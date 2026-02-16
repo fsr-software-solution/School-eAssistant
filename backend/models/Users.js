@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
 
 const usersSchema = new mongoose.Schema({
   username: {
@@ -17,41 +18,43 @@ const usersSchema = new mongoose.Schema({
   role: {
     type: String,
     required: [true, 'Role is required'],
-    enum: {
-      values: ['student', 'admin'],
-        message: 'Role must be either student or admin',
-      default: 'student'
-    }
+    enum: ['student', 'admin'],
+    default: 'student'
   },
+  refreshToken: {
+    type: String
+  },
+
   isDeleted: {
     type: Boolean,
     default: false
   },
-  deletedAt: {
-    type: Date
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
-  }
+  deletedAt: Date
 }, {
   timestamps: true
 });
 
-usersSchema.pre('save', function(next) {
-  this.updatedAt = new Date();
-  next();
+
+usersSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return;
+
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
 });
 
+
+usersSchema.methods.comparePassword = async function (enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
+};
+
+
 usersSchema.index({ isDeleted: 1 });
-usersSchema.statics.findActive = function() {
+
+usersSchema.statics.findActive = function () {
   return this.find({ isDeleted: false });
 };
-usersSchema.methods.softDelete = function() {
+
+usersSchema.methods.softDelete = function () {
   this.isDeleted = true;
   this.deletedAt = new Date();
   return this.save();
