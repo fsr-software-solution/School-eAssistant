@@ -21,7 +21,7 @@ const booksSchema = new mongoose.Schema({
     min: [1, 'Total pages must be at least 1']
   },
   toc: {
-    type: [String],
+    type: mongoose.Schema.Types.Mixed,
     default: []
   },
   summary: {
@@ -60,12 +60,11 @@ const booksSchema = new mongoose.Schema({
 });
 
 // Unique index for grade level + subject + version
-booksSchema.index({ gradeLevel: 1, subject: 1, version: 1 }, { unique: true });
+// booksSchema.index({ gradeLevel: 1, subject: 1, version: 1 }, { unique: true });
 
 // Update the updatedAt field before saving
-booksSchema.pre('save', function(next) {
+booksSchema.pre('save', function() {
   this.updatedAt = new Date();
-  next();
 });
 
 // Index for soft delete queries

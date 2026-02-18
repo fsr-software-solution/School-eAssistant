@@ -68,7 +68,7 @@ referencesSchema.index({ quizId: 1 });
 referencesSchema.index({ isDeleted: 1 });
 
 // Custom validation to ensure exactly one of interactionId or quizId is provided
-referencesSchema.pre('save', function(next) {
+referencesSchema.pre('save', function() {
   this.updatedAt = new Date();
   
   if (!this.interactionId && !this.quizId) {

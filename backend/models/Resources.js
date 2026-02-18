@@ -92,7 +92,7 @@ resourcesSchema.index({ type: 1 });
 resourcesSchema.index({ isDeleted: 1 });
 
 // Custom validation to ensure exactly one of sectionId or interactionId is provided
-resourcesSchema.pre('save', function(next) {
+resourcesSchema.pre('save', function() {
   this.updatedAt = new Date();
   
   if (!this.sectionId && !this.interactionId) {

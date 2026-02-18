@@ -69,7 +69,7 @@ studentProgressSchema.index({ status: 1 });
 studentProgressSchema.index({ isDeleted: 1 });
 
 // Update the updatedAt field before saving
-studentProgressSchema.pre('save', function(next) {
+studentProgressSchema.pre('save', function() {
   this.updatedAt = new Date();
   next();
 });

@@ -1,5 +1,5 @@
 import Books from '../models/Books.js';
-import splitAndExtract from '../utils/split_and_extract_pdf.js'
+import bookExtractor from '../utils/ai_services/book_graph.js';
 
 /**
  * Get all books
@@ -91,33 +91,25 @@ export const createBook = async (req, res) => {
     });
   }
 
-  const {tocStartingPage, tocEndingPage, gradeLevel, subject} = req.body
-  const tocStartingPageIndex = tocStartingPage - 1
-  const tocEndingPageIndex = tocEndingPage - 1
-  
-  const splittedBook = await splitAndExtract(bookFile.buffer);
-  const toc = splittedBook.slice(tocStartingPageIndex, tocEndingPage).map(page => page.content).join('\n\n')
-  console.log(toc);
-  
-  
+  const {gradeLevel, subject, version, tocStartingPage, tocEndingPage} = req.body
 
-  
+  await bookExtractor('/home/yope/.projects/code/School-eAssistant/backend/utils/ai_services copy/G9-Biology-STB-2023-web.pdf', {
+    gradeLevel,
+    subject,
+    version,
+    tocStartingPage,
+    tocEndingPage,
+    filePath: bookFile.originalname
+  })
 
-  
   res.status(201).json({
     success: true,
     message: 'Book processed successfully',
     data: {
-      fileName: bookFile.originalname,
-      pageCount: splittedBook.length,
-      tableOfContent: toc
+      fileName: bookFile.originalname
     }
   })
 }
-  // TODO: Implement actual book creation logic
-  // const bookData = req.body;
-  // const book = new Books(bookData);
-  // await book.save();
 
 /**
  * Delete all books (bulk delete)

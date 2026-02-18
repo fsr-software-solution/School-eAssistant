@@ -56,7 +56,7 @@ chatSessionsSchema.index({ type: 1 });
 chatSessionsSchema.index({ isDeleted: 1 });
 
 // Update the updatedAt field before saving
-chatSessionsSchema.pre('save', function(next) {
+chatSessionsSchema.pre('save', function() {
   this.updatedAt = new Date();
   next();
 });

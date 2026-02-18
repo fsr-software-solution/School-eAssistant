@@ -101,9 +101,8 @@ sectionsSchema.index({ parentSectionId: 1 });
 sectionsSchema.index({ isDeleted: 1 });
 
 // Update the updatedAt field before saving
-sectionsSchema.pre('save', function(next) {
+sectionsSchema.pre('save', function() {
   this.updatedAt = new Date();
-  next();
 });
 
 // Static method to find active sections

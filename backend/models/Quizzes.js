@@ -54,7 +54,7 @@ quizzesSchema.index({ chatSessionId: 1 });
 quizzesSchema.index({ isDeleted: 1 });
 
 // Update the updatedAt field before saving
-quizzesSchema.pre('save', function(next) {
+quizzesSchema.pre('save', function() {
   this.updatedAt = new Date();
   next();
 });

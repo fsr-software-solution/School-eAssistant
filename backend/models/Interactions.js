@@ -85,7 +85,7 @@ interactionsSchema.index({ studentId: 1 });
 interactionsSchema.index({ isDeleted: 1 });
 
 // Update the updatedAt field before saving
-interactionsSchema.pre('save', function(next) {
+interactionsSchema.pre('save', function() {
   this.updatedAt = new Date();
   next();
 });

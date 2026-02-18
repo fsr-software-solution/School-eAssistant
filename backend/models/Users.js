@@ -42,7 +42,7 @@ const usersSchema = new mongoose.Schema({
   timestamps: true
 });
 
-usersSchema.pre('save', function(next) {
+usersSchema.pre('save', function() {
   this.updatedAt = new Date();
   next();
 });
