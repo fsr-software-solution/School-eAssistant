@@ -9,7 +9,7 @@ import Units from '../../models/Units.js'
 import Sections from '../../models/Sections.js'
 
 
-const bookExtractor = async (file, {gradeLevel, subject, version, filePath, tocStartingPage, tocEndingPage}) => {    
+const bookContentExtractor = async (file, {gradeLevel, subject, version, filePath, tocStartingPage, tocEndingPage}) => {    
     let llm = new ChatOllama({model: 'smollm2:135m'})
     // let llm = new ChatGroq({
     //     model: 'llama-3.3-70b-versatile',
@@ -28,6 +28,7 @@ const bookExtractor = async (file, {gradeLevel, subject, version, filePath, tocS
     //     CONTENT: ${rawToc}
     // `.trim())
 
+    // For development purpose
     let data = await readFile('/home/yope/.projects/code/School-eAssistant/backend/utils/ai_services copy/mock_toc.json', 'utf-8')
     let book = JSON.parse(data)    
 
@@ -163,4 +164,4 @@ const bookExtractor = async (file, {gradeLevel, subject, version, filePath, tocS
 
 
 
-export default bookExtractor
+export default bookContentExtractor

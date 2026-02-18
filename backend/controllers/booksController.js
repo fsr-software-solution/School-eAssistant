@@ -1,5 +1,5 @@
 import Books from '../models/Books.js';
-import bookExtractor from '../utils/ai_services/book_graph.js';
+import bookContentExtractor from '../utils/ai_services/book_content_extractor.js';
 
 /**
  * Get all books
@@ -93,7 +93,7 @@ export const createBook = async (req, res) => {
 
   const {gradeLevel, subject, version, tocStartingPage, tocEndingPage} = req.body
 
-  await bookExtractor('/home/yope/.projects/code/School-eAssistant/backend/utils/ai_services copy/G9-Biology-STB-2023-web.pdf', {
+  await bookContentExtractor('/home/yope/.projects/code/School-eAssistant/backend/utils/ai_services copy/G9-Biology-STB-2023-web.pdf', {
     gradeLevel,
     subject,
     version,
