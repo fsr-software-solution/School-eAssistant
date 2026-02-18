@@ -4,7 +4,6 @@ const chatSessionsSchema = new mongoose.Schema({
   summary: {
     type: String,
     required: [true, 'Summary is required'],
-    maxlength: [500, 'Summary cannot exceed 500 characters']
   },
   studentId: {
     type: mongoose.Schema.Types.ObjectId,

@@ -1,5 +1,5 @@
 import {StateGraph, START, END} from '@langchain/langgraph'
-import { BookState, TOCSchema, UnitState } from './states.js'
+import { BookState, TOCSchema, UnitState, SectionState, SubsectionState } from './states.js'
 import { ChatOllama } from '@langchain/ollama'
 import {ChatGroq} from '@langchain/groq'
 import {readFile, writeFile} from 'fs/promises'
@@ -9,159 +9,242 @@ import Units from '../../models/Units.js'
 import Sections from '../../models/Sections.js'
 
 
-const bookContentExtractor = async (file, {gradeLevel, subject, version, filePath, tocStartingPage, tocEndingPage}) => {    
-    let llm = new ChatOllama({model: 'smollm2:135m'})
-    // let llm = new ChatGroq({
-    //     model: 'llama-3.3-70b-versatile',
-    //     apiKey: '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'
-    // })
-    llm = llm.withStructuredOutput(TOCSchema)
-
-    
-    let splittedBook = await splitAndExtract(file)
-    let rawToc = splittedBook.slice(tocStartingPage - 1, tocEndingPage).map(page => page.content).join('\n\n')
-    let allContent = splittedBook.slice(tocEndingPage).map(page => page.content).join('\n\n')
-    
-    
-    // let book = await llm.invoke(`
-    //     extract structured table of contents from the content
-    //     CONTENT: ${rawToc}
-    // `.trim())
-
-    // For development purpose
-    let data = await readFile('/home/yope/.projects/code/School-eAssistant/backend/utils/ai_services copy/mock_toc.json', 'utf-8')
-    let book = JSON.parse(data)    
-
-    let newBook = await Books.create({
-        gradeLevel,
-        subject,
-        totalPages: splittedBook.length,
-        toc: book,
-        filePath,
-        version
-    })
-    
-
-    for (let i = 0; i < book.units?.length || 0; i++) {
-        const unit = book.units[i]
-        const nextUnit = book.units[i+1]
-
-        let newUnit = await Units.create({
-            bookId: newBook._id,
-            unitNumber: unit.unitNumber,
-            title: unit.title,
-            startingPage: unit?.startingPage,
-            endingPage: nextUnit?.startingPage || splittedBook.length - tocEndingPage
-        })
+const bookContentExtractor = async (file, {gradeLevel, subject, version, filePath, tocStartingPage, tocEndingPage}) => {
+    try {
+        console.log('Starting book content extraction...');
         
+        // Initialize LLM
+        let llm = new ChatOllama({model: 'smollm2:135m'})
+        llm = llm.withStructuredOutput(TOCSchema)
 
-        for (let j = 0; j < unit.sections?.length || 0; j++) {
-            const section_h1 = unit.sections[j]
-            const nextSection_h1 = unit.sections[j+1]          
+        // Extract PDF content
+        console.log('Extracting PDF content...');
+        let splittedBook = await splitAndExtract(file)
+        let rawToc = splittedBook.slice(tocStartingPage - 1, tocEndingPage).map(page => page.content).join('\n\n')
+        let allContent = splittedBook.slice(tocEndingPage).map(page => page.content).join('\n\n')
+        
+        // Extract TOC using AI or use mock data for development
+        let book;
+        try {
+            // console.log('Extracting structured TOC...');
+            // book = await llm.invoke(`
+            //     Extract structured table of contents from the content.
+            //     Focus on identifying unit numbers, section numbers, titles, and page numbers.
+            //     CONTENT: ${rawToc}
+            // `.trim())
+            throw new Error('Extracting structured TOC...');            
+        } catch (error) {
+            console.log('AI extraction failed, using mock data:', error.message);
+            // For development purpose
+            let data = await readFile('/home/yope/.projects/code/School-eAssistant/backend/utils/ai_services/mock_toc.json', 'utf-8')
+            book = JSON.parse(data)
+        }
 
-            let newSection1 = await Sections.create({
-                unitId: newUnit._id,
-                sectionNumber: section_h1.sectionNumber,
-                parentSectionId: null,
-                headingLevel: 1,
-                title: section_h1.title,
-                startingPage: section_h1?.startingPage,
-                endingPage: (section_h1.subsections??[])[0]?.startingPage || nextSection_h1?.startingPage || 1000,
-                content: allContent.match(new RegExp(`
-                        ${section_h1.sectionNumber}[\s\S]{0,5}${section_h1.title}[\s\S]+(?=${(section_h1.subsections??[])[0].sectionNumber || nextSection_h1.sectionNumber || nextUnit.unitNumber}[\s\S]{0,5}${(section_h1.subsections??[])[0].title || nextSection_h1.title || nextUnit.title})
-                    `.trim(), 'i'))[0]
+        // Create book record
+        console.log('Creating book record...');
+        let newBook = await Books.create({
+            gradeLevel,
+            subject,
+            totalPages: splittedBook.length,
+            toc: book,
+            filePath,
+            version
+        })
+
+        // Process units and sections
+        console.log('Processing units and sections...');
+        for (let i = 0; i < book.units?.length || 0; i++) {
+            const unit = book.units[i]
+            const nextUnit = book.units[i+1]
+
+            let newUnit = await Units.create({
+                bookId: newBook._id,
+                unitNumber: unit.unitNumber,
+                title: unit.title,
+                startingPage: unit?.startingPage,
+                endingPage: nextUnit?.startingPage || splittedBook.length - tocEndingPage
             })
 
-
-            for (let k = 0; k < section_h1.subsections?.length || 0; k++) {
-                const section_h2 = section_h1.subsections[k];
-                const nextSection_h2 = section_h1.subsections[k+1]
-
-                let newSection2 = await Sections.create({
-                    unitId: newUnit._id,
-                    sectionNumber: section_h2.sectionNumber,
-                    parentSectionId: newSection1._id,
-                    headingLevel: 2,
-                    title: section_h2.title,
-                    startingPage: section_h2?.startingPage,
-                    endingPage: (section_h2.subsections??[])[0]?.startingPage || nextSection_h2?.startingPage || 1000,
-                    content: '.....2'
-                })                
-
-
-                for (let l = 0; l < section_h2.subsections?.length || 0; l++) {
-                    const section_h3 = section_h2.subsections[l];
-                    const nextSection_h3 = section_h2.subsections[l+1]
-
-                    let newSection3 = await Sections.create({
-                        unitId: newUnit._id,
-                        sectionNumber: section_h3.sectionNumber,
-                        parentSectionId: newSection2._id,
-                        headingLevel: 3,
-                        title: section_h3.title,
-                        startingPage: section_h3?.startingPage,
-                        endingPage: (section_h3.subsections??[])[0]?.startingPage || nextSection_h3?.startingPage || 1000,
-                        content: '.....3'
-                    })
-
-
-                    for (let m = 0; m < section_h3.subsections?.length || 0; m++) {
-                        const section_h4 = section_h3.subsections[m];
-                        const nextSection_h4 = section_h3.subsections[m+1]
-
-                        let newSection4 = await Sections.create({
-                            unitId: newUnit._id,
-                            sectionNumber: section_h4.sectionNumber,
-                            parentSectionId: newSection3._id,
-                            headingLevel: 4,
-                            title: section_h4.title,
-                            startingPage: section_h4?.startingPage,
-                            endingPage: (section_h4.subsections??[])[0]?.startingPage || nextSection_h4?.startingPage || 1000,
-                            content: '.....4'
-                        })
-
-
-                        for (let n = 0; n < section_h4.subsections?.length || 0; n++) {
-                            const section_h5 = section_h4.subsections[n];
-                            const nextSection_h5 = section_h4.subsections[n+1]
-
-                            let newSection5 = await Sections.create({
-                                unitId: newUnit._id,
-                                sectionNumber: section_h5.sectionNumber,
-                                parentSectionId: newSection4._id,
-                                headingLevel: 5,
-                                title: section_h5.title,
-                                startingPage: section_h5?.startingPage,
-                                endingPage: (section_h5.subsections??[])[0]?.startingPage || nextSection_h5?.startingPage || 1000,
-                                content: '.....5'
-                            })
-
-
-                            for (let o = 0; k < section_h5.subsections?.length || 0; o++) {
-                                const section_h6 = section_h5.subsections[o];
-                                const nextSection_h6 = section_h5.subsections[o+1]
-
-                                await Sections.create({
-                                    unitId: newUnit._id,
-                                    sectionNumber: section_h6.sectionNumber,
-                                    parentSectionId: newSection5._id,
-                                    headingLevel: 6,
-                                    title: section_h6.title,
-                                    startingPage: section_h6?.startingPage,
-                                    endingPage: (section_h6.subsections??[])[0]?.startingPage || nextSection_h6?.startingPage || 1000,
-                                    content: '.....6'
-                                })
-                            }
-                        }
-                    }
-                }
+            // Process sections recursively
+            if (unit.sections && unit.sections.length > 0) {
+                await processSections(unit.sections, newUnit._id, null, allContent, splittedBook, tocEndingPage)
             }
+        }
+
+        console.log('Book content extraction completed successfully');
+        return { success: true, bookId: newBook._id }
+
+    } catch (error) {
+        console.error('Error in bookContentExtractor:', error)
+        throw error
+    }
+}
+
+/**
+ * Recursively process sections and subsections
+ */
+const processSections = async (sections, unitId, parentSectionId, allContent, splittedBook, tocEndingPage) => {
+    for (let i = 0; i < sections.length; i++) {
+        const section = sections[i]
+        const nextSection = sections[i + 1]
+        
+        // Calculate heading level based on section number depth
+        const headingLevel = (section.sectionNumber.match(/\./g) || []).length + 1
+        
+        // Calculate page boundaries
+        const startingPage = section.startingPage || 1
+        const endingPage = getNextSectionStartingPage(section, nextSection, sections, i)
+        
+        // Extract content for this section
+        const content = extractSectionContent(
+            section, 
+            nextSection, 
+            sections, 
+            i, 
+            allContent, 
+            splittedBook, 
+            tocEndingPage
+        )
+
+        // Create section record
+        let newSection = await Sections.create({
+            unitId,
+            sectionNumber: section.sectionNumber,
+            parentSectionId,
+            headingLevel,
+            title: section.title,
+            startingPage,
+            endingPage,
+            content
+        })
+
+        // Process subsections recursively
+        if (section.subsections && section.subsections.length > 0) {
+            await processSections(section.subsections, unitId, newSection._id, allContent, splittedBook, tocEndingPage)
         }
     }
 }
 
+/**
+ * Validate and normalize section data
+ */
+const validateSectionData = (section) => {
+    if (!section.sectionNumber || !section.title) {
+        throw new Error(`Invalid section data: missing sectionNumber or title`)
+    }
+    
+    // Ensure section number is properly formatted
+    section.sectionNumber = section.sectionNumber.toString().trim()
+    section.title = section.title.toString().trim()
+    
+    if (section.startingPage) {
+        section.startingPage = parseInt(section.startingPage, 10)
+        if (isNaN(section.startingPage) || section.startingPage < 1) {
+            section.startingPage = 1
+        }
+    }
+    
+    return section
+}
 
+/**
+ * Get the starting page of the next section at the same level
+ */
+const getNextSectionStartingPage = (currentSection, nextSection, sections, currentIndex) => {
+    // If there's a next section at the same level
+    if (nextSection) {
+        return nextSection.startingPage
+    }
+    
+    // If this is the last section, find the next section at any level
+    for (let i = currentIndex + 1; i < sections.length; i++) {
+        if (sections[i].startingPage) {
+            return sections[i].startingPage
+        }
+    }
+    
+    // Default fallback
+    return 1000
+}
 
+/**
+ * Extract content for a specific section using regex patterns
+ */
+const extractSectionContent = (section, nextSection, sections, currentIndex, allContent, splittedBook, tocEndingPage) => {
+    try {
+        // Build regex pattern to find section content
+        const sectionPattern = escapeRegExp(section.sectionNumber)
+        const sectionTitlePattern = escapeRegExp(section.title)
+        
+        let endPattern = ''
+        
+        // Determine the end pattern based on next section or subsection
+        if (nextSection) {
+            endPattern = `(?=${escapeRegExp(nextSection.sectionNumber)}[\\s\\S]{0,10}${escapeRegExp(nextSection.title)})`
+        } else {
+            // Look for any next section at the same or higher level
+            for (let i = currentIndex + 1; i < sections.length; i++) {
+                if (sections[i].sectionNumber && sections[i].title) {
+                    endPattern = `(?=${escapeRegExp(sections[i].sectionNumber)}[\\s\\S]{0,10}${escapeRegExp(sections[i].title)})`
+                    break
+                }
+            }
+            
+            // If no next section found, use end of content
+            if (!endPattern) {
+                endPattern = '$'
+            }
+        }
+        
+        const pattern = new RegExp(
+            `${sectionPattern}[\\s\\S]{0,10}${sectionTitlePattern}[\\s\\S]+?${endPattern}`,
+            'ig'
+        )
+        
+        const match = allContent.match(pattern)
+        if (match && match[0]) {
+            const longest = match
+                .filter(str => typeof str === "string")
+                .reduce((max, str) => str.length > max.length ? str : max, "")
+            return longest.trim()
+        }
+        
+        // Fallback: extract by page range if regex fails
+        return extractByPageRange(section, nextSection, sections, currentIndex, splittedBook, tocEndingPage)
+        
+    } catch (error) {
+        console.error(`Error extracting content for section ${section.sectionNumber}:`, error)
+        return `Content extraction failed for section ${section.sectionNumber}: ${error.message}`
+    }
+}
+
+/**
+ * Extract content based on page ranges as fallback
+ */
+const extractByPageRange = (section, nextSection, sections, currentIndex, splittedBook, tocEndingPage) => {
+    try {
+        const sectionStartPage = section.startingPage || 1
+        const sectionEndPage = getNextSectionStartingPage(section, nextSection, sections, currentIndex)
+        
+        // Convert to 0-based index and adjust for TOC offset
+        const startIndex = Math.max(0, sectionStartPage - 1)
+        const endIndex = Math.min(splittedBook.length, sectionEndPage - 1)
+        
+        const pages = splittedBook.slice(startIndex, endIndex)
+        return pages.map(page => page.content).join('\n\n').trim()
+        
+    } catch (error) {
+        console.error('Error extracting by page range:', error)
+        return `Page range extraction failed: ${error.message}`
+    }
+}
+
+/**
+ * Escape special regex characters in a string
+ */
+const escapeRegExp = (string) => {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
 
 
 export default bookContentExtractor

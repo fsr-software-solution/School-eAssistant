@@ -28,7 +28,6 @@ const referencesSchema = new mongoose.Schema({
   quotedText: {
     type: String,
     required: [true, 'Quoted text is required'],
-    maxlength: [1000, 'Quoted text cannot exceed 1000 characters']
   },
   pageNumber: {
     type: Number,

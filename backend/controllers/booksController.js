@@ -93,7 +93,7 @@ export const createBook = async (req, res) => {
 
   const {gradeLevel, subject, version, tocStartingPage, tocEndingPage} = req.body
 
-  await bookContentExtractor('/home/yope/.projects/code/School-eAssistant/backend/utils/ai_services copy/G9-Biology-STB-2023-web.pdf', {
+  await bookContentExtractor(bookFile.buffer, {
     gradeLevel,
     subject,
     version,
@@ -102,11 +102,14 @@ export const createBook = async (req, res) => {
     filePath: bookFile.originalname
   })
 
+  delete bookFile.buffer
+  console.log(bookFile)
+
   res.status(201).json({
     success: true,
     message: 'Book processed successfully',
     data: {
-      fileName: bookFile.originalname
+      bookFile: bookFile.originalname
     }
   })
 }

@@ -16,16 +16,13 @@ const quizzesSchema = new mongoose.Schema({
   question: {
     type: String,
     required: [true, 'Question is required'],
-    maxlength: [1000, 'Question cannot exceed 1000 characters']
   },
   answer: {
     type: String,
     required: [true, 'Answer is required'],
-    maxlength: [2000, 'Answer cannot exceed 2000 characters']
   },
   explanation: {
     type: String,
-    maxlength: [3000, 'Explanation cannot exceed 3000 characters']
   },
   // Common attributes
   isDeleted: {

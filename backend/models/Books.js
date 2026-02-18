@@ -13,7 +13,6 @@ const booksSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Subject is required'],
     trim: true,
-    maxlength: [100, 'Subject cannot exceed 100 characters']
   },
   totalPages: {
     type: Number,
@@ -26,7 +25,6 @@ const booksSchema = new mongoose.Schema({
   },
   summary: {
     type: String,
-    maxlength: [2000, 'Summary cannot exceed 2000 characters']
   },
   filePath: {
     type: String,
@@ -37,7 +35,6 @@ const booksSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Version is required'],
     trim: true,
-    maxlength: [50, 'Version cannot exceed 50 characters']
   },
   // Common attributes
   isDeleted: {

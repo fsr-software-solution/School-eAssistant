@@ -40,12 +40,10 @@ const interactionsSchema = new mongoose.Schema({
   studentQuestion: {
     type: String,
     required: [true, 'Student question is required'],
-    maxlength: [2000, 'Student question cannot exceed 2000 characters']
   },
   aiAnswer: {
     type: String,
     required: [true, 'AI answer is required'],
-    maxlength: [5000, 'AI answer cannot exceed 5000 characters']
   },
   confidenceScore: {
     type: Number,
