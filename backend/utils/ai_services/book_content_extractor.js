@@ -1,5 +1,4 @@
-import {StateGraph, START, END} from '@langchain/langgraph'
-import { BookState, TOCSchema, UnitState, SectionState, SubsectionState } from './states.js'
+import { TOCSchema } from './states.js'
 import { ChatOllama } from '@langchain/ollama'
 import {ChatGroq} from '@langchain/groq'
 import {readFile, writeFile} from 'fs/promises'
@@ -10,243 +9,174 @@ import Sections from '../../models/Sections.js'
 
 
 const bookContentExtractor = async (file, {gradeLevel, subject, yearOfPublish, filePath, tocStartingPage, tocEndingPage}) => {
-    try {
-        console.log('Starting book content extraction...');
-        
-        // Initialize LLM
-        let llm = new ChatOllama({model: 'smollm2:135m'})
-        llm = llm.withStructuredOutput(TOCSchema)
+    let llm = new ChatOllama({model: 'smollm2:135m'})
+    // let llm = new ChatGroq({
+    //     model: 'llama-3.3-70b-versatile',
+    //     apiKey: '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'
+    // })
+    llm = llm.withStructuredOutput(TOCSchema)
 
-        // Extract PDF content
-        console.log('Extracting PDF content...');
-        let splittedBook = await splitAndExtract(file)
-        let rawToc = splittedBook.slice(tocStartingPage - 1, tocEndingPage).map(page => page.content).join('\n\n')
-        let allContent = splittedBook.slice(tocEndingPage).map(page => page.content).join('\n\n')
-        
-        // Extract TOC using AI or use mock data for development
-        let book;
-        try {
-            // console.log('Extracting structured TOC...');
-            // book = await llm.invoke(`
-            //     Extract structured table of contents from the content.
-            //     Focus on identifying unit numbers, section numbers, titles, and page numbers.
-            //     CONTENT: ${rawToc}
-            // `.trim())
-            throw new Error('Extracting structured TOC...');            
-        } catch (error) {
-            console.log('AI extraction failed, using mock data:', error.message);
-            // For development purpose
-            let data = await readFile('/home/yope/.projects/code/School-eAssistant/backend/utils/ai_services/mock_toc.json', 'utf-8')
-            book = JSON.parse(data)
-        }
+    let splittedBook = await splitAndExtract(file)
+    let rawToc = splittedBook.slice(tocStartingPage - 1, tocEndingPage).map(page => page.content).join('\n\n')
 
-        // Create book record
-        console.log('Creating book record...');
-        let newBook = await Books.create({
-            gradeLevel,
-            subject,
-            totalPages: splittedBook.length,
-            toc: book,
-            filePath,
-            yearOfPublish
+    // let toc = await llm.invoke(`
+    //     Extract structured table of contents from the content.
+    //     Focus on identifying unit numbers, section numbers, titles, and page numbers.
+    //     CONTENT: ${rawToc}
+    // `.trim())
+
+    let data = await readFile('/home/yope/.projects/code/School-eAssistant/backend/utils/ai_services/mock_toc.json', 'utf-8')
+    let toc = JSON.parse(data)    
+
+    let tocList = []
+    toc.units?.map(unit => {
+        tocList.push({
+            type: 'unit',
+            unitNumber: unit.unitNumber,
+            title: unit.title,
+            startingPage: unit.startingPage
         })
 
-        // Process units and sections
-        console.log('Processing units and sections...');
-        for (let i = 0; i < book.units?.length || 0; i++) {
-            const unit = book.units[i]
-            const nextUnit = book.units[i+1]
-
-            let newUnit = await Units.create({
-                bookId: newBook._id,
-                unitNumber: unit.unitNumber,
-                title: unit.title,
-                startingPage: unit?.startingPage,
-                endingPage: nextUnit?.startingPage || splittedBook.length - tocEndingPage
+        unit.sections?.map(section => {
+            tocList.push({
+                type: 'section',
+                headingLevel: 1,
+                sectionNumber: section.sectionNumber,
+                title: section.title,
+                startingPage: section.startingPage
             })
 
-            // Process sections recursively
-            if (unit.sections && unit.sections.length > 0) {
-                await processSections(unit.sections, newUnit._id, null, allContent, splittedBook, tocEndingPage)
-            }
-        }
+            section.subsections?.map(section => {
+                tocList.push({
+                    type: 'subsection',
+                    headingLevel: 2,
+                    sectionNumber: section.sectionNumber,
+                    title: section.title,
+                    startingPage: section.startingPage
+                })
 
-        console.log('Book content extraction completed successfully');
-        // return { success: true, bookId: newBook._id }
-        return newBook;
+                section.subsections?.map(section => {
+                    tocList.push({
+                        type: 'subsection',
+                        headingLevel: 3,
+                        sectionNumber: section.sectionNumber,
+                        title: section.title,
+                        startingPage: section.startingPage
+                    })
 
-    } catch (error) {
-        console.error('Error in bookContentExtractor:', error)
-        throw error
-    }
-}
+                    section.subsections?.map(section => {
+                        tocList.push({
+                            type: 'subsection',
+                            headingLevel: 4,
+                            sectionNumber: section.sectionNumber,
+                            title: section.title,
+                            startingPage: section.startingPage
+                        })
 
-/**
- * Recursively process sections and subsections
- */
-const processSections = async (sections, unitId, parentSectionId, allContent, splittedBook, tocEndingPage) => {
-    for (let i = 0; i < sections.length; i++) {
-        const section = sections[i]
-        const nextSection = sections[i + 1]
-        
-        // Calculate heading level based on section number depth
-        const headingLevel = (section.sectionNumber.match(/\./g) || []).length + 1
-        
-        // Calculate page boundaries
-        const startingPage = section.startingPage || 1
-        const endingPage = getNextSectionStartingPage(section, nextSection, sections, i)
-        
-        // Extract content for this section
-        const content = extractSectionContent(
-            section, 
-            nextSection, 
-            sections, 
-            i, 
-            allContent, 
-            splittedBook, 
-            tocEndingPage
-        )
+                        section.subsections?.map(section => {
+                            tocList.push({
+                                type: 'subsection',
+                                headingLevel: 5,
+                                sectionNumber: section.sectionNumber,
+                                title: section.title,
+                                startingPage: section.startingPage
+                            })
 
-        // Create section record
-        let newSection = await Sections.create({
-            unitId,
-            sectionNumber: section.sectionNumber,
-            parentSectionId,
-            headingLevel,
-            title: section.title,
-            startingPage,
-            endingPage,
-            content
+                            section.subsections?.map(section => {
+                                tocList.push({
+                                    type: 'subsection',
+                                    headingLevel: 6,
+                                    sectionNumber: section.sectionNumber,
+                                    title: section.title,
+                                    startingPage: section.startingPage
+                                })
+                            })
+                        })
+                    })
+                })
+            })
         })
+    })
+   
 
-        // Process subsections recursively
-        if (section.subsections && section.subsections.length > 0) {
-            await processSections(section.subsections, unitId, newSection._id, allContent, splittedBook, tocEndingPage)
+    let unit = null
+    let section = null
+    let book = await Books.create({
+        gradeLevel,
+        subject,
+        totalPages: splittedBook.length,
+        toc,
+        filePath,
+        yearOfPublish
+    })
+
+
+    for (let i=0; i<tocList.length; i++) {
+        let prev = tocList[i-1]
+        let current = tocList[i]
+        let next = tocList[i+1]
+        let lastPage = splittedBook.length - tocEndingPage
+        
+        if (current.type == 'unit') {
+            unit = await Units.create({
+                bookId: book?._id,
+                unitNumber: current.unitNumber,
+                title: current.title,
+                startingPage: current.startingPage,
+                endingPage: next?.startingPage || lastPage
+            })
+        } else if (current.type == 'section') {
+            section = await Sections.create({
+                unitId: unit?._id,
+                sectionNumber: current.sectionNumber,
+                parentSectionId: null,
+                headingLevel: current.headingLevel,
+                title: current.title,
+                startingPage: current.startingPage,
+                endingPage: next?.startingPage || lastPage,
+                content: extractSectionContent(splittedBook, current?.title, next?.title, current.startingPage, next?.startingPage || lastPage, tocEndingPage - 1)
+            })
+        } else if (current.type == 'subsection') {
+            section = await Sections.create({
+                unitId: unit?._id,
+                sectionNumber: current.sectionNumber,
+                parentSectionId: section?._id,
+                headingLevel: current.headingLevel,
+                title: current.title,
+                startingPage: current.startingPage,
+                endingPage: next?.startingPage || lastPage,
+                content: extractSectionContent(splittedBook, current?.title, next?.title, current.startingPage, next?.startingPage || lastPage, tocEndingPage - 1)
+            })
         }
     }
 }
 
-/**
- * Validate and normalize section data
- */
-const validateSectionData = (section) => {
-    if (!section.sectionNumber || !section.title) {
-        throw new Error(`Invalid section data: missing sectionNumber or title`)
-    }
-    
-    // Ensure section number is properly formatted
-    section.sectionNumber = section.sectionNumber.toString().trim()
-    section.title = section.title.toString().trim()
-    
-    if (section.startingPage) {
-        section.startingPage = parseInt(section.startingPage, 10)
-        if (isNaN(section.startingPage) || section.startingPage < 1) {
-            section.startingPage = 1
-        }
-    }
-    
-    return section
-}
 
-/**
- * Get the starting page of the next section at the same level
- */
-const getNextSectionStartingPage = (currentSection, nextSection, sections, currentIndex) => {
-    // If there's a next section at the same level
-    if (nextSection) {
-        return nextSection.startingPage
-    }
+const extractSectionContent = (splittedBook, startMark, endMark, startingPage, endingPage, pageDiff) => {
+    let text = ''
+    if (startingPage == endingPage)
+        text = splittedBook[startingPage + pageDiff].content
+    else
+        text = splittedBook.slice(startingPage + pageDiff, endingPage + pageDiff + 1).map(page => page.content).join('\n\n')
     
-    // If this is the last section, find the next section at any level
-    for (let i = currentIndex + 1; i < sections.length; i++) {
-        if (sections[i].startingPage) {
-            return sections[i].startingPage
-        }
-    }
+    let matchedTexts = text.match(new RegExp(`${startMark}.*(?=${endMark})?`, 'isg')) ?? [text]
+
+    const longestString = matchedTexts
+        .filter(item => item !== null)
+        .reduce((longest, current) => current.length > longest.length ? current : longest, '');
     
-    // Default fallback
-    return 1000
+    return longestString
 }
-
-/**
- * Extract content for a specific section using regex patterns
- */
-const extractSectionContent = (section, nextSection, sections, currentIndex, allContent, splittedBook, tocEndingPage) => {
-    try {
-        // Build regex pattern to find section content
-        const sectionPattern = escapeRegExp(section.sectionNumber)
-        const sectionTitlePattern = escapeRegExp(section.title)
-        
-        let endPattern = ''
-        
-        // Determine the end pattern based on next section or subsection
-        if (nextSection) {
-            endPattern = `(?=${escapeRegExp(nextSection.sectionNumber)}[\\s\\S]{0,10}${escapeRegExp(nextSection.title)})`
-        } else {
-            // Look for any next section at the same or higher level
-            for (let i = currentIndex + 1; i < sections.length; i++) {
-                if (sections[i].sectionNumber && sections[i].title) {
-                    endPattern = `(?=${escapeRegExp(sections[i].sectionNumber)}[\\s\\S]{0,10}${escapeRegExp(sections[i].title)})`
-                    break
-                }
-            }
-            
-            // If no next section found, use end of content
-            if (!endPattern) {
-                endPattern = '$'
-            }
-        }
-        
-        const pattern = new RegExp(
-            `${sectionPattern}[\\s\\S]{0,10}${sectionTitlePattern}[\\s\\S]+?${endPattern}`,
-            'ig'
-        )
-        
-        const match = allContent.match(pattern)
-        if (match && match[0]) {
-            const longest = match
-                .filter(str => typeof str === "string")
-                .reduce((max, str) => str.length > max.length ? str : max, "")
-            console.log(longest.length)            
-            return longest.trim()
-        }
-        
-        // Fallback: extract by page range if regex fails
-        return extractByPageRange(section, nextSection, sections, currentIndex, splittedBook, tocEndingPage)
-        
-    } catch (error) {
-        console.error(`Error extracting content for section ${section.sectionNumber}:`, error)
-        return `Content extraction failed for section ${section.sectionNumber}: ${error.message}`
-    }
-}
-
-/**
- * Extract content based on page ranges as fallback
- */
-const extractByPageRange = (section, nextSection, sections, currentIndex, splittedBook, tocEndingPage) => {
-    try {
-        const sectionStartPage = section.startingPage || 1
-        const sectionEndPage = getNextSectionStartingPage(section, nextSection, sections, currentIndex)
-        
-        // Convert to 0-based index and adjust for TOC offset
-        const startIndex = Math.max(0, sectionStartPage - 1)
-        const endIndex = Math.min(splittedBook.length, sectionEndPage - 1)
-        
-        const pages = splittedBook.slice(startIndex, endIndex)
-        return pages.map(page => page.content).join('\n\n').trim()
-        
-    } catch (error) {
-        console.error('Error extracting by page range:', error)
-        return `Page range extraction failed: ${error.message}`
-    }
-}
-
-/**
- * Escape special regex characters in a string
- */
-const escapeRegExp = (string) => {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-}
-
 
 export default bookContentExtractor
+
+
+////// For testing
+// await bookContentExtractor('./G9-Biology-STB-2023-web.pdf', {
+//     gradeLevel: 'G-9',
+//     subject: 'Biology',
+//     yearOfPublish: '2023',
+//     filePath: '.',
+//     tocStartingPage: 6,
+//     tocEndingPage: 7
+// })
