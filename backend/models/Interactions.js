@@ -113,7 +113,6 @@ interactionsSchema.statics.findByStudent = function(studentId) {
     .sort({ createdAt: -1 });
 };
 
-// Instance method to mark as deleted
 interactionsSchema.methods.softDelete = function() {
   this.isDeleted = true;
   this.deletedAt = new Date();

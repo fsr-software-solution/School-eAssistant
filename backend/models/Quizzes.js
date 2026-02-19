@@ -1,31 +1,175 @@
 import mongoose from 'mongoose';
 
-const quizzesSchema = new mongoose.Schema({
-  chatSessionId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'ChatSessions',
-    required: [true, 'Chat session ID is required'],
-    validate: {
-      validator: async function(value) {
-        const session = await mongoose.model('ChatSessions').findById(value);
-        return session && !session.isDeleted && session.type === 'quiz';
-      },
-      message: 'Referenced chat session does not exist, has been deleted, or is not a quiz session'
+const questionSchema = new mongoose.Schema({
+  text: {
+    type: String,
+    required: [true, 'Question text is required'],
+    trim: true
+  },
+  type: {
+    type: String,
+    required: [true, 'Question type is required'],
+    enum: ['multiple_choice', 'true_false', 'short_answer'],
+    default: 'multiple_choice'
+  },
+  options: [{
+    text: String,
+    isCorrect: Boolean
+  }],
+  correctAnswer: {
+    type: String,
+    required: function() {
+      return this.type === 'short_answer';
     }
-  },
-  question: {
-    type: String,
-    required: [true, 'Question is required'],
-    maxlength: [1000, 'Question cannot exceed 1000 characters']
-  },
-  answer: {
-    type: String,
-    required: [true, 'Answer is required'],
-    maxlength: [2000, 'Answer cannot exceed 2000 characters']
   },
   explanation: {
     type: String,
-    maxlength: [3000, 'Explanation cannot exceed 3000 characters']
+    required: [true, 'Explanation is required'],
+    trim: true
+  },
+  points: {
+    type: Number,
+    default: 1,
+    min: [1, 'Points must be at least 1']
+  },
+  difficulty: {
+    type: String,
+    enum: ['easy', 'medium', 'hard'],
+    default: 'medium'
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+const answerSchema = new mongoose.Schema({
+  questionId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true
+  },
+  questionText: {
+    type: String,
+    required: true
+  },
+  questionType: {
+    type: String,
+    enum: ['multiple_choice', 'true_false', 'short_answer'],
+    required: true
+  },
+  selectedAnswer: {
+    type: mongoose.Schema.Types.Mixed
+  },
+  shortAnswer: {
+    type: String
+  },
+  isCorrect: {
+    type: Boolean,
+    default: false
+  },
+  pointsAwarded: {
+    type: Number,
+    default: 0
+  },
+  timeSpent: {
+    type: Number,
+    default: 0
+  }
+});
+
+const attemptSchema = new mongoose.Schema({
+  studentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Users',
+    required: true
+  },
+  answers: [answerSchema],
+  totalScore: {
+    type: Number,
+    default: 0
+  },
+  maxScore: {
+    type: Number,
+    default: 0
+  },
+  percentage: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 100
+  },
+  timeStarted: {
+    type: Date,
+    default: Date.now
+  },
+  timeCompleted: {
+    type: Date
+  },
+  timeTaken: {
+    type: Number,
+    default: 0
+  },
+  isCompleted: {
+    type: Boolean,
+    default: false
+  },
+  attemptNumber: {
+    type: Number,
+    default: 1
+  },
+  difficulty: {
+    type: String,
+    enum: ['easy', 'medium', 'hard', 'mixed']
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+const quizSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: [true, 'Quiz title is required'],
+    trim: true,
+    maxlength: [100, 'Title cannot exceed 100 characters']
+  },
+  description: {
+    type: String,
+    trim: true,
+    maxlength: [500, 'Description cannot exceed 500 characters']
+  },
+  unitId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Units',
+    required: [true, 'Unit ID is required']
+  },
+  sectionId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Sections'
+  },
+  questions: [questionSchema],
+  timeLimit: {
+    type: Number,
+    default: 0,
+    min: [0, 'Time limit cannot be negative']
+  },
+  totalPoints: {
+    type: Number,
+    default: 0
+  },
+  difficulty: {
+    type: String,
+    enum: ['easy', 'medium', 'hard', 'mixed'],
+    default: 'mixed'
+  },
+  isActive: {
+    type: Boolean,
+    default: true
+  },
+  isGenerated: {
+    type: Boolean,
+    default: false
   },
   // Common attributes
   isDeleted: {
@@ -35,6 +179,12 @@ const quizzesSchema = new mongoose.Schema({
   deletedAt: {
     type: Date
   },
+  attempts: [attemptSchema],
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Users',
+    required: [true, 'Creator is required']
+  },
   createdAt: {
     type: Date,
     default: Date.now
@@ -43,38 +193,67 @@ const quizzesSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   }
-}, {
-  timestamps: true
 });
 
-// Index for chatSessionId to optimize queries
-quizzesSchema.index({ chatSessionId: 1 });
-
-// Index for soft delete queries
-quizzesSchema.index({ isDeleted: 1 });
-
-// Update the updatedAt field before saving
-quizzesSchema.pre('save', function(next) {
-  this.updatedAt = new Date();
-  next();
+// Calculate total points before saving
+quizSchema.pre('save', function(next) {
+  try {
+    if (this.questions && Array.isArray(this.questions) && this.questions.length > 0) {
+      this.totalPoints = this.questions.reduce((total, question) => {
+        return total + (question.points || 1);
+      }, 0);
+    } else {
+      this.totalPoints = 0;
+    }
+    this.updatedAt = new Date();
+    next();
+  } catch (error) {
+    console.error('Error in pre-save hook:', error);
+    if (typeof next === 'function') {
+      next(error);
+    } else {
+      console.error('next is not a function:', typeof next);
+    }
+  }
 });
 
-// Static method to find active quizzes
-quizzesSchema.statics.findActive = function() {
-  return this.find({ isDeleted: false });
+// Indexes for better performance
+quizSchema.index({ unitId: 1 });
+quizSchema.index({ sectionId: 1 });
+quizSchema.index({ isActive: 1 });
+quizSchema.index({ createdBy: 1 });
+quizSchema.index({ createdAt: -1 });
+
+// Static methods
+quizSchema.statics.findByUnit = function(unitId) {
+  return this.find({ unitId, isActive: true })
+    .populate('sectionId', 'title')
+    .sort({ createdAt: -1 });
 };
 
-// Static method to find quizzes by chat session
-quizzesSchema.statics.findByChatSession = function(chatSessionId) {
-  return this.find({ chatSessionId, isDeleted: false })
-    .sort({ createdAt: 1 });
+quizSchema.statics.findBySection = function(sectionId) {
+  return this.find({ sectionId, isActive: true })
+    .sort({ createdAt: -1 });
 };
 
-// Instance method to mark as deleted
-quizzesSchema.methods.softDelete = function() {
-  this.isDeleted = true;
-  this.deletedAt = new Date();
-  return this.save();
+quizSchema.statics.findByDifficulty = function(difficulty) {
+  return this.find({ difficulty, isActive: true })
+    .populate('unitId', 'title')
+    .sort({ createdAt: -1 });
 };
 
-export default mongoose.model('Quizzes', quizzesSchema);
+quizSchema.statics.getQuizStats = async function(quizId) {
+  const quiz = await this.findById(quizId);
+  if (!quiz) return null;
+
+  return {
+    title: quiz.title,
+    totalQuestions: quiz.questions.length,
+    totalPoints: quiz.totalPoints,
+    timeLimit: quiz.timeLimit,
+    difficulty: quiz.difficulty,
+    isGenerated: quiz.isGenerated
+  };
+};
+
+export default mongoose.model('Quizzes', quizSchema);
