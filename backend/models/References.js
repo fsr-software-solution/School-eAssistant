@@ -25,6 +25,17 @@ const referencesSchema = new mongoose.Schema({
       message: 'Referenced quiz does not exist or has been deleted'
     }
   },
+  bookId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Books',
+    validate: {
+      validator: async function(value) {
+        const book = await mongoose.model('Books').findById(value);
+        return book && !book.isDeleted;
+      },
+      message: 'Referenced book does not exist or has been deleted'
+    }
+  },
   quotedText: {
     type: String,
     required: [true, 'Quoted text is required'],
@@ -54,8 +65,8 @@ const referencesSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Compound index to ensure a reference is linked to either an interaction or quiz, but not both
-referencesSchema.index({ interactionId: 1, quizId: 1 }, { unique: true });
+// Compound index to ensure a reference is linked to exactly one of interaction, quiz, or book
+referencesSchema.index({ interactionId: 1, quizId: 1, bookId: 1 }, { unique: true });
 
 // Index for interactionId to optimize queries
 referencesSchema.index({ interactionId: 1 });
@@ -63,19 +74,24 @@ referencesSchema.index({ interactionId: 1 });
 // Index for quizId to optimize queries
 referencesSchema.index({ quizId: 1 });
 
+// Index for bookId to optimize queries
+referencesSchema.index({ bookId: 1 });
+
 // Index for soft delete queries
 referencesSchema.index({ isDeleted: 1 });
 
-// Custom validation to ensure exactly one of interactionId or quizId is provided
+// Custom validation to ensure exactly one of interactionId, quizId, or bookId is provided
 referencesSchema.pre('save', function() {
   this.updatedAt = new Date();
   
-  if (!this.interactionId && !this.quizId) {
-    return next(new Error('Either interactionId or quizId must be provided'));
+  const providedReferences = [this.interactionId, this.quizId, this.bookId].filter(Boolean);
+  
+  if (providedReferences.length === 0) {
+    return next(new Error('Either interactionId, quizId, or bookId must be provided'));
   }
   
-  if (this.interactionId && this.quizId) {
-    return next(new Error('Reference cannot be linked to both an interaction and a quiz'));
+  if (providedReferences.length > 1) {
+    return next(new Error('Reference cannot be linked to more than one entity (interaction, quiz, or book)'));
   }
   
   next();
@@ -94,6 +110,11 @@ referencesSchema.statics.findByInteraction = function(interactionId) {
 // Static method to find references by quiz
 referencesSchema.statics.findByQuiz = function(quizId) {
   return this.find({ quizId, isDeleted: false });
+};
+
+// Static method to find references by book
+referencesSchema.statics.findByBook = function(bookId) {
+  return this.find({ bookId, isDeleted: false });
 };
 
 // Instance method to mark as deleted

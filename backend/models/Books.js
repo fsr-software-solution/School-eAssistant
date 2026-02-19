@@ -31,9 +31,9 @@ const booksSchema = new mongoose.Schema({
     required: [true, 'File path is required'],
     trim: true
   },
-  version: {
+  yearOfPublish: {
     type: String,
-    required: [true, 'Version is required'],
+    required: [true, 'Year of publish is required'],
     trim: true,
   },
   // Common attributes
@@ -56,8 +56,8 @@ const booksSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Unique index for grade level + subject + version
-// booksSchema.index({ gradeLevel: 1, subject: 1, version: 1 }, { unique: true });
+// Unique index for grade level + subject + year of publish
+booksSchema.index({ gradeLevel: 1, subject: 1, yearOfPublish: 1 }, { unique: true });
 
 // Update the updatedAt field before saving
 booksSchema.pre('save', function() {

@@ -9,7 +9,7 @@ import Units from '../../models/Units.js'
 import Sections from '../../models/Sections.js'
 
 
-const bookContentExtractor = async (file, {gradeLevel, subject, version, filePath, tocStartingPage, tocEndingPage}) => {
+const bookContentExtractor = async (file, {gradeLevel, subject, yearOfPublish, filePath, tocStartingPage, tocEndingPage}) => {
     try {
         console.log('Starting book content extraction...');
         
@@ -48,7 +48,7 @@ const bookContentExtractor = async (file, {gradeLevel, subject, version, filePat
             totalPages: splittedBook.length,
             toc: book,
             filePath,
-            version
+            yearOfPublish
         })
 
         // Process units and sections
@@ -72,7 +72,8 @@ const bookContentExtractor = async (file, {gradeLevel, subject, version, filePat
         }
 
         console.log('Book content extraction completed successfully');
-        return { success: true, bookId: newBook._id }
+        // return { success: true, bookId: newBook._id }
+        return newBook;
 
     } catch (error) {
         console.error('Error in bookContentExtractor:', error)
@@ -206,6 +207,7 @@ const extractSectionContent = (section, nextSection, sections, currentIndex, all
             const longest = match
                 .filter(str => typeof str === "string")
                 .reduce((max, str) => str.length > max.length ? str : max, "")
+            console.log(longest.length)            
             return longest.trim()
         }
         

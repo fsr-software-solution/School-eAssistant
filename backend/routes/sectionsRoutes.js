@@ -5,7 +5,6 @@ import {
   getSectionResources,
   getSectionInteractions,
   updateSection,
-  deleteSection
 } from '../controllers/sectionsController.js';
 
 const router = express.Router();
@@ -24,8 +23,5 @@ router.get('/:id/interactions', getSectionInteractions);
 
 // PUT /api/sections/:id - Update a section
 router.put('/:id', updateSection);
-
-// DELETE /api/sections/:id - Delete a section
-router.delete('/:id', deleteSection);
 
 export default router;
