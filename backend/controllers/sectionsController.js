@@ -1,10 +1,26 @@
 import Sections from '../models/Sections.js'
 import Resources from '../models/Resources.js'
 import Interactions from '../models/Interactions.js'
+import { summarizer, clarifier } from '../utils/ai_services/content_generator.js'
 
 export const getSectionById = async (req, res, next) => {
   const { id } = req.params
   const section = await Sections.findOne({ _id: id, isDeleted: false })
+  
+      if (!section) {
+        next(new Error('Section not found'))
+      }
+  
+      if (!section.summary) {
+        section.summary = await summarizer({section})
+        await section.save()
+      }
+
+      if (!section.aiClarification) {
+        section.aiClarification = await clarifier({section})
+        await section.save()
+      }
+  
   res.status(200).json({data: section})
 }
 

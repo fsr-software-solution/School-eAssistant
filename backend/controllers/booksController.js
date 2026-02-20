@@ -2,6 +2,7 @@ import Books from '../models/Books.js'
 import Units from '../models/Units.js'
 import bookContentExtractor from '../utils/ai_services/book_content_extractor.js'
 import embedDocument from '../utils/ai_services/embeddings.js'
+import { summarizer } from '../utils/ai_services/content_generator.js'
 
 export const getAllBooks = async (req, res, next) => {
   const books = await Books.findActive()
@@ -11,6 +12,16 @@ export const getAllBooks = async (req, res, next) => {
 export const getBookById = async (req, res, next) => {
     const { id } = req.params
     const book = await Books.findOne({ _id: id, isDeleted: false })
+
+    if (!book) {
+      next(new Error('Book not found'))
+    }
+
+    if (!book.summary) {
+      book.summary = await summarizer({book})
+      await book.save()
+    }
+
     res.status(200).json({data: book})
 }
 

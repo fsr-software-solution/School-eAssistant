@@ -19,14 +19,12 @@ const bookContentExtractor = async (file, {gradeLevel, subject, yearOfPublish, f
     let splittedBook = await splitAndExtract(file)
     let rawToc = splittedBook.slice(tocStartingPage - 1, tocEndingPage).map(page => page.content).join('\n\n')
 
-    // let toc = await llm.invoke(`
-    //     Extract structured table of contents from the content.
-    //     Focus on identifying unit numbers, section numbers, titles, and page numbers.
-    //     CONTENT: ${rawToc}
-    // `.trim())
-
-    let data = await readFile('/home/yope/.projects/code/School-eAssistant/backend/utils/ai_services/mock_toc.json', 'utf-8')
-    let toc = JSON.parse(data)    
+    let toc = await llm.invoke(`
+        Extract structured table of contents from the content.
+        Focus on identifying unit numbers, section numbers, titles, and page numbers.
+        CONTENT: ${rawToc}
+    `.trim())
+     
 
     let tocList = []
     toc.units?.map(unit => {
@@ -222,14 +220,3 @@ const extractSectionContent = (splittedBook, startMark, endMark, startingPage, e
 }
 
 export default bookContentExtractor
-
-
-////// For testing
-// await bookContentExtractor('./G9-Biology-STB-2023-web.pdf', {
-//     gradeLevel: 'G-9',
-//     subject: 'Biology',
-//     yearOfPublish: '2023',
-//     filePath: '.',
-//     tocStartingPage: 6,
-//     tocEndingPage: 7
-// })
