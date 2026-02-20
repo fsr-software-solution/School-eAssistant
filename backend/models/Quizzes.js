@@ -21,6 +21,9 @@ const quizzesSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Answer is required'],
   },
+  studentAttempt: {
+    type: String,
+  },
   explanation: {
     type: String,
   },

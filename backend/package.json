@@ -19,11 +19,14 @@
     "@langchain/mongodb": "^1.1.0",
     "@langchain/ollama": "^1.2.2",
     "@langchain/textsplitters": "^1.0.1",
+    "@mudbill/duckduckgo-images-api": "^2.0.1",
     "bcryptjs": "^3.0.3",
     "cloudinary": "^1.41.3",
     "cors": "^2.8.6",
     "crypto": "^1.0.1",
+    "ddg-search": "^2026.2.16",
     "dotenv": "^17.3.1",
+    "duck-duck-scrape": "^2.2.7",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "langchain": "^1.2.25",
@@ -33,9 +36,10 @@
     "pdf-lib": "^1.17.1",
     "pdf-parse": "^1.1.4",
     "pdf-parse-v2": "npm:pdf-parse@^2.4.5",
-    "pdfjs-dist": "^5.4.624"
+    "pdfjs-dist": "^5.4.624",
+    "youtube-sr": "^4.3.12"
   },
   "devDependencies": {
-    "nodemon": "^3.1.11"
+    "nodemon": "^3.1.13"
   }
 }
