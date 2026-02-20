@@ -9,19 +9,10 @@ import {
 
 const router = express.Router();
 
-// GET /api/sections/:id - Get a section by ID
 router.get('/:id', getSectionById);
-
-// GET /api/sections/:id/subsections - Get subsections for a specific section
 router.get('/:id/subsections', getSectionSubsections);
-
-// GET /api/sections/:id/resources - Get resources for a specific section
 router.get('/:id/resources', getSectionResources);
-
-// GET /api/sections/:id/interactions - Get interactions for a specific section
 router.get('/:id/interactions', getSectionInteractions);
-
-// PUT /api/sections/:id - Update a section
 router.put('/:id', updateSection);
 
 export default router;

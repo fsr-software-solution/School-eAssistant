@@ -1,8 +1,8 @@
 import {ChatOllama} from '@langchain/ollama'
 
-export const summarizer = async ({book, unit, section}) => {
-    if (!book && !unit && !section) {
-        throw new Error("No book, unit or section");        
+export const summarizer = async ({book, unit, section, interaction, quiz}) => {
+    if (!book && !unit && !section && !interaction && !quiz) {
+        throw new Error("No book, unit, section, interaction or quiz");        
     }
 
     let llm = new ChatOllama({model: 'smollm2:135m'})
@@ -12,6 +12,8 @@ export const summarizer = async ({book, unit, section}) => {
         ${book? 'GRADE LEVEL: ' + book.gradeLevel : ''}
         ${unit? 'UNIT: ' + unit.title : ''}
         ${section? 'TOPIC: ' + section.title : ''}
+        ${interaction? 'QUESTION: ' + interaction.studentQuestion : ''}
+        ${quiz? 'QUIZ: ' + quiz.question : ''}
         SUMMARY:
         `.trim())
     return response.content.trim()

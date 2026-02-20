@@ -4,25 +4,26 @@ import bookContentExtractor from '../utils/ai_services/book_content_extractor.js
 import embedDocument from '../utils/ai_services/embeddings.js'
 import { summarizer } from '../utils/ai_services/content_generator.js'
 
+
 export const getAllBooks = async (req, res, next) => {
   const books = await Books.findActive()
   res.status(200).json({data: books})
 }
 
 export const getBookById = async (req, res, next) => {
-    const { id } = req.params
-    const book = await Books.findOne({ _id: id, isDeleted: false })
+  const { id } = req.params
+  const book = await Books.findOne({ _id: id, isDeleted: false })
 
-    if (!book) {
-      next(new Error('Book not found'))
-    }
+  if (!book) {
+    next(new Error('Book not found'))
+  }
 
-    if (!book.summary) {
-      book.summary = await summarizer({book})
-      await book.save()
-    }
+  if (!book.summary) {
+    book.summary = await summarizer({book})
+    await book.save()
+  }
 
-    res.status(200).json({data: book})
+  res.status(200).json({data: book})
 }
 
 export const getBookUnits = async (req, res, next) => {
@@ -55,11 +56,11 @@ export const createBook = async (req, res, next) => {
 }
 
 export const deleteBookById = async (req, res, next) => {
-    const { id } = req.params
-    const book = await Books.findOne({ _id: id, isDeleted: false })
+  const { id } = req.params
+  const book = await Books.findOne({ _id: id, isDeleted: false })
 
-    if (!book) next(new Error('Book not found'))
-    await book.softDelete()
-  
-    res.status(200).json({data: true})
+  if (!book) next(new Error('Book not found'))
+  await book.softDelete()
+
+  res.status(200).json({data: true})
 }

@@ -3,7 +3,6 @@ import mongoose from 'mongoose';
 const chatSessionsSchema = new mongoose.Schema({
   summary: {
     type: String,
-    required: [true, 'Summary is required'],
   },
   studentId: {
     type: mongoose.Schema.Types.ObjectId,

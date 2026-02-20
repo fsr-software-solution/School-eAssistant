@@ -9,19 +9,19 @@ export const getSectionById = async (req, res, next) => {
   const { id } = req.params
   const section = await Sections.findOne({ _id: id, isDeleted: false })
   
-    if (!section) {
-      next(new Error('Section not found'))
-    }
+  if (!section) {
+    next(new Error('Section not found'))
+  }
 
-    if (!section.summary) {
-      section.summary = await summarizer({section})
-      await section.save()
-    }
+  if (!section.summary) {
+    section.summary = await summarizer({section})
+    await section.save()
+  }
 
-    if (!section.aiClarification) {
-      section.aiClarification = await clarifier({section})
-      await section.save()
-    }
+  if (!section.aiClarification) {
+    section.aiClarification = await clarifier({section})
+    await section.save()
+  }
       
   const resources = await Resources.find({ sectionId: id, isDeleted: false }) ?? []
   if (resources.length === 0) {
