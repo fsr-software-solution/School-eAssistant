@@ -101,6 +101,11 @@ const bookContentExtractor = async (file, {gradeLevel, subject, yearOfPublish, f
 
     let unit = null
     let section = null
+    let subsection2 = null
+    let subsection3 = null
+    let subsection4 = null
+    let subsection5 = null
+    
     let book = await Books.create({
         gradeLevel,
         subject,
@@ -137,16 +142,62 @@ const bookContentExtractor = async (file, {gradeLevel, subject, yearOfPublish, f
                 content: extractSectionContent(splittedBook, current?.title, next?.title, current.startingPage, next?.startingPage || lastPage, tocEndingPage - 1)
             })
         } else if (current.type == 'subsection') {
-            section = await Sections.create({
-                unitId: unit?._id,
-                sectionNumber: current.sectionNumber,
-                parentSectionId: section?._id,
-                headingLevel: current.headingLevel,
-                title: current.title,
-                startingPage: current.startingPage,
-                endingPage: next?.startingPage || lastPage,
-                content: extractSectionContent(splittedBook, current?.title, next?.title, current.startingPage, next?.startingPage || lastPage, tocEndingPage - 1)
-            })
+            if (current.headingLevel == 2) {
+                subsection2 = await Sections.create({
+                    unitId: unit?._id,
+                    sectionNumber: current.sectionNumber,
+                    parentSectionId: section?._id,
+                    headingLevel: current.headingLevel,
+                    title: current.title,
+                    startingPage: current.startingPage,
+                    endingPage: next?.startingPage || lastPage,
+                    content: extractSectionContent(splittedBook, current?.title, next?.title, current.startingPage, next?.startingPage || lastPage, tocEndingPage - 1)
+                })
+            } else if (current.headingLevel == 3) {
+                subsection3 = await Sections.create({
+                    unitId: unit?._id,
+                    sectionNumber: current.sectionNumber,
+                    parentSectionId: subsection2?._id,
+                    headingLevel: current.headingLevel,
+                    title: current.title,
+                    startingPage: current.startingPage,
+                    endingPage: next?.startingPage || lastPage,
+                    content: extractSectionContent(splittedBook, current?.title, next?.title, current.startingPage, next?.startingPage || lastPage, tocEndingPage - 1)
+                })
+            } else if (current.headingLevel == 4) {
+                subsection4 = await Sections.create({
+                    unitId: unit?._id,
+                    sectionNumber: current.sectionNumber,
+                    parentSectionId: subsection3?._id,
+                    headingLevel: current.headingLevel,
+                    title: current.title,
+                    startingPage: current.startingPage,
+                    endingPage: next?.startingPage || lastPage,
+                    content: extractSectionContent(splittedBook, current?.title, next?.title, current.startingPage, next?.startingPage || lastPage, tocEndingPage - 1)
+                })
+            } else if (current.headingLevel == 5) {
+                subsection5 = await Sections.create({
+                    unitId: unit?._id,
+                    sectionNumber: current.sectionNumber,
+                    parentSectionId: subsection4?._id,
+                    headingLevel: current.headingLevel,
+                    title: current.title,
+                    startingPage: current.startingPage,
+                    endingPage: next?.startingPage || lastPage,
+                    content: extractSectionContent(splittedBook, current?.title, next?.title, current.startingPage, next?.startingPage || lastPage, tocEndingPage - 1)
+                })
+            } else if (current.headingLevel == 6) {
+                await Sections.create({
+                    unitId: unit?._id,
+                    sectionNumber: current.sectionNumber,
+                    parentSectionId: subsection5?._id,
+                    headingLevel: current.headingLevel,
+                    title: current.title,
+                    startingPage: current.startingPage,
+                    endingPage: next?.startingPage || lastPage,
+                    content: extractSectionContent(splittedBook, current?.title, next?.title, current.startingPage, next?.startingPage || lastPage, tocEndingPage - 1)
+                })
+            }
         }
     }
 }
