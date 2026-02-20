@@ -200,6 +200,8 @@ const bookContentExtractor = async (file, {gradeLevel, subject, yearOfPublish, f
             }
         }
     }
+
+    return book
 }
 
 

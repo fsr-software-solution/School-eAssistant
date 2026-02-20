@@ -22,7 +22,8 @@ const vectorStore = new MongoDBAtlasVectorSearch(embeddings, {
 });
 
 let embedDocument = async (pdfBytes, bookId) => {
-    let loader = new PDFLoader(pdfBytes)
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    let loader = new PDFLoader(blob)
     let docs = await loader.load()
 
     let splitter = new RecursiveCharacterTextSplitter({
@@ -41,13 +42,5 @@ let embedDocument = async (pdfBytes, bookId) => {
 const similaritySearch = async (query, limit) => await vectorStore.similaritySearch(query, limit);
 
 
+export default embedDocument
 export {embedDocument, similaritySearch}
-
-// Test
-// test 1 => pass
-// await embedDocument('./G9-Biology-STB-2023-web.pdf', 'bio-1')
-
-// test 2
-console.log(
-    await similaritySearch('What is light microscope?', 4)
-);

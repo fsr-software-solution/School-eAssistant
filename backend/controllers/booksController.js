@@ -1,6 +1,7 @@
 import Books from '../models/Books.js'
 import Units from '../models/Units.js'
 import bookContentExtractor from '../utils/ai_services/book_content_extractor.js'
+import embedDocument from '../utils/ai_services/embeddings.js'
 
 export const getAllBooks = async (req, res, next) => {
   const books = await Books.findActive()
@@ -38,6 +39,7 @@ export const createBook = async (req, res, next) => {
     filePath: bookFile.originalname
   })
 
+  await embedDocument(bookFile.buffer, book._id)
   res.status(201).json({data: book})
 }
 

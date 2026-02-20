@@ -1,6 +1,6 @@
 import { readFile } from 'fs/promises';
 import { PDFDocument } from 'pdf-lib';
-import { PDFParse } from 'pdf-parse';
+import { PDFParse } from 'pdf-parse-v2';
 
 async function splitAndExtract(pdfBytes) {
     if (!pdfBytes) {
