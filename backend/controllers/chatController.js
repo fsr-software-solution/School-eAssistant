@@ -21,7 +21,7 @@ export const getChatById = async (req, res, next) => {
 
 export const getChatInteractions = async (req, res, next) => {
   const { id } = req.params
-  const chat = await ChatSessions.findById(id)
+  const chat = await ChatSessions.findOne({_id: id, isDeleted: false})
   
   if (!chat) next(new Error('Chat session not found'))
   if (chat.type !== 'interaction') next(new Error('This chat session is not a interaction session'))
@@ -37,7 +37,7 @@ export const getChatInteractions = async (req, res, next) => {
 
 export const getChatQuizzes = async (req, res, next) => {
   const { id } = req.params
-  const chat = await ChatSessions.findById(id)
+  const chat = await ChatSessions.findOne({_id: id, isDeleted: false})
   
   if (!chat || chat.isDeleted) next(new Error('Chat session not found'))
   if (chat.type !== 'quiz') next(new Error('This chat session is not a quiz session'))
@@ -54,7 +54,7 @@ export const getChatQuizzes = async (req, res, next) => {
 export const createChat = async (req, res, next) => {
   const { studentId, type } = req.body
 
-  const student = await Users.findById(studentId)
+  const student = await Users.findOne({_id: studentId, isDeleted: false})
   if (!student || student.isDeleted || student.role !== 'student') next(new Error('Invalid student ID or student not found'))
   if (!studentId || !type) next(new Error('StudentId and type are required'))
   if (!['interaction', 'quiz'].includes(type)) next(new Error('Type must be either "interaction" or "quiz"'))
@@ -69,7 +69,7 @@ export const createChat = async (req, res, next) => {
 
 export const deleteChat = async (req, res, next) => {
   const { id } = req.params
-  const chat = await ChatSessions.findById(id)
+  const chat = await ChatSessions.findOne({_id: id, isDeleted: false})
   
   if (!chat || chat.isDeleted) next(new Error('Chat session not found'))
   await chat.softDelete()
