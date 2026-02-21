@@ -3,9 +3,7 @@ import {RecursiveCharacterTextSplitter} from '@langchain/textsplitters'
 import {OllamaEmbeddings} from '@langchain/ollama'
 import { MongoDBAtlasVectorSearch } from "@langchain/mongodb"
 import { MongoClient } from "mongodb";
-import dotenv from "dotenv";
 
-dotenv.config({path: '../../.env'})
 
 let embeddings = new OllamaEmbeddings({model: 'all-minilm:22m'})
 
@@ -49,8 +47,6 @@ const selectRandomDocuments = async (limit = 5) =>
     ])
     .toArray()
 
+    
 export default embedDocument
 export {embedDocument, similaritySearch, selectRandomDocuments}
-
-let results = await selectRandomDocuments(3)
-console.log(results);
