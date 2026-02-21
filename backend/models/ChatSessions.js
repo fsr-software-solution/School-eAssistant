@@ -3,8 +3,6 @@ import mongoose from 'mongoose';
 const chatSessionsSchema = new mongoose.Schema({
   summary: {
     type: String,
-    required: [true, 'Summary is required'],
-    maxlength: [500, 'Summary cannot exceed 500 characters']
   },
   studentId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -56,7 +54,7 @@ chatSessionsSchema.index({ type: 1 });
 chatSessionsSchema.index({ isDeleted: 1 });
 
 // Update the updatedAt field before saving
-chatSessionsSchema.pre('save', function(next) {
+chatSessionsSchema.pre('save', function() {
   this.updatedAt = new Date();
   next();
 });

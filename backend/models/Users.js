@@ -8,7 +8,6 @@ const usersSchema = new mongoose.Schema({
     unique: true,
     trim: true,
     minlength: [3, 'Username must be at least 3 characters long'],
-    maxlength: [50, 'Username cannot exceed 50 characters']
   },
   password: {
     type: String,
@@ -34,12 +33,13 @@ const usersSchema = new mongoose.Schema({
   timestamps: true
 });
 
-
-usersSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return;
-
+usersSchema.pre('save', function() {
+  this.updatedAt = new Date();
+  if (!this.isModified('password')) return this.save();
+  
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
+  return this.save();
 });
 
 

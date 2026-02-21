@@ -22,7 +22,6 @@ const unitsSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Title is required'],
     trim: true,
-    maxlength: [200, 'Title cannot exceed 200 characters']
   },
   startingPage: {
     type: Number,
@@ -42,7 +41,6 @@ const unitsSchema = new mongoose.Schema({
   },
   summary: {
     type: String,
-    maxlength: [1000, 'Summary cannot exceed 1000 characters']
   },
   isDeleted: {
     type: Boolean,
@@ -70,9 +68,8 @@ unitsSchema.index({ bookId: 1, unitNumber: 1 }, { unique: true });
 unitsSchema.index({ isDeleted: 1 });
 
 // Update the updatedAt field before saving
-unitsSchema.pre('save', function(next) {
+unitsSchema.pre('save', function() {
   this.updatedAt = new Date();
-  next();
 });
 
 // Static method to find active units

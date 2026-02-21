@@ -14,18 +14,24 @@ const quizzesSchema = new mongoose.Schema({
     }
   },
   question: {
-    type: String,
+    type: mongoose.Schema.Types.Mixed,
+    default: [],
     required: [true, 'Question is required'],
-    maxlength: [1000, 'Question cannot exceed 1000 characters']
+  },
+  choices: {
+    type: mongoose.Schema.Types.Mixed,
+    default: [],
+    required: [true, 'Choices is required'],
   },
   answer: {
     type: String,
     required: [true, 'Answer is required'],
-    maxlength: [2000, 'Answer cannot exceed 2000 characters']
   },
   explanation: {
     type: String,
-    maxlength: [3000, 'Explanation cannot exceed 3000 characters']
+  },
+  studentAttempt: {
+    type: String,
   },
   // Common attributes
   isDeleted: {
@@ -54,7 +60,7 @@ quizzesSchema.index({ chatSessionId: 1 });
 quizzesSchema.index({ isDeleted: 1 });
 
 // Update the updatedAt field before saving
-quizzesSchema.pre('save', function(next) {
+quizzesSchema.pre('save', function() {
   this.updatedAt = new Date();
   next();
 });

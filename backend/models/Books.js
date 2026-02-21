@@ -13,7 +13,6 @@ const booksSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Subject is required'],
     trim: true,
-    maxlength: [100, 'Subject cannot exceed 100 characters']
   },
   totalPages: {
     type: Number,
@@ -21,23 +20,21 @@ const booksSchema = new mongoose.Schema({
     min: [1, 'Total pages must be at least 1']
   },
   toc: {
-    type: [String],
+    type: mongoose.Schema.Types.Mixed,
     default: []
   },
   summary: {
     type: String,
-    maxlength: [2000, 'Summary cannot exceed 2000 characters']
   },
   filePath: {
     type: String,
     required: [true, 'File path is required'],
     trim: true
   },
-  version: {
+  yearOfPublish: {
     type: String,
-    required: [true, 'Version is required'],
+    required: [true, 'Year of publish is required'],
     trim: true,
-    maxlength: [50, 'Version cannot exceed 50 characters']
   },
   // Common attributes
   isDeleted: {
@@ -59,13 +56,12 @@ const booksSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Unique index for grade level + subject + version
-booksSchema.index({ gradeLevel: 1, subject: 1, version: 1 }, { unique: true });
+// Unique index for grade level + subject + year of publish
+booksSchema.index({ gradeLevel: 1, subject: 1, yearOfPublish: 1 }, { unique: true });
 
 // Update the updatedAt field before saving
-booksSchema.pre('save', function(next) {
+booksSchema.pre('save', function() {
   this.updatedAt = new Date();
-  next();
 });
 
 // Index for soft delete queries

@@ -1,16 +1,16 @@
 import mongoose from 'mongoose';
 
 const interactionsSchema = new mongoose.Schema({
-  sessionId: {
+  sectionId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'ChatSessions',
-    required: [true, 'Session ID is required'],
+    ref: 'Sections',
+    required: [true, 'Section ID is required'],
     validate: {
       validator: async function(value) {
-        const session = await mongoose.model('ChatSessions').findById(value);
-        return session && !session.isDeleted;
+        const section = await mongoose.model('Sections').findById(value);
+        return section && !section.isDeleted;
       },
-      message: 'Referenced session does not exist or has been deleted'
+      message: 'Referenced section does not exist or has been deleted'
     }
   },
   chatSessionId: {
@@ -40,12 +40,10 @@ const interactionsSchema = new mongoose.Schema({
   studentQuestion: {
     type: String,
     required: [true, 'Student question is required'],
-    maxlength: [2000, 'Student question cannot exceed 2000 characters']
   },
   aiAnswer: {
     type: String,
     required: [true, 'AI answer is required'],
-    maxlength: [5000, 'AI answer cannot exceed 5000 characters']
   },
   confidenceScore: {
     type: Number,
@@ -85,7 +83,7 @@ interactionsSchema.index({ studentId: 1 });
 interactionsSchema.index({ isDeleted: 1 });
 
 // Update the updatedAt field before saving
-interactionsSchema.pre('save', function(next) {
+interactionsSchema.pre('save', function() {
   this.updatedAt = new Date();
   next();
 });

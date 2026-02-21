@@ -17,7 +17,6 @@ const sectionsSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Section number is required'],
     trim: true,
-    maxlength: [20, 'Section number cannot exceed 20 characters']
   },
   parentSectionId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -41,7 +40,6 @@ const sectionsSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Title is required'],
     trim: true,
-    maxlength: [300, 'Title cannot exceed 300 characters']
   },
   startingPage: {
     type: Number,
@@ -62,15 +60,12 @@ const sectionsSchema = new mongoose.Schema({
   content: {
     type: String,
     required: [true, 'Content is required'],
-    maxlength: [10000, 'Content cannot exceed 10000 characters']
   },
   aiClarification: {
     type: String,
-    maxlength: [5000, 'AI clarification cannot exceed 5000 characters']
   },
   summary: {
     type: String,
-    maxlength: [2000, 'Summary cannot exceed 2000 characters']
   },
   isDeleted: {
     type: Boolean,
@@ -101,9 +96,8 @@ sectionsSchema.index({ parentSectionId: 1 });
 sectionsSchema.index({ isDeleted: 1 });
 
 // Update the updatedAt field before saving
-sectionsSchema.pre('save', function(next) {
+sectionsSchema.pre('save', function() {
   this.updatedAt = new Date();
-  next();
 });
 
 // Static method to find active sections
