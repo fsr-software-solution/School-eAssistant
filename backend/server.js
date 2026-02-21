@@ -15,7 +15,7 @@ app.use(express.urlencoded({ extended: true }))
 
 app.use('/api/v1', apiRoutes)
 app.get("/api", (req, res) => {
-    res.send("eAssistant Server is Live ...")
+    res.send("FSR School eAssistant Server is Live ...")
 })
 
 app.use((req, res) => {
