@@ -21,7 +21,7 @@ const vectorStore = new MongoDBAtlasVectorSearch(embeddings, {
   embeddingKey: "embedding",
 });
 
-let embedDocument = async (pdfBytes, bookId) => {
+const embedDocument = async (pdfBytes, bookId) => {
     const blob = new Blob([pdfBytes], { type: 'application/pdf' });
     let loader = new PDFLoader(blob)
     let docs = await loader.load()
@@ -39,11 +39,18 @@ let embedDocument = async (pdfBytes, bookId) => {
     return splittedDocs.length
 }
 
-const similaritySearch = async (query, limit=5) => await vectorStore.similaritySearch(query, limit);
+const similaritySearch = async (query, limit=5) => await vectorStore.similaritySearch(query, limit)
 
+const selectRandomDocuments = async (limit = 5) =>
+  await collection
+    .aggregate([
+      { $sample: { size: limit } },
+      { $project: { embedding: 0 } }
+    ])
+    .toArray()
 
 export default embedDocument
-export {embedDocument, similaritySearch}
+export {embedDocument, similaritySearch, selectRandomDocuments}
 
-let r = await similaritySearch('What is light microscope?')
-console.log(r[0].metadata);
+let results = await selectRandomDocuments(3)
+console.log(results);

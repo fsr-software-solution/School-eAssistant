@@ -14,17 +14,23 @@ const quizzesSchema = new mongoose.Schema({
     }
   },
   question: {
-    type: String,
+    type: mongoose.Schema.Types.Mixed,
+    default: [],
     required: [true, 'Question is required'],
+  },
+  choices: {
+    type: mongoose.Schema.Types.Mixed,
+    default: [],
+    required: [true, 'Choices is required'],
   },
   answer: {
     type: String,
     required: [true, 'Answer is required'],
   },
-  studentAttempt: {
+  explanation: {
     type: String,
   },
-  explanation: {
+  studentAttempt: {
     type: String,
   },
   // Common attributes

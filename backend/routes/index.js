@@ -4,6 +4,7 @@ import unitsRoutes from './unitsRoutes.js';
 import sectionsRoutes from './sectionsRoutes.js';
 import chatRoutes from './chatRoutes.js';
 import interactionsRoutes from './interactionsRoutes.js';
+import quizzesRoutes from './quizzesRoutes.js';
 
 const router = express.Router();
 
@@ -12,5 +13,6 @@ router.use('/units', unitsRoutes);
 router.use('/sections', sectionsRoutes);
 router.use('/chats', chatRoutes);
 router.use('/interactions', interactionsRoutes);
+router.use('/quizzes', quizzesRoutes);
 
 export default router;
