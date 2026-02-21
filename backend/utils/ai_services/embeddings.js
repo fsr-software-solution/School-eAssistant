@@ -3,8 +3,9 @@ import {RecursiveCharacterTextSplitter} from '@langchain/textsplitters'
 import {OllamaEmbeddings} from '@langchain/ollama'
 import { MongoDBAtlasVectorSearch } from "@langchain/mongodb"
 import { MongoClient } from "mongodb";
+import dotenv from 'dotenv'
 
-
+dotenv.config()
 let embeddings = new OllamaEmbeddings({model: 'all-minilm:22m'})
 
 const client = new MongoClient(process.env.MONGODB_ATLAS_URI || "");
