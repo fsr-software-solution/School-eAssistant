@@ -11,17 +11,11 @@ export const initializeAdmin = async () => {
         }
 
         const existingAdmin = await Users.findOne({
-            username: initialUsername,
             role: 'admin',
             isDeleted: false
         });
 
-        if (existingAdmin) {
-            existingAdmin.password = initialPassword;
-            await existingAdmin.save();
-            console.log(`Admin user '${initialUsername}' password updated`);
-            return;
-        }
+        if (existingAdmin) return
         const admin = await Users.create({
             username: initialUsername,
             password: initialPassword, 

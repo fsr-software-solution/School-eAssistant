@@ -35,11 +35,10 @@ const usersSchema = new mongoose.Schema({
 
 usersSchema.pre('save', async function() {
   this.updatedAt = new Date();
-  if (!this.isModified('password')) return this.save();
+  if (!this.isModified('password')) return;
   
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
-  return this.save();
 });
 
 
