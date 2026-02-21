@@ -1,16 +1,16 @@
 import mongoose from 'mongoose';
 
 const interactionsSchema = new mongoose.Schema({
-  sessionId: {
+  sectionId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'ChatSessions',
-    required: [true, 'Session ID is required'],
+    ref: 'Sections',
+    required: [true, 'Section ID is required'],
     validate: {
       validator: async function(value) {
-        const session = await mongoose.model('ChatSessions').findById(value);
-        return session && !session.isDeleted;
+        const section = await mongoose.model('Sections').findById(value);
+        return section && !section.isDeleted;
       },
-      message: 'Referenced session does not exist or has been deleted'
+      message: 'Referenced section does not exist or has been deleted'
     }
   },
   chatSessionId: {

@@ -39,8 +39,11 @@ let embedDocument = async (pdfBytes, bookId) => {
     return splittedDocs.length
 }
 
-const similaritySearch = async (query, limit) => await vectorStore.similaritySearch(query, limit);
+const similaritySearch = async (query, limit=5) => await vectorStore.similaritySearch(query, limit);
 
 
 export default embedDocument
 export {embedDocument, similaritySearch}
+
+let r = await similaritySearch('What is light microscope?')
+console.log(r[0].metadata);

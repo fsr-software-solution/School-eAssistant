@@ -53,7 +53,7 @@ const addResources = async ({section, interaction}) => {
     ])
 
 
-    articles.results.map( async (article) => {
+    articles?.results?.slice(0, 5)?.map( async (article) => {
         await Resources.create({
             sectionId: section?._id,
             interactionId: interaction?._id,
@@ -64,7 +64,7 @@ const addResources = async ({section, interaction}) => {
         })
     })
     
-    images.map( async (image) => {
+    images?.slice(0, 5)?.map( async (image) => {
         await Resources.create({
             sectionId: section?._id,
             interactionId: interaction?._id,
@@ -75,7 +75,7 @@ const addResources = async ({section, interaction}) => {
         })
     })
 
-    videos.map( async (video) => {
+    videos?.slice(0, 5)?.map( async (video) => {
         await Resources.create({
             sectionId: section?._id,
             interactionId: interaction?._id,

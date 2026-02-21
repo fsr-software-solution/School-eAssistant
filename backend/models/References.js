@@ -45,6 +45,14 @@ const referencesSchema = new mongoose.Schema({
     required: [true, 'Page number is required'],
     min: [1, 'Page number must be at least 1']
   },
+  lineFrom: {
+    type: Number,
+    min: [1, 'Line number must be at least 1']
+  },
+  lineTo: {
+    type: Number,
+    min: [1, 'Line number must be at least 1']
+  },
   // Common attributes
   isDeleted: {
     type: Boolean,
