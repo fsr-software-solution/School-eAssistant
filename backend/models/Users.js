@@ -33,7 +33,7 @@ const usersSchema = new mongoose.Schema({
   timestamps: true
 });
 
-usersSchema.pre('save', function() {
+usersSchema.pre('save', async function() {
   this.updatedAt = new Date();
   if (!this.isModified('password')) return this.save();
   
