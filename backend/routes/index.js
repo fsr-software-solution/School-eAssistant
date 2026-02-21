@@ -7,6 +7,7 @@ import interactionsRoutes from './interactionsRoutes.js';
 import quizzesRoutes from './quizzesRoutes.js';
 import resourcesRoutes from './resourcesRoutes.js';
 import referencesRoutes from './referencesRoutes.js';
+import progressRoutes from './progressRoutes.js';
 
 const router = express.Router();
 
@@ -18,5 +19,6 @@ router.use('/interactions', interactionsRoutes);
 router.use('/quizzes', quizzesRoutes);
 router.use('/resources', resourcesRoutes);
 router.use('/references', referencesRoutes);
+router.use('/progress', progressRoutes);
 
 export default router;
