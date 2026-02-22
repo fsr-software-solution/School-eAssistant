@@ -4,7 +4,7 @@ import { z } from 'zod';
 import PaymentTransaction from '../models/PaymentTransaction.js';
 import PremiumPlan from '../models/PremiumPlan.js';
 import PaymentAccount from '../models/PaymentAccount.js';
-import paymentOcrService from '../services/paymentOcrService.js';
+import paymentOcrService from '../utils/paymentOcrService.js';
 
 // Configure Cloudinary
 cloudinary.v2.config({
