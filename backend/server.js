@@ -4,6 +4,7 @@ import cors from 'cors'
 import connectDb from './config/database.js'
 import apiRoutes from './routes/index.js'
 import initializeAdmin from './utils/adminInit.js'
+import { initializePaymentAccount, initializePremiumPlans } from './utils/paymentInit.js'
 
 dotenv.config()
 connectDb()
@@ -30,6 +31,7 @@ const PORT = process.env.PORT || 5000
 app.listen(PORT, async () => {
     console.log(`Server is running on port http://localhost:${PORT}/api`)
 
-    // Initialize admin user
     await initializeAdmin()
+    await initializePaymentAccount()
+    await initializePremiumPlans()
 })
