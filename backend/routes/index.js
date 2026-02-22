@@ -9,7 +9,7 @@ import quizzesRoutes from './quizzesRoutes.js';
 import resourcesRoutes from './resourcesRoutes.js';
 import referencesRoutes from './referencesRoutes.js';
 import progressRoutes from './progressRoutes.js';
-import paymentRoutes from './paymentRoutes.js'
+import paymentRoutes from './paymentRoutes.js';
 import hardDeleteRoutes from './hardDeleteRoutes.js'
 import restoreRoutes from './restoreRoutes.js'
 import adminDashboard from '../controllers/adminDashboardController.js';
