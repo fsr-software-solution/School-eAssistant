@@ -20,10 +20,6 @@ const paymentAccountSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
-  updatedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Users'
-  },
   createdAt: {
     type: Date,
     default: Date.now
