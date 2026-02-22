@@ -9,6 +9,7 @@ import quizzesRoutes from './quizzesRoutes.js';
 import resourcesRoutes from './resourcesRoutes.js';
 import referencesRoutes from './referencesRoutes.js';
 import progressRoutes from './progressRoutes.js';
+import paymentRoutes from './paymentRoutes.js'
 
 const router = express.Router();
 
@@ -22,5 +23,6 @@ router.use('/quizzes', quizzesRoutes);
 router.use('/resources', resourcesRoutes);
 router.use('/references', referencesRoutes);
 router.use('/progress', progressRoutes);
+router.use('/payments', paymentRoutes);
 
 export default router;
