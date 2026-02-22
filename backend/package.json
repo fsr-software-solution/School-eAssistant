@@ -25,7 +25,7 @@
     "cors": "^2.8.6",
     "crypto": "^1.0.1",
     "ddg-search": "^2026.2.16",
-    "dotenv": "^17.3.1",
+    "dotenv": "^16.6.1",
     "duck-duck-scrape": "^2.2.7",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
@@ -34,7 +34,7 @@
     "multer": "^2.0.2",
     "multer-storage-cloudinary": "^4.0.0",
     "pdf-lib": "^1.17.1",
-    "pdf-parse": "^1.1.4",
+    "pdf-parse": "^2.4.5",
     "pdf-parse-v2": "npm:pdf-parse@^2.4.5",
     "pdfjs-dist": "^5.4.624",
     "youtube-sr": "^4.3.12"
