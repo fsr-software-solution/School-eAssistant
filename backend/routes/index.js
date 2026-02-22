@@ -9,7 +9,7 @@ import quizzesRoutes from './quizzesRoutes.js';
 import resourcesRoutes from './resourcesRoutes.js';
 import referencesRoutes from './referencesRoutes.js';
 import progressRoutes from './progressRoutes.js';
-import paymentRoutes from './paymentRoutes.js'
+import paymentRoutes from './paymentRoutes.js';
 
 const router = express.Router();
 
