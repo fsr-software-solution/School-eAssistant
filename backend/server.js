@@ -6,7 +6,9 @@ import { connectVectorDb } from './config/vectorDatabase.js'
 import authRoutes from './routes/authRoutes.js'
 import chatRoutes from './routes/chatRoutes.js'
 import quizRoutes from './routes/quizRoutes.js'
+import paymentRoutes from './routes/paymentRoutes.js'
 import { initializeAdmin } from './utils/adminInit.js'
+import { initializePaymentAccount, initializePremiumPlans } from './utils/paymentInit.js'
 import vectorService from './services/vectorService.js'
 
 // Load environment variables first
@@ -38,6 +40,7 @@ app.use(express.urlencoded({ extended: true }))
 app.use("/api/auth", authRoutes)
 app.use("/api/chat", chatRoutes)
 app.use("/api/quizzes", quizRoutes)
+app.use("/api/payments", paymentRoutes)
 
 app.get("/api", (req, res) => {
     res.send("eAssistant Server is Live ...")
@@ -48,6 +51,8 @@ app.listen(PORT, async () => {
     console.log(`Server is running on port http://localhost:${PORT}/api`)
 
     await initializeAdmin()
+    await initializePaymentAccount()
+    await initializePremiumPlans()
     await vectorService.initialize()
 
     // Initialize chat session controller

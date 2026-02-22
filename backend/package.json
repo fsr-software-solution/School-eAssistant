@@ -12,9 +12,11 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@langchain/google-genai": "^2.1.18",
     "@langchain/groq": "^1.1.0",
     "bcryptjs": "^3.0.3",
+    "cloudinary": "^2.9.0",
     "cors": "^2.8.6",
     "crypto": "^1.0.1",
     "dotenv": "^17.3.1",
@@ -22,7 +24,10 @@
     "fetch": "^1.1.0",
     "jsonwebtoken": "^9.0.3",
     "langchain": "^1.2.24",
-    "mongoose": "^9.0.0"
+    "mongoose": "^9.0.0",
+    "multer": "^2.0.2",
+    "tesseract.js": "^7.0.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "nodemon": "^3.1.11"
