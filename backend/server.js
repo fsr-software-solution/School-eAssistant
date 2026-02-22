@@ -3,7 +3,7 @@ import dotenv from 'dotenv'
 import cors from 'cors'
 import connectDb from './config/database.js'
 import apiRoutes from './routes/index.js'
-import { initializeAdmin } from './utils/adminInit.js'
+import initializeAdmin from './utils/adminInit.js'
 
 dotenv.config()
 connectDb()

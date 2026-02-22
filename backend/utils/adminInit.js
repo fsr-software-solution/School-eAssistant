@@ -1,6 +1,6 @@
 import Users from '../models/Users.js';
 
-export const initializeAdmin = async () => {
+const initializeAdmin = async () => {
     try {
         const initialUsername = process.env.INITIAL_ADMIN_USERNAME;
         const initialPassword = process.env.INITIAL_ADMIN_PASSWORD;
@@ -29,3 +29,4 @@ export const initializeAdmin = async () => {
 };
 
 
+export default initializeAdmin
