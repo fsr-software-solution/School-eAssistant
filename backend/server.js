@@ -5,6 +5,7 @@ import connectDb from './config/database.js'
 import apiRoutes from './routes/index.js'
 import initializeAdmin from './utils/adminInit.js'
 import { initializePaymentAccount, initializePremiumPlans } from './utils/paymentInit.js'
+import authRoutes from './routes/authRoutes.js'
 
 dotenv.config()
 connectDb()
@@ -18,6 +19,7 @@ app.use('/api/v1', apiRoutes)
 app.get("/api", (req, res) => {
     res.send("FSR School eAssistant Server is Live ...")
 })
+app.use('/api/auth',authRoutes)
 
 app.use((req, res) => {
     res.status(404).json({error: 'Route not found'})
