@@ -11,6 +11,7 @@ import StudentProgress from '../models/StudentProgress.js'
 import PaymentAccount from '../models/PaymentAccount.js'
 import PaymentTransaction from '../models/PaymentTransaction.js'
 import PremiumPlan from '../models/PremiumPlan.js'
+import { deleteEmbeddedBook } from './ai_services/embeddings.js'
 
 
 export const deleteUsers = async ({id}) => {
@@ -35,6 +36,7 @@ export const deleteBooks = async ({id}) => {
 
         await deleteUnits({bookId: book._id})
         await deleteReferences({bookId: book._id})
+        await deleteEmbeddedBook(book._id)
         await book.deleteOne()
         return true
     }
