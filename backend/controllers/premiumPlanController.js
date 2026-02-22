@@ -10,7 +10,7 @@ const planSchema = z.object({
 });
 
 class PremiumPlanController {
-  static async createPlan(req, res) {
+  static async createPlan(req, res, next) {
     try {
       const validation = planSchema.safeParse(req.body);
       if (!validation.success) {
@@ -55,7 +55,7 @@ class PremiumPlanController {
     }
   }
 
-  static async getAllPlans(req, res) {
+  static async getAllPlans(req, res, next) {
     try {
       const { includeDeleted = false } = req.query;
       const filter = includeDeleted === 'true' ? {} : { isDeleted: false };
@@ -76,7 +76,7 @@ class PremiumPlanController {
     }
   }
 
-  static async getActivePlans(req, res) {
+  static async getActivePlans(req, res, next) {
     try {
       const plans = await PremiumPlan.getActivePlans();
       res.status(200).json({
@@ -93,7 +93,7 @@ class PremiumPlanController {
     }
   }
 
-  static async getPlanById(req, res) {
+  static async getPlanById(req, res, next) {
     try {
       const { planId } = req.params;
       const plan = await PremiumPlan.findById(planId);
@@ -119,7 +119,7 @@ class PremiumPlanController {
     }
   }
 
-  static async updatePlan(req, res) {
+  static async updatePlan(req, res, next) {
     try {
       const { planId } = req.params;
       const validation = planSchema.safeParse(req.body);
@@ -174,7 +174,7 @@ class PremiumPlanController {
     }
   }
 
-  static async deletePlan(req, res) {
+  static async deletePlan(req, res, next) {
     try {
       const { planId } = req.params;
       const plan = await PremiumPlan.findById(planId);
@@ -202,7 +202,7 @@ class PremiumPlanController {
     }
   }
 
-  static async restorePlan(req, res) {
+  static async restorePlan(req, res, next) {
     try {
       const { planId } = req.params;
       const plan = await PremiumPlan.findById(planId);

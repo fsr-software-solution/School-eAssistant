@@ -48,10 +48,7 @@ const premiumPlanSchema = new mongoose.Schema({
 premiumPlanSchema.index({ isDeleted: 1 });
 premiumPlanSchema.index({ amount: 1 });
 
-premiumPlanSchema.pre('save', function (next) {
-  this.updatedAt = Date.now();
-  next();
-});
+// Note: updatedAt is automatically handled by timestamps: true option
 
 premiumPlanSchema.statics.getActivePlans = function () {
   return this.find({ isDeleted: false });
