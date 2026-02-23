@@ -31,43 +31,43 @@ import {
 const router = express.Router();
 
 router.get('/users/:id', restoreUser);
-router.get('/users/all', restoreAllUsers);
+router.get('/users', restoreAllUsers);
 
 router.get('/books/:id', restoreBook);
-router.get('/books/all', restoreAllBooks);
+router.get('/books', restoreAllBooks);
 
 router.get('/units/:id', restoreUnit);
-router.get('/units/all', restoreAllUnits);
+router.get('/units', restoreAllUnits);
 
 router.get('/sections/:id', restoreSection);
-router.get('/sections/all', restoreAllSections);
+router.get('/sections', restoreAllSections);
 
 router.get('/interactions/:id', restoreInteraction);
-router.get('/interactions/all', restoreAllInteractions);
+router.get('/interactions', restoreAllInteractions);
 
 router.get('/chats/:id', restoreChatSession);
-router.get('/chats/all', restoreAllChatSessions);
+router.get('/chats', restoreAllChatSessions);
 
 router.get('/quizzes/:id', restoreQuiz);
-router.get('/quizzes/all', restoreAllQuizzes);
+router.get('/quizzes', restoreAllQuizzes);
 
 router.get('/references/:id', restoreReference);
-router.get('/references/all', restoreAllReferences);
+router.get('/references', restoreAllReferences);
 
 router.get('/resources/:id', restoreResource);
-router.get('/resources/all', restoreAllResources);
+router.get('/resources', restoreAllResources);
 
 router.get('/student-progress/:id', restoreStudentProgress);
-router.get('/student-progress/all', restoreAllStudentProgress);
+router.get('/student-progress', restoreAllStudentProgress);
 
 router.get('/payment-account/:id', restorePaymentAccount);
-router.get('/payment-account/all', restoreAllPaymentAccounts);
+router.get('/payment-account', restoreAllPaymentAccounts);
 
 router.get('/payment-transaction/:id', restorePaymentTransaction);
-router.get('/payment-transaction/all', restoreAllPaymentTransactions);
+router.get('/payment-transaction', restoreAllPaymentTransactions);
 
 router.get('/premium-plan/:id', restorePremiumPlan);
-router.get('/premium-plan/all', restoreAllPremiumPlans);
+router.get('/premium-plan', restoreAllPremiumPlans);
 
 
 export default router;

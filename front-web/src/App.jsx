@@ -1,12 +1,12 @@
-
+import React from 'react';
+import LandingPage from './pages/LandingPage';
 
 function App() {
-
   return (
-    <>
-      <h1>School eAssistant</h1>
-     </>
-  )
+    <div className="App">
+      <LandingPage />
+    </div>
+  );
 }
 
-export default App
+export default App;

@@ -7,23 +7,15 @@ import PremiumPlan from '../models/PremiumPlan.js';
  */
 export const initializePaymentAccount = async () => {
   try {
+    const existing = await PaymentAccount.getActiveAccount();
+    if (existing) return;
+
     const accountNumber = process.env.DEFAULT_PAYMENT_ACCOUNT_NUMBER?.trim();
     const accountHolderName = process.env.DEFAULT_PAYMENT_ACCOUNT_HOLDER_NAME?.trim();
     const bankName = (process.env.DEFAULT_PAYMENT_BANK_NAME || 'CBE').trim();
 
     if (!accountNumber || !accountHolderName) {
       console.log('Payment account not configured. Add to .env: DEFAULT_PAYMENT_ACCOUNT_NUMBER, DEFAULT_PAYMENT_ACCOUNT_HOLDER_NAME');
-      return;
-    }
-
-    const existing = await PaymentAccount.getActiveAccount();
-    if (existing) {
-      // Don't overwrite existing account - admin should update via API
-      // Only update if env vars are provided AND account doesn't exist
-      console.log('Payment account already configured:', {
-        accountNumber: existing.accountNumber,
-        accountHolderFullName: existing.accountHolderFullName
-      });
       return;
     }
 
