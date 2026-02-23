@@ -6,9 +6,6 @@ import PaymentAccount from '../models/PaymentAccount.js';
  */
 const verifyPaymentAccount = async () => {
   try {
-    await connectDb();
-    console.log('Connected to database\n');
-
     // Get active account
     const activeAccount = await PaymentAccount.getActiveAccount();
     console.log('=== ACTIVE PAYMENT ACCOUNT ===');
