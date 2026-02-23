@@ -136,9 +136,9 @@ export const logout = async (req, res) => {
     }
 };
 
-export const createAdmin = async (req, res) => {
+export const createUser = async (req, res) => {
     try {
-        const { username, password } = req.body;
+        const { username, password, role } = req.body;
         const adminId = req.user.id;
 
         // Verify the requesting user is an admin
@@ -171,17 +171,13 @@ export const createAdmin = async (req, res) => {
         const user = await Users.create({
             username,
             password,
-            role: 'admin'
+            role
         });
 
         res.status(201).json({
             success: true,
             message: "Admin user created successfully",
-            user: {
-                id: user._id,
-                username: user.username,
-                role: user.role
-            }
+            data: user
         });
 
     } catch (error) {

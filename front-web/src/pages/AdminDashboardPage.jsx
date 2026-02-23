@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import OverviewSection from '../components/admin/OverviewSection';
@@ -10,6 +10,7 @@ import TrashSection from '../components/admin/TrashSection';
 function DashboardPage() {
   const { user, isLoading, handleLogout } = useAuth();
   const navigate = useNavigate();
+  const [activeSection, setActiveSection] = useState('overview');
 
   useEffect(() => {
     if (isLoading) return
@@ -66,31 +67,66 @@ function DashboardPage() {
       {/* Navigation Tabs */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10 mb-6">
-          <div className="flex flex-wrap gap-4">
-            <button className="px-4 py-2 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-lg hover:bg-blue-500/30 transition-colors font-medium">
+          <div className="grid grid-cols-5 gap-4">
+            <button 
+              onClick={() => setActiveSection('overview')}
+              className={`px-4 py-2 border rounded-lg font-medium transition-colors ${
+                activeSection === 'overview' 
+                  ? 'bg-blue-500/20 text-blue-400 border-blue-500/30 hover:bg-blue-500/30' 
+                  : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
+              }`}
+            >
               Overview
             </button>
-            <button className="px-4 py-2 bg-white/10 text-white border border-white/20 rounded-lg hover:bg-white/20 transition-colors font-medium">
+            <button 
+              onClick={() => setActiveSection('users')}
+              className={`px-4 py-2 border rounded-lg font-medium transition-colors ${
+                activeSection === 'users' 
+                  ? 'bg-blue-500/20 text-blue-400 border-blue-500/30 hover:bg-blue-500/30' 
+                  : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
+              }`}
+            >
               Users
             </button>
-            <button className="px-4 py-2 bg-white/10 text-white border border-white/20 rounded-lg hover:bg-white/20 transition-colors font-medium">
+            <button 
+              onClick={() => setActiveSection('books')}
+              className={`px-4 py-2 border rounded-lg font-medium transition-colors ${
+                activeSection === 'books' 
+                  ? 'bg-blue-500/20 text-blue-400 border-blue-500/30 hover:bg-blue-500/30' 
+                  : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
+              }`}
+            >
               Books
             </button>
-            <button className="px-4 py-2 bg-white/10 text-white border border-white/20 rounded-lg hover:bg-white/20 transition-colors font-medium">
+            <button 
+              onClick={() => setActiveSection('payments')}
+              className={`px-4 py-2 border rounded-lg font-medium transition-colors ${
+                activeSection === 'payments' 
+                  ? 'bg-blue-500/20 text-blue-400 border-blue-500/30 hover:bg-blue-500/30' 
+                  : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
+              }`}
+            >
               Payments
             </button>
-            <button className="px-4 py-2 bg-white/10 text-white border border-white/20 rounded-lg hover:bg-white/20 transition-colors font-medium">
+            <button 
+              onClick={() => setActiveSection('trash')}
+              className={`px-4 py-2 border rounded-lg font-medium transition-colors ${
+                activeSection === 'trash' 
+                  ? 'bg-blue-500/20 text-blue-400 border-blue-500/30 hover:bg-blue-500/30' 
+                  : 'bg-white/10 text-white border-white/20 hover:bg-white/20'
+              }`}
+            >
               Trash
             </button>
           </div>
         </div>
 
         {/* Section Content */}
-        <OverviewSection />
-        <UsersSection />
-        <BooksSection />
-        <PaymentsSection />
-        <TrashSection />
+        {activeSection === 'overview' && <OverviewSection />}
+        {activeSection === 'users' && <UsersSection />}
+        {activeSection === 'books' && <BooksSection />}
+        {activeSection === 'payments' && <PaymentsSection />}
+        {activeSection === 'trash' && <TrashSection />}
       </main>
     </div>
   );

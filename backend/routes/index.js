@@ -1,5 +1,6 @@
 import express from 'express';
 import authRoutes from './authRoutes.js';
+import usersRoutes from './usersRoutes.js';
 import booksRoutes from './booksRoutes.js';
 import unitsRoutes from './unitsRoutes.js';
 import sectionsRoutes from './sectionsRoutes.js';
@@ -19,6 +20,7 @@ import adminOnly from '../middleware/adminMiddleware.js';
 const router = express.Router();
 
 router.use('/auth', authRoutes);
+router.use('/users', usersRoutes);
 router.use('/books', booksRoutes);
 router.use('/units', unitsRoutes);
 router.use('/sections', sectionsRoutes);
