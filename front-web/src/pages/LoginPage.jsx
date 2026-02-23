@@ -1,15 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API_BASE_URL } from '../constants';
-import { getRedirectPath, validateLoginResponse } from '../utils/authUtils';
+import { getRedirectPath } from '../utils/authUtils';
+import { useAuth } from '../hooks/useAuth';
 
 function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const { user, isLoading: isLoad } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isLoad) return
+    if (!user) {
+      return
+    }
+    else if (user?.role === 'admin') {
+      navigate('/dashboard')
+    }
+    else if (user?.role !== 'admin') {
+      navigate('/pending');
+    }
+  }, [user, navigate, isLoad]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

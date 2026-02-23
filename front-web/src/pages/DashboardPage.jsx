@@ -3,15 +3,33 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 function DashboardPage() {
-  const { user, handleLogout } = useAuth();
+  const { user, isLoading, handleLogout } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user has admin role
-    if (user && user?.role !== 'admin') {
+    if (isLoading) return
+    if (!user) {
+      navigate('/login')
+    }
+    else if (user?.role !== 'admin') {
       navigate('/pending');
     }
-  }, [user, navigate]);
+  }, [isLoading, navigate, user]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500 mx-auto"></div>
+          <p className="text-gray-400 mt-4">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">

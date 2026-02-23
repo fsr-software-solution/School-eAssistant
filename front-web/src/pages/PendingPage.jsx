@@ -1,8 +1,20 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 function PendingPage() {
   const { user, isLoading, handleLogout } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isLoading) return
+    if (!user) {
+      navigate('/login')
+    }
+    else if (user?.role === 'admin') {
+      navigate('/dashboard');
+    }
+  }, [isLoading, navigate, user]);
 
   if (isLoading) {
     return (
