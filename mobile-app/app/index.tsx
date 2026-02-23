@@ -6,17 +6,16 @@ import LoadingScreen from '../components/ui/LoadingScreen';
 
 export default function Index() {
   const router = useRouter();
-  const { isLoading, isAuthenticated } = useAuth();
+  const { isLoading } = useAuth();
 
   useEffect(() => {
     if (!isLoading) {
-      if (isAuthenticated) {
-        router.replace('/(tabs)');
-      } else {
-        router.replace('/login');
-      }
+      // Always go directly to the main app tabs.
+      // AuthContext already auto-registers/logs in the student in the background
+      // using the unique device ID as username & password.
+      router.replace('/(tabs)');
     }
-  }, [isLoading, isAuthenticated]);
+  }, [isLoading]);
 
   return <LoadingScreen />;
 }

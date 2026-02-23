@@ -8,10 +8,7 @@ import { STORAGE_KEYS } from '../constants/config';
  */
 const isSecureStoreAvailable = Platform.OS !== 'web' && SecureStore.isAvailableAsync;
 
-/**
- * Secure storage for sensitive data (tokens)
- * Uses SecureStore on native, AsyncStorage on web
- */
+
 export const secureStorage = {
   async setItem(key: string, value: string): Promise<void> {
     try {

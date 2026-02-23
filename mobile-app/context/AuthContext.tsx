@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authService, AuthResponse } from '../services/auth';
-import { tokenStorage, userStorage } from '../utils/storage';
+import { authService } from '../services/auth';
 
 interface User {
   id: string;
@@ -33,10 +32,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const checkAuthStatus = async () => {
     try {
       const isAuth = await authService.isAuthenticated();
+
       if (isAuth) {
         const userData = await authService.getCurrentUser();
-        setUser(userData);
+        if (userData) {
+          setUser(userData);
+          return;
+        }
       }
+
+      // No token/user in storage → auto register/login student in background
+      const autoAuth = await authService.autoRegisterOrLoginStudent();
+      setUser(autoAuth.user);
     } catch (error) {
       console.error('Auth check error:', error);
     } finally {
@@ -92,4 +99,6 @@ export function useAuth() {
   }
   return context;
 }
+
+
 

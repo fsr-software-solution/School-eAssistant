@@ -24,6 +24,18 @@ export interface AuthResponse {
   };
 }
 
+function buildDeviceCredentials(deviceId: string) {
+  // Backend constraint: Users.username max length is 50.
+  // So we derive a short, deterministic username from deviceId.
+  const compact = deviceId.replace(/[^a-zA-Z0-9]/g, '');
+  const username = `stu_${compact.slice(0, 40)}`; // <= 44 chars
+
+  // Per your request: use the generated id as the password.
+  const password = deviceId;
+
+  return { username, password };
+}
+
 /**
  * Authentication Service
  */
@@ -77,6 +89,29 @@ export const authService = {
     }
 
     return response.data;
+  },
+
+  /**
+   * Student auto-authentication:
+   * - generate deviceId in background
+   * - use deviceId as password
+   * - use derived username from deviceId (keeps <= 50 chars for backend)
+   * - try register; if already exists, login
+   */
+  async autoRegisterOrLoginStudent(): Promise<AuthResponse> {
+    const deviceId = await getOrCreateDeviceId();
+    const { username, password } = buildDeviceCredentials(deviceId);
+
+    try {
+      return await this.register({ username, password, role: 'student' });
+    } catch (error: any) {
+      // If already registered, login instead
+      const status = error?.response?.status;
+      if (status === 409) {
+        return await this.login({ username, password });
+      }
+      throw error;
+    }
   },
 
   /**
