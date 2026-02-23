@@ -5,12 +5,15 @@ import {
   createQuiz,
   deleteQuiz
 } from '../controllers/quizzesController.js';
+import protect from '../middleware/authMiddleware.js';
+import { requirePremiumAccess } from '../middleware/paymentMiddleware.js';
 
 const router = express.Router();
 
-router.get('/:id', getQuizById);
-router.get('/:id/references', getQuizReferences);
-router.post('/', createQuiz);
-router.delete('/:id', deleteQuiz);
+// All quiz routes require authentication and premium access
+router.get('/:id', protect, requirePremiumAccess, getQuizById);
+router.get('/:id/references', protect, requirePremiumAccess, getQuizReferences);
+router.post('/', protect, requirePremiumAccess, createQuiz);
+router.delete('/:id', protect, requirePremiumAccess, deleteQuiz);
 
 export default router;
