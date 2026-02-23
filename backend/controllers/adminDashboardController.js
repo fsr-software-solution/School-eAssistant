@@ -14,171 +14,155 @@ import PremiumPlan from '../models/PremiumPlan.js'
 
 
 const adminDashboard = async (req, res, next) => {
-    try {
-        // Users analytics
-        const users = await Users.aggregate([
-            {
-                $group: {
-                    _id: null,
-                    total: { $sum: 1 },
-                    students: { $sum: { $cond: [{ $eq: ["$role", "student"] }, 1, 0] } },
-                    teachers: { $sum: { $cond: [{ $eq: ["$role", "teacher"] }, 1, 0] } },
-                    admins: { $sum: { $cond: [{ $eq: ["$role", "admin"] }, 1, 0] } }
-                }
-            }
-        ]);
+  try {
+    // Run all queries in parallel for efficiency
+    const [
+      usersStats,
+      booksStats,
+      unitsCount,
+      sectionsCount,
+      interactionsCount,
+      chatSessionsStats,
+      quizzesCount,
+      referencesCount,
+      resourcesStats,
+      studentProgressStats,
+      paymentAccount,
+      paymentTransactionsStats,
+      premiumPlansStats,
+    ] = await Promise.all([
+      getUsersStats(),
+      getBooksStats(),
+      Units.countDocuments({ isDeleted: false }),
+      Sections.countDocuments({ isDeleted: false }),
+      Interactions.countDocuments({ isDeleted: false }),
+      getChatSessionsStats(),
+      Quizzes.countDocuments({ isDeleted: false }),
+      References.countDocuments({ isDeleted: false }),
+      getResourcesStats(),
+      getStudentProgressStats(),
+      PaymentAccount.getActiveAccount(), // returns the active account or null
+      getPaymentTransactionsStats(),
+      getPremiumPlansStats(),
+    ]);
 
-        // Books analytics
-        const books = await Books.aggregate([
-            {
-                $group: {
-                    _id: null,
-                    total: { $sum: 1 },
-                    active: { $sum: { $cond: ["$isActive", 1, 0] } },
-                    inactive: { $sum: { $cond: ["$isActive", 0, 1] } }
-                }
-            }
-        ]);
+    res.status(200).json({
+      users: usersStats,
+      books: booksStats,
+      units: { total: unitsCount },
+      sections: { total: sectionsCount },
+      interactions: { total: interactionsCount },
+      chatSessions: chatSessionsStats,
+      quizzes: { total: quizzesCount },
+      references: { total: referencesCount },
+      resources: resourcesStats,
+      studentProgress: studentProgressStats,
+      paymentAccounts: paymentAccount ? {
+        accountNumber: paymentAccount.accountNumber,
+        accountHolder: paymentAccount.accountHolderFullName,
+        bankName: paymentAccount.bankName,
+        isActive: paymentAccount.isActive,
+      } : { message: 'No active payment account set' },
+      paymentTransactions: paymentTransactionsStats,
+      premiumPlans: premiumPlansStats,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
-        // Units analytics
-        const units = await Units.aggregate([
-            {
-                $group: {
-                    _id: null,
-                    total: { $sum: 1 },
-                    active: { $sum: { $cond: ["$isActive", 1, 0] } }
-                }
-            }
-        ]);
+// ---------- Helper functions ----------
 
-        // Sections analytics
-        const sections = await Sections.aggregate([
-            {
-                $group: {
-                    _id: null,
-                    total: { $sum: 1 },
-                    active: { $sum: { $cond: ["$isActive", 1, 0] } }
-                }
-            }
-        ]);
-
-        // Interactions analytics
-        const interactions = await Interactions.aggregate([
-            {
-                $group: {
-                    _id: "$type",
-                    count: { $sum: 1 }
-                }
-            }
-        ]);
-
-        // ChatSessions analytics
-        const chatSessions = await ChatSessions.aggregate([
-            {
-                $group: {
-                    _id: null,
-                    total: { $sum: 1 },
-                    active: { $sum: { $cond: [{ $eq: ["$status", "active"] }, 1, 0] } },
-                    completed: { $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] } }
-                }
-            }
-        ]);
-
-        // Quizzes analytics
-        const quizzes = await Quizzes.aggregate([
-            {
-                $group: {
-                    _id: null,
-                    total: { $sum: 1 },
-                    active: { $sum: { $cond: ["$isActive", 1, 0] } }
-                }
-            }
-        ]);
-
-        // References analytics
-        const references = await References.aggregate([
-            {
-                $group: {
-                    _id: "$type",
-                    count: { $sum: 1 }
-                }
-            }
-        ]);
-
-        // Resources analytics
-        const resources = await Resources.aggregate([
-            {
-                $group: {
-                    _id: "$type",
-                    count: { $sum: 1 },
-                    totalDownloads: { $sum: "$downloadCount" }
-                }
-            }
-        ]);
-
-        // StudentProgress analytics
-        const studentProgress = await StudentProgress.aggregate([
-            {
-                $group: {
-                    _id: null,
-                    total: { $sum: 1 },
-                    averageProgress: { $avg: "$progressPercentage" },
-                    completed: { $sum: { $cond: [{ $gte: ["$progressPercentage", 100] }, 1, 0] } }
-                }
-            }
-        ]);
-
-        // PaymentAccounts analytics
-        const paymentAccounts = await PaymentAccount.aggregate([
-            {
-                $group: {
-                    _id: null,
-                    total: { $sum: 1 },
-                    totalBalance: { $sum: "$balance" }
-                }
-            }
-        ]);
-
-        // PaymentTransactions analytics
-        const paymentTransactions = await PaymentTransaction.aggregate([
-            {
-                $group: {
-                    _id: "$type",
-                    count: { $sum: 1 },
-                    totalAmount: { $sum: "$amount" }
-                }
-            }
-        ]);
-
-        // PremiumPlans analytics
-        const premiumPlans = await PremiumPlan.aggregate([
-            {
-                $group: {
-                    _id: null,
-                    total: { $sum: 1 },
-                    totalRevenue: { $sum: "$price" }
-                }
-            }
-        ]);
-
-        res.status(200).json({
-            users: users[0] || { total: 0, students: 0, teachers: 0, admins: 0 },
-            books: books[0] || { total: 0, active: 0, inactive: 0 },
-            units: units[0] || { total: 0, active: 0 },
-            sections: sections[0] || { total: 0, active: 0 },
-            interactions: interactions,
-            chatSessions: chatSessions[0] || { total: 0, active: 0, completed: 0 },
-            quizzes: quizzes[0] || { total: 0, active: 0 },
-            references: references,
-            resources: resources,
-            studentProgress: studentProgress[0] || { total: 0, averageProgress: 0, completed: 0 },
-            paymentAccounts: paymentAccounts[0] || { total: 0, totalBalance: 0 },
-            paymentTransactions: paymentTransactions,
-            premiumPlans: premiumPlans[0] || { total: 0, totalRevenue: 0 },
-        });
-    } catch (error) {
-        next(error);
-    }
+async function getUsersStats() {
+  const total = await Users.countDocuments({ isDeleted: false });
+  const byRole = await Users.aggregate([
+    { $match: { isDeleted: false } },
+    { $group: { _id: '$role', count: { $sum: 1 } } },
+  ]);
+  const roleCounts = byRole.reduce((acc, { _id, count }) => {
+    acc[_id] = count;
+    return acc;
+  }, {});
+  return { total, byRole: roleCounts };
 }
 
-export default adminDashboard
+async function getBooksStats() {
+  const total = await Books.countDocuments({ isDeleted: false });
+  const byGradeLevel = await Books.aggregate([
+    { $match: { isDeleted: false } },
+    { $group: { _id: '$gradeLevel', count: { $sum: 1 } } },
+  ]);
+  const gradeCounts = byGradeLevel.reduce((acc, { _id, count }) => {
+    acc[_id] = count;
+    return acc;
+  }, {});
+  return { total, byGradeLevel: gradeCounts };
+}
+
+async function getChatSessionsStats() {
+  const total = await ChatSessions.countDocuments({ isDeleted: false });
+  const byType = await ChatSessions.aggregate([
+    { $match: { isDeleted: false } },
+    { $group: { _id: '$type', count: { $sum: 1 } } },
+  ]);
+  const typeCounts = byType.reduce((acc, { _id, count }) => {
+    acc[_id] = count;
+    return acc;
+  }, {});
+  return { total, byType: typeCounts };
+}
+
+async function getResourcesStats() {
+  const total = await Resources.countDocuments({ isDeleted: false });
+  const byType = await Resources.aggregate([
+    { $match: { isDeleted: false } },
+    { $group: { _id: '$type', count: { $sum: 1 } } },
+  ]);
+  const typeCounts = byType.reduce((acc, { _id, count }) => {
+    acc[_id] = count;
+    return acc;
+  }, {});
+  return { total, byType: typeCounts };
+}
+
+async function getStudentProgressStats() {
+  const total = await StudentProgress.countDocuments({ isDeleted: false });
+  const byStatus = await StudentProgress.aggregate([
+    { $match: { isDeleted: false } },
+    { $group: { _id: '$status', count: { $sum: 1 } } },
+  ]);
+  const statusCounts = byStatus.reduce((acc, { _id, count }) => {
+    acc[_id] = count;
+    return acc;
+  }, {});
+  return { total, byStatus: statusCounts };
+}
+
+async function getPaymentTransactionsStats() {
+  const total = await PaymentTransaction.countDocuments(); // no soft delete on this model
+  const byStatus = await PaymentTransaction.aggregate([
+    { $group: { _id: '$verificationStatus', count: { $sum: 1 } } },
+  ]);
+  const statusCounts = byStatus.reduce((acc, { _id, count }) => {
+    acc[_id] = count;
+    return acc;
+  }, {});
+  // Include a few recent pending transactions for quick review
+  const recentPending = await PaymentTransaction.find({ verificationStatus: 'pending' })
+    .sort({ createdAt: -1 })
+    .limit(5)
+    .populate('studentId', 'username')
+    .populate('planId', 'planName amount')
+    .lean();
+  return { total, byStatus: statusCounts, recentPending };
+}
+
+async function getPremiumPlansStats() {
+  const total = await PremiumPlan.countDocuments({ isDeleted: false });
+  const plans = await PremiumPlan.find({ isDeleted: false })
+    .sort({ amount: 1 })
+    .lean();
+  return { total, plans };
+}
+
+export default adminDashboard;
