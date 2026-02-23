@@ -1,6 +1,5 @@
 import express from 'express';
 import {
-    register,
     login,
     refreshAccessToken,
     logout,
@@ -17,7 +16,6 @@ import adminOnly from '../middleware/adminMiddleware.js';
 const router = express.Router();
 
 // Public auth routes
-router.post('/register', register);
 router.post('/login', login);
 router.post('/refresh-token', refreshAccessToken);
 router.post('/logout', logout);
