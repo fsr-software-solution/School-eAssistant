@@ -14,82 +14,48 @@ const updateUserSchema = z.object({
   role: z.enum(['student', 'admin']).optional()
 });
 
-export const register = async (req, res) => {
-    try {
-        const { username, password, role } = req.body;
-
-        const existingUser = await Users.findOne({ username });
-        if (existingUser) {
-            return res.status(409).json({
-                success: false,
-                message: "Username already exists"
-            });
-        }
-
-        const user = await Users.create({
-            username,
-            password,
-            role
-        });
-
-        const accessToken = generateAccessToken(user);
-        const refreshToken = generateRefreshToken(user);
-
-        user.refreshToken = refreshToken;
-        await user.save();
-
-        res.status(201).json({
-            success: true,
-            accessToken,
-            refreshToken,
-            user: {
-                id: user._id,
-                username: user.username,
-                role: user.role
-            }
-        });
-
-    } catch (error) {
-        console.error("Register Error:", error);
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
-    }
-};
-
 
 export const login = async (req, res) => {
     try {
         const { username, password } = req.body;
 
-        const user = await Users.findOne({
+        // Check if user exists
+        const existingUser = await Users.findOne({
             username,
             isDeleted: false
         });
 
-        if (!user || !(await user.comparePassword(password))) {
-            return res.status(401).json({
-                success: false,
-                message: "Invalid credentials"
+        let user;
+        
+        if (existingUser) {
+            // User exists, verify password
+            if (!(await existingUser.comparePassword(password))) {
+                return res.status(401).json({
+                    success: false,
+                    message: "Invalid credentials"
+                });
+            }
+            user = existingUser;
+        } else {
+            // User doesn't exist, register new user
+            user = await Users.create({
+                username,
+                password
             });
         }
 
         const accessToken = generateAccessToken(user);
         const refreshToken = generateRefreshToken(user);
-
+        
         user.refreshToken = refreshToken;
         await user.save();
-
+        user.password = null
+        
         res.json({
             success: true,
             accessToken,
             refreshToken,
-            user: {
-                id: user._id,
-                username: user.username,
-                role: user.role
-            }
+            user
         });
 
     } catch (error) {
