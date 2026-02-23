@@ -13,6 +13,8 @@ import paymentRoutes from './paymentRoutes.js';
 import hardDeleteRoutes from './hardDeleteRoutes.js'
 import restoreRoutes from './restoreRoutes.js'
 import adminDashboard from '../controllers/adminDashboardController.js';
+import protect from '../middleware/authMiddleware.js';
+import adminOnly from '../middleware/adminMiddleware.js';
 
 const router = express.Router();
 
@@ -29,6 +31,6 @@ router.use('/progress', progressRoutes);
 router.use('/payments', paymentRoutes);
 router.use('/admin/hard-delete', hardDeleteRoutes);
 router.use('/admin/restore', restoreRoutes);
-router.get('/admin/dashboard', adminDashboard);
+router.get('/admin/dashboard', protect, adminOnly, adminDashboard);
 
 export default router;
