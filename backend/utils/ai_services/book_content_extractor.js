@@ -9,11 +9,11 @@ import Sections from '../../models/Sections.js'
 
 
 const bookContentExtractor = async (file, {gradeLevel, subject, yearOfPublish, filePath, tocStartingPage, tocEndingPage}) => {
-    let llm = new ChatOllama({model: 'smollm2:135m'})
-    // let llm = new ChatGroq({
-    //     model: 'llama-3.3-70b-versatile',
-    //     apiKey: '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'
-    // })
+    // let llm = new ChatOllama({model: 'smollm2:135m'})
+    let llm = new ChatGroq({
+        model: 'llama-3.3-70b-versatile',
+        apiKey: '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'
+    })
     llm = llm.withStructuredOutput(TOCSchema)
 
     let splittedBook = await splitAndExtract(file)

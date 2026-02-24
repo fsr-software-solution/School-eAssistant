@@ -301,31 +301,20 @@ export const getUserProgress = async (req, res, next) => {
         }
 
         // Verify user exists and is a student
-        const user = await Users.findById(id);
-        if (!user || user.isDeleted) {
+        const user = await Users.findOne({_id: id, isDeleted: false});
+        if (!user) {
             return res.status(404).json({
                 success: false,
                 message: 'User not found'
             });
         }
 
-        if (user.role !== 'student') {
-            return res.status(400).json({
-                success: false,
-                message: 'Progress is only available for students'
-            });
-        }
-
         // Get all progress for this student
-        const progress = await StudentProgress.findByStudent(id);
+        const progress = await StudentProgress.find({studentId: id, isDeleted: false});
 
         res.status(200).json({
             success: true,
-            data: {
-                studentId: id,
-                username: user.username,
-                progress: progress
-            }
+            data: progress
         });
     } catch (error) {
         console.error('Get user progress error:', error);
@@ -345,7 +334,7 @@ export const updateUser = async (req, res, next) => {
     try {
         const { id } = req.params;
         const requestingUserId = req.user?.id;
-        const requestingUserRole = req.user?.role;
+        const requestingUserRole = req.user?.role;        
 
         // Users can only update their own profile unless they're admin
         if (requestingUserRole !== 'admin' && requestingUserId !== id) {
@@ -356,6 +345,10 @@ export const updateUser = async (req, res, next) => {
         }
 
         // Validate input
+        if (!req?.body?.password) {
+            delete req.body.password
+        }
+        
         const validation = updateUserSchema.safeParse(req.body);
         if (!validation.success) {
             return res.status(400).json({
@@ -376,8 +369,8 @@ export const updateUser = async (req, res, next) => {
         }
 
         // Find user
-        const user = await Users.findById(id);
-        if (!user || user.isDeleted) {
+        const user = await Users.findOne({_id: id, isDeleted: false});
+        if (!user) {
             return res.status(404).json({
                 success: false,
                 message: 'User not found'
@@ -460,7 +453,7 @@ export const deleteUser = async (req, res, next) => {
         await user.softDelete();
 
         res.status(200).json({
-            success: true,
+            data: true,
             message: 'User deleted successfully'
         });
     } catch (error) {
