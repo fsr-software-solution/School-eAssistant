@@ -175,48 +175,12 @@ const UsersSection = () => {
         });
         
         // Refetch users to ensure the list is up to date
-        await fetchUsers();
+        setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
         alert('User deleted successfully!')
       } catch (error) {
         console.error('Error deleting user:', error);
         alert('Error deleting user: ' + (error.response?.data?.message || error.message));
       }
-    }
-  };
-
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      
-      // Get token from localStorage (assuming it's stored there after login)
-      const token = localStorage.getItem('accessToken');
-      
-      const response = await axios.get(`${API_BASE_URL}/api/v1/users`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (response.data.success) {
-        // Map API response to the expected format
-        const mappedUsers = response.data.data.map((user) => ({
-          id: user._id,
-          username: user.username,
-          role: user.role,
-          createdAt: new Date(user.createdAt).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-          })
-        }));
-        setUsers(mappedUsers);
-      } else {
-        console.error('Failed to fetch users:', response.data.message);
-      }
-    } catch (error) {
-      console.error('Error fetching users:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
