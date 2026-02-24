@@ -94,14 +94,12 @@ resourcesSchema.pre('save', function() {
   this.updatedAt = new Date();
   
   if (!this.sectionId && !this.interactionId) {
-    return next(new Error('Either sectionId or interactionId must be provided'));
+    return new Error('Either sectionId or interactionId must be provided');
   }
   
   if (this.sectionId && this.interactionId) {
-    return next(new Error('Resource cannot be linked to both a section and an interaction'));
+    return new Error('Resource cannot be linked to both a section and an interaction');
   }
-  
-  next();
 });
 
 // Static method to find active resources

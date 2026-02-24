@@ -85,7 +85,6 @@ interactionsSchema.index({ isDeleted: 1 });
 // Update the updatedAt field before saving
 interactionsSchema.pre('save', function() {
   this.updatedAt = new Date();
-  next();
 });
 
 // Static method to find active interactions

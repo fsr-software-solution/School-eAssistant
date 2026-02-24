@@ -95,14 +95,12 @@ referencesSchema.pre('save', function() {
   const providedReferences = [this.interactionId, this.quizId, this.bookId].filter(Boolean);
   
   if (providedReferences.length === 0) {
-    return next(new Error('Either interactionId, quizId, or bookId must be provided'));
+    return new Error('Either interactionId, quizId, or bookId must be provided');
   }
   
   if (providedReferences.length > 1) {
-    return next(new Error('Reference cannot be linked to more than one entity (interaction, quiz, or book)'));
+    return new Error('Reference cannot be linked to more than one entity (interaction, quiz, or book)');
   }
-  
-  next();
 });
 
 // Static method to find active references

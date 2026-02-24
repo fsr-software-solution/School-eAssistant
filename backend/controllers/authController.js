@@ -1,4 +1,5 @@
 import Users from '../models/Users.js';
+import ChatSessions from '../models/ChatSessions.js'
 import StudentProgress from '../models/StudentProgress.js';
 import {
     generateAccessToken,
@@ -467,6 +468,86 @@ export const deleteUser = async (req, res, next) => {
         res.status(500).json({
             success: false,
             message: 'Failed to delete user',
+            error: error.message
+        });
+    }
+};
+
+
+export const getUserChatInteractions = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const requestingUserId = req.user?.id;
+        const requestingUserRole = req.user?.role;
+
+        // Users can only view their own chat interactions unless they're admin
+        if (requestingUserRole !== 'admin' && requestingUserId !== id) {
+            return res.status(403).json({
+                success: false,
+                message: 'You can only view your own chat interactions'
+            });
+        }
+
+        // Verify user exists and is a student
+        const user = await Users.findOne({_id: id, isDeleted: false});
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        const interactions = await ChatSessions.find({studentId: id, type: 'interaction'})
+
+        res.status(200).json({
+            success: true,
+            data: interactions
+        });
+    } catch (error) {
+        console.error('Get user chat interactions error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to retrieve user chat interactions',
+            error: error.message
+        });
+    }
+};
+
+
+export const getUserQuizzes = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const requestingUserId = req.user?.id;
+        const requestingUserRole = req.user?.role;
+
+        // Users can only view their own quizzes unless they're admin
+        if (requestingUserRole !== 'admin' && requestingUserId !== id) {
+            return res.status(403).json({
+                success: false,
+                message: 'You can only view your own quizzes'
+            });
+        }
+
+       // Verify user exists and is a student
+        const user = await Users.findOne({_id: id, isDeleted: false});
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        const quizzes = await ChatSessions.find({studentId: id, type: 'quiz'})
+
+        res.status(200).json({
+            success: true,
+            data: quizzes
+        });
+    } catch (error) {
+        console.error('Get user quizzes error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to retrieve user quizzes',
             error: error.message
         });
     }
