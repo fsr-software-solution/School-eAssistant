@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authService, AuthResponse } from '../services/auth';
-import { tokenStorage, userStorage } from '../utils/storage';
+import { authService } from '../services/auth';
 
 interface User {
   id: string;
@@ -14,7 +13,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (username: string, password: string) => Promise<void>;
   register: (username: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
+  retryAuth: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,12 +30,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const checkAuthStatus = async () => {
+    setIsLoading(true);
     try {
       const isAuth = await authService.isAuthenticated();
+
       if (isAuth) {
         const userData = await authService.getCurrentUser();
-        setUser(userData);
+        if (userData) {
+          setUser(userData);
+          return;
+        }
       }
+
+      // No token/user in storage → auto register/login student in background
+      const autoAuth = await authService.autoRegisterOrLoginStudent();
+      setUser(autoAuth.user);
     } catch (error) {
       console.error('Auth check error:', error);
     } finally {
@@ -62,24 +70,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = async () => {
-    try {
-      await authService.logout();
-      setUser(null);
-    } catch (error) {
-      console.error('Logout error:', error);
-      // Clear local state even if API call fails
-      setUser(null);
-    }
-  };
-
   const value: AuthContextType = {
     user,
     isLoading,
     isAuthenticated: !!user,
     login,
     register,
-    logout,
+    retryAuth: checkAuthStatus,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -92,4 +89,6 @@ export function useAuth() {
   }
   return context;
 }
+
+
 

@@ -8,7 +8,8 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING, BORDER_RADIUS, TYPOGRAPHY } from '../../constants/config';
+import { SPACING, BORDER_RADIUS } from '../../constants/config';
+import { useTheme } from '../../context/ThemeContext';
 
 interface InputProps extends TextInputProps {
   label?: string;
@@ -29,6 +30,7 @@ export default function Input({
   style,
   ...props
 }: InputProps) {
+  const { colors, typography } = useTheme();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
 
@@ -37,26 +39,27 @@ export default function Input({
 
   return (
     <View style={styles.container}>
-      {label && <Text style={styles.label}>{label}</Text>}
+      {label && <Text style={[styles.label, typography.bodySmall, { color: colors.text, fontWeight: '600' }]}>{label}</Text>}
       <View
         style={[
           styles.inputContainer,
-          isFocused && styles.inputContainerFocused,
-          error && styles.inputContainerError,
+          { backgroundColor: colors.surface, borderColor: colors.border },
+          isFocused && { borderColor: colors.primary, borderWidth: 2 },
+          error ? { borderColor: colors.error } : null,
         ]}
       >
         {leftIcon && (
           <Ionicons
             name={leftIcon}
             size={20}
-            color={COLORS.textSecondary}
+            color={colors.textSecondary}
             style={styles.leftIcon}
           />
         )}
         <TextInput
-          style={[styles.input, leftIcon && styles.inputWithLeftIcon]}
+          style={[styles.input, typography.body, { color: colors.text }, leftIcon && styles.inputWithLeftIcon]}
           secureTextEntry={actualSecureTextEntry}
-          placeholderTextColor={COLORS.textSecondary}
+          placeholderTextColor={colors.textSecondary}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           {...props}
@@ -69,17 +72,17 @@ export default function Input({
             <Ionicons
               name={isPasswordVisible ? 'eye-off' : 'eye'}
               size={20}
-              color={COLORS.textSecondary}
+              color={colors.textSecondary}
             />
           </TouchableOpacity>
         )}
         {rightIcon && !showPasswordToggle && (
           <TouchableOpacity onPress={onRightIconPress} style={styles.iconButton}>
-            <Ionicons name={rightIcon} size={20} color={COLORS.textSecondary} />
+            <Ionicons name={rightIcon} size={20} color={colors.textSecondary} />
           </TouchableOpacity>
         )}
       </View>
-      {error && <Text style={styles.errorText}>{error}</Text>}
+      {error && <Text style={[styles.errorText, typography.caption, { color: colors.error }]}>{error}</Text>}
     </View>
   );
 }
@@ -89,32 +92,18 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
   },
   label: {
-    ...TYPOGRAPHY.bodySmall,
-    fontWeight: '600',
-    color: COLORS.text,
     marginBottom: SPACING.xs,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: COLORS.border,
     borderRadius: BORDER_RADIUS.md,
     paddingHorizontal: SPACING.md,
     minHeight: 48,
   },
-  inputContainerFocused: {
-    borderColor: COLORS.primary,
-    borderWidth: 2,
-  },
-  inputContainerError: {
-    borderColor: COLORS.error,
-  },
   input: {
     flex: 1,
-    ...TYPOGRAPHY.body,
-    color: COLORS.text,
     paddingVertical: SPACING.md,
   },
   inputWithLeftIcon: {
@@ -127,9 +116,8 @@ const styles = StyleSheet.create({
     padding: SPACING.xs,
   },
   errorText: {
-    ...TYPOGRAPHY.caption,
-    color: COLORS.error,
     marginTop: SPACING.xs,
   },
 });
+
 

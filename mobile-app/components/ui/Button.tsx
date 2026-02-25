@@ -7,7 +7,8 @@ import {
   ViewStyle,
   TextStyle,
 } from 'react-native';
-import { COLORS, SPACING, BORDER_RADIUS, TYPOGRAPHY } from '../../constants/config';
+import { SPACING, BORDER_RADIUS } from '../../constants/config';
+import { useTheme } from '../../context/ThemeContext';
 
 interface ButtonProps {
   title: string;
@@ -30,6 +31,7 @@ export default function Button({
   style,
   textStyle,
 }: ButtonProps) {
+  const { colors, typography } = useTheme();
   const buttonStyle = [
     styles.button,
     styles[variant],
@@ -39,22 +41,32 @@ export default function Button({
   ];
 
   const textStyles = [
+    typography.body,
     styles.textBase,
-    styles[`text_${variant}`],
     styles[`textSize_${size}`],
+    variant === 'primary' && { color: colors.surface },
+    variant === 'secondary' && { color: colors.surface },
+    variant === 'outline' && { color: colors.primary },
+    variant === 'text' && { color: colors.primary },
     textStyle,
+  ];
+
+  const dynamicButtonStyle = [
+    variant === 'primary' && { backgroundColor: colors.primary },
+    variant === 'secondary' && { backgroundColor: colors.secondary },
+    variant === 'outline' && { borderColor: colors.primary },
   ];
 
   return (
     <TouchableOpacity
-      style={buttonStyle}
+      style={[buttonStyle, ...dynamicButtonStyle]}
       onPress={onPress}
       disabled={disabled || loading}
       activeOpacity={0.7}
     >
       {loading ? (
         <ActivityIndicator
-          color={variant === 'primary' ? COLORS.surface : COLORS.primary}
+          color={variant === 'primary' ? colors.surface : colors.primary}
           size="small"
         />
       ) : (
@@ -72,15 +84,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   primary: {
-    backgroundColor: COLORS.primary,
   },
   secondary: {
-    backgroundColor: COLORS.secondary,
   },
   outline: {
     backgroundColor: 'transparent',
     borderWidth: 2,
-    borderColor: COLORS.primary,
   },
   text: {
     backgroundColor: 'transparent',
@@ -104,20 +113,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   textBase: {
-    ...TYPOGRAPHY.body,
     fontWeight: '600',
-  },
-  text_primary: {
-    color: COLORS.surface,
-  },
-  text_secondary: {
-    color: COLORS.surface,
-  },
-  text_outline: {
-    color: COLORS.primary,
-  },
-  text_text: {
-    color: COLORS.primary,
   },
   textSize_small: {
     fontSize: 14,

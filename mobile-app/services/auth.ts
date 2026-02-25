@@ -24,6 +24,18 @@ export interface AuthResponse {
   };
 }
 
+function buildDeviceCredentials(deviceId: string) {
+  // Backend constraint: Users.username max length is 50.
+  // So we derive a short, deterministic username from deviceId.
+  const compact = deviceId.replace(/[^a-zA-Z0-9]/g, '');
+  const username = `stu_${compact.slice(0, 40)}`; // <= 44 chars
+
+  // Per your request: use the generated id as the password.
+  const password = deviceId;
+
+  return { username, password };
+}
+
 /**
  * Authentication Service
  */
@@ -33,7 +45,7 @@ export const authService = {
    */
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     const deviceId = await getOrCreateDeviceId();
-    
+
     const response = await api.post<AuthResponse>('/auth/login', {
       ...credentials,
       deviceId, // Include device ID in login
@@ -45,7 +57,7 @@ export const authService = {
         response.data.accessToken,
         response.data.refreshToken
       );
-      
+
       // Save user data
       await userStorage.saveUser(response.data.user);
     }
@@ -54,15 +66,17 @@ export const authService = {
   },
 
   /**
-   * Register new user
+   * Register new user (The backend handles registration via the login endpoint)
    */
   async register(data: RegisterData): Promise<AuthResponse> {
     const deviceId = await getOrCreateDeviceId();
-    
-    const response = await api.post<AuthResponse>('/auth/register', {
-      ...data,
+
+    // Backend doesn't have /auth/register. /auth/login creates the user if it doesn't exist.
+    const response = await api.post<AuthResponse>('/auth/login', {
+      username: data.username,
+      password: data.password,
       role: data.role || 'student',
-      deviceId, // Include device ID in registration
+      deviceId, // Include device ID
     });
 
     if (response.data.success) {
@@ -71,7 +85,7 @@ export const authService = {
         response.data.accessToken,
         response.data.refreshToken
       );
-      
+
       // Save user data
       await userStorage.saveUser(response.data.user);
     }
@@ -80,18 +94,17 @@ export const authService = {
   },
 
   /**
-   * Logout user
+   * Student auto-authentication:
+   * - generate deviceId in background
+   * - use deviceId as password
+   * - use derived username from deviceId (keeps <= 50 chars for backend)
+   * - call login, which creates the user if they don't exist on the backend
    */
-  async logout(): Promise<void> {
-    try {
-      await api.post('/auth/logout');
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      // Clear local storage
-      await tokenStorage.clearTokens();
-      await userStorage.clearUser();
-    }
+  async autoRegisterOrLoginStudent(): Promise<AuthResponse> {
+    const deviceId = await getOrCreateDeviceId();
+    const { username, password } = buildDeviceCredentials(deviceId);
+
+    return await this.login({ username, password });
   },
 
   /**
