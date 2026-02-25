@@ -65,4 +65,3 @@ premiumPlanSchema.methods.restore = function () {
 };
 
 export default mongoose.model('PremiumPlan', premiumPlanSchema);
-

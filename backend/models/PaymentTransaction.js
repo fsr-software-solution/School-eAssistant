@@ -84,4 +84,3 @@ paymentTransactionSchema.index({ createdAt: -1 });
 // No need for manual pre-save hook
 
 export default mongoose.model('PaymentTransaction', paymentTransactionSchema);
-

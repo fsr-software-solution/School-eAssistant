@@ -45,5 +45,3 @@ router.get('/admin/payments', protect, adminOnly, PaymentController.getAllPaymen
 router.put('/admin/payments/:transactionId/status', protect, adminOnly, PaymentController.updatePaymentStatus);
 
 export default router;
-
-
