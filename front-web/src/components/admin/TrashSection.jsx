@@ -155,51 +155,6 @@ const TrashSection = () => {
           </div>
         )}
       </div>
-
-      {/* Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-400 text-sm">Total Deleted Items</p>
-              <p className="text-2xl font-bold text-white">{deletedItems.length}</p>
-            </div>
-            <div className="p-3 bg-red-500/20 rounded-full">
-              <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-400 text-sm">Restored Items</p>
-              <p className="text-2xl font-bold text-white">{deletedItems.filter(item => item.restored).length}</p>
-            </div>
-            <div className="p-3 bg-green-500/20 rounded-full">
-              <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-400 text-sm">Permanently Deleted</p>
-              <p className="text-2xl font-bold text-white">{deletedItems.filter(item => !item.restored).length}</p>
-            </div>
-            <div className="p-3 bg-gray-500/20 rounded-full">
-              <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 12H4"></path>
-              </svg>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

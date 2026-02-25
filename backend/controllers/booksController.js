@@ -55,6 +55,28 @@ export const createBook = async (req, res, next) => {
   res.status(201).json({data: book})
 }
 
+export const updateBookById = async (req, res, next) => {
+  const { id } = req.params
+  const book = await Books.findOne({ _id: id, isDeleted: false })
+  const {gradeLevel, subject, yearOfPublish} = req.body
+
+  if (!book) {
+    next(new Error('Book not found'))
+  }
+
+  if (gradeLevel) book.gradeLevel = gradeLevel
+  if (subject) book.subject = subject
+  if (yearOfPublish) book.yearOfPublish = yearOfPublish
+  await book.save()
+
+  if (!book.summary) {
+    book.summary = await summarizer({book})
+    await book.save()
+  }
+
+  res.status(200).json({data: book})
+}
+
 export const deleteBookById = async (req, res, next) => {
   const { id } = req.params
   const book = await Books.findOne({ _id: id, isDeleted: false })

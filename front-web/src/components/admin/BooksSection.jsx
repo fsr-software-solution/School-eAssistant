@@ -12,6 +12,8 @@ const BooksSection = () => {
   const [selectedBookUnits, setSelectedBookUnits] = useState(null);
   const [unitsLoading, setUnitsLoading] = useState(false);
   const [selectedUnit, setSelectedUnit] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingBook, setEditingBook] = useState(null);
   const [sectionsStack, setSectionsStack] = useState([]);
   const [sectionsLoading, setSectionsLoading] = useState(false);
   const [selectedSection, setSelectedSection] = useState(null);
@@ -124,7 +126,7 @@ const BooksSection = () => {
   };
 
   const formatToc = (toc) => {
-    if (!toc || !toc.units) return '';
+    if (!toc || !toc.units) return JSON.stringify(toc || '');
     
     return toc.units.map(unit => {
       const unitTitle = `${unit.unitNumber}. ${unit.title} (p. ${unit.startingPage})`;
@@ -162,6 +164,42 @@ const BooksSection = () => {
         alert('Error deleting book. Please try again.');
       }
     }
+  };
+
+  const handleEditBook = (book) => {
+    setEditingBook(book);
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateBook = async (e) => {
+    e.preventDefault();
+    
+    try {
+      const response = await axios.put(`${API_BASE_URL}/api/v1/books/${editingBook._id}`, {
+        gradeLevel: editingBook.gradeLevel,
+        subject: editingBook.subject,
+        yearOfPublish: editingBook.yearOfPublish
+      });
+
+      // Update the book in the list
+      setBooks(prevBooks => 
+        prevBooks.map(book => 
+          book._id === editingBook._id ? response.data.data : book
+        )
+      );
+      
+      alert('Book updated successfully!');
+      setIsEditModalOpen(false);
+      setEditingBook(null);
+    } catch (error) {
+      console.error('Error updating book:', error);
+      alert('Error updating book. Please try again.');
+    }
+  };
+
+  const handleEditInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditingBook(prev => ({ ...prev, [name]: value }));
   };
 
   const fetchBookUnits = async (book) => {
@@ -334,6 +372,12 @@ const BooksSection = () => {
                         className="px-3 py-1 bg-green-500/20 text-green-400 border border-blue-500/30 rounded text-sm hover:bg-blue-500/30 transition-colors"
                       >
                         View
+                      </button>
+                      <button 
+                        onClick={() => handleEditBook(book)}
+                        className="px-3 py-1 bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded text-sm hover:bg-yellow-500/30 transition-colors"
+                      >
+                        Edit
                       </button>
                       <button 
                         onClick={() => handleUnitsClick(book)}
@@ -847,6 +891,94 @@ const BooksSection = () => {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Edit Book Modal */}
+      {isEditModalOpen && editingBook && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-white">Edit Book</h3>
+              <button
+                onClick={() => {
+                  setIsEditModalOpen(false);
+                  setEditingBook(null);
+                }}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <form onSubmit={handleUpdateBook} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Grade Level</label>
+                <select
+                  name="gradeLevel"
+                  value={editingBook.gradeLevel}
+                  onChange={handleEditInputChange}
+                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-yellow-500"
+                  required
+                >
+                  <option value="">Select Grade Level</option>
+                  <option value="G-7">G-7</option>
+                  <option value="G-8">G-8</option>
+                  <option value="G-9">G-9</option>
+                  <option value="G-10">G-10</option>
+                  <option value="G-11">G-11</option>
+                  <option value="G-12">G-12</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Subject</label>
+                <input
+                  type="text"
+                  name="subject"
+                  value={editingBook.subject}
+                  onChange={handleEditInputChange}
+                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-yellow-500"
+                  placeholder="e.g., Biology"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Year of Publish</label>
+                <input
+                  type="text"
+                  name="yearOfPublish"
+                  value={editingBook.yearOfPublish}
+                  onChange={handleEditInputChange}
+                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-yellow-500"
+                  placeholder="e.g., 2027"
+                  required
+                />
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEditModalOpen(false);
+                    setEditingBook(null);
+                  }}
+                  className="px-4 py-2 bg-gray-500/20 text-gray-400 border border-gray-500/30 rounded hover:bg-gray-500/30 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded hover:bg-yellow-500/30 transition-colors"
+                >
+                  Update Book
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

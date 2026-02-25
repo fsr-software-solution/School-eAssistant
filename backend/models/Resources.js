@@ -75,7 +75,7 @@ const resourcesSchema = new mongoose.Schema({
 });
 
 // Compound index to ensure a resource is linked to either a section or interaction, but not both
-// resourcesSchema.index({ sectionId: 1, interactionId: 1 }, { unique: true });
+resourcesSchema.index({ sectionId: 1, interactionId: 1 }, { unique: true });
 
 // Index for sectionId to optimize queries
 resourcesSchema.index({ sectionId: 1 });
