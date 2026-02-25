@@ -73,9 +73,6 @@ const referencesSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Compound index to ensure a reference is linked to exactly one of interaction, quiz, or book
-referencesSchema.index({ interactionId: 1, quizId: 1, bookId: 1 }, { unique: true });
-
 // Index for interactionId to optimize queries
 referencesSchema.index({ interactionId: 1 });
 

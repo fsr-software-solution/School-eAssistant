@@ -4,7 +4,6 @@ const interactionsSchema = new mongoose.Schema({
   sectionId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Sections',
-    required: [true, 'Section ID is required'],
     validate: {
       validator: async function(value) {
         const section = await mongoose.model('Sections').findById(value);
@@ -16,7 +15,6 @@ const interactionsSchema = new mongoose.Schema({
   chatSessionId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'ChatSessions',
-    required: [true, 'Chat session ID is required'],
     validate: {
       validator: async function(value) {
         const session = await mongoose.model('ChatSessions').findById(value);
@@ -71,7 +69,7 @@ const interactionsSchema = new mongoose.Schema({
 });
 
 // Index for sessionId to optimize queries
-interactionsSchema.index({ sessionId: 1 });
+interactionsSchema.index({ sectionId: 1 });
 
 // Index for chatSessionId to optimize queries
 interactionsSchema.index({ chatSessionId: 1 });

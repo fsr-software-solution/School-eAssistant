@@ -9,7 +9,7 @@ const addReferences = async ({interaction, quiz, similaritySearchResults}) => {
         await References.create({
             interactionId: interaction?._id,
             quizId: quiz?._id,
-            bookId: doc?.metadata?.bookId,
+            bookId: doc?.metadata?.bookId.toString(),
             quotedText: doc?.pageContent,
             pageNumber: doc?.metadata?.loc?.pageNumber,
             lineFrom: doc?.metadata?.loc?.lines?.from,

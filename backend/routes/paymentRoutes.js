@@ -31,6 +31,9 @@ router.post(
 );
 router.get('/history', protect, PaymentController.getPaymentHistory);
 router.get('/status/:transactionId', protect, PaymentController.getPaymentStatus);
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 router.post('/admin/plans', protect, adminOnly, premiumPlanController.createPlan);
 router.get('/admin/plans', protect, adminOnly, premiumPlanController.getAllPlans);
 router.get('/admin/plans/:planId', protect, adminOnly, premiumPlanController.getPlanById);

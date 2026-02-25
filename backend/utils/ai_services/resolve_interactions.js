@@ -1,12 +1,11 @@
 import { ChatOllama } from '@langchain/ollama'
 import Interactions from '../../models/Interactions.js'
-import addResources from './resource_browser.js'
 import addReferences from './add_references.js'
 import { similaritySearch } from './embeddings.js'
 import * as z from 'zod'
 
 const resolveInteraction = async ({sectionId, chatSessionId, studentId, studentQuestion, histories, section}) => {
-    let llm = new ChatOllama({model: 'smollm2:135m'})
+    let llm = new ChatOllama({model: 'llama3.2:3b'})
     let standaloneQuestion = await llm.invoke(`
             Extract standalone question from the following question:
             QUESTION: ${studentQuestion}
@@ -39,8 +38,8 @@ const resolveInteraction = async ({sectionId, chatSessionId, studentId, studentQ
         aiAnswer: response.answer,
         confidenceScore: response.confidenceScore
     })
-    await addResources({interaction})
     await addReferences({interaction, similaritySearchResults})
+    return interaction
 }
 
 export default resolveInteraction

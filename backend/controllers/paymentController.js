@@ -487,10 +487,7 @@ class PaymentController {
       res.status(200).json({
         success: true,
         message: 'Payment status updated',
-        data: {
-          transactionId: transaction.transactionId,
-          status: transaction.verificationStatus
-        }
+        data: transaction
       });
     } catch (error) {
       console.error('Update payment status error:', error);

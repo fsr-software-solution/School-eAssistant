@@ -19,6 +19,7 @@ import adminOnly from '../middleware/adminMiddleware.js';
 
 const router = express.Router();
 
+router.use(paymentRoutes);
 router.use('/auth', authRoutes);
 router.use('/users', usersRoutes);
 router.use('/books', booksRoutes);
@@ -30,7 +31,6 @@ router.use('/quizzes', quizzesRoutes);
 router.use('/resources', resourcesRoutes);
 router.use('/references', referencesRoutes);
 router.use('/progress', progressRoutes);
-router.use('/payments', paymentRoutes);
 router.use('/admin/hard-delete', hardDeleteRoutes);
 router.use('/admin/restore', restoreRoutes);
 router.get('/admin/dashboard', protect, adminOnly, adminDashboard);
