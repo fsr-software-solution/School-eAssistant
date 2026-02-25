@@ -44,8 +44,7 @@ export const getSectionResources = async (req, res, next) => {
     
   let resources = await Resources.find({ sectionId: id, isDeleted: false }) ?? []
   if (resources.length === 0) {
-    await addResources({section})
-    resources = await Resources.find({ sectionId: id, isDeleted: false })
+    resources = await addResources({section})
   }
   
   res.status(200).json({data: resources})

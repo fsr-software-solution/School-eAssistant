@@ -12,11 +12,26 @@ const BooksSection = () => {
   const [selectedBookUnits, setSelectedBookUnits] = useState(null);
   const [unitsLoading, setUnitsLoading] = useState(false);
   const [selectedUnit, setSelectedUnit] = useState(null);
-  const [selectedUnitSections, setSelectedUnitSections] = useState(null);
+  const [sectionsStack, setSectionsStack] = useState([]);
   const [sectionsLoading, setSectionsLoading] = useState(false);
   const [selectedSection, setSelectedSection] = useState(null);
   const [selectedSectionResources, setSelectedSectionResources] = useState(null);
   const [resourcesLoading, setResourcesLoading] = useState(false);
+
+  // Helper function to get the current sections/subsections from the stack
+  const getCurrentSections = () => {
+    return sectionsStack.length > 0 ? sectionsStack[sectionsStack.length - 1] : null;
+  };
+
+  // Helper function to add sections/subsections to the stack
+  const pushToSectionsStack = (sections) => {
+    setSectionsStack(prev => [...prev, sections]);
+  };
+
+  // Helper function to go back in the stack
+  const popFromSectionsStack = () => {
+    setSectionsStack(prev => prev.slice(0, -1));
+  };
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -171,7 +186,7 @@ const BooksSection = () => {
     try {
       setSectionsLoading(true);
       const response = await axios.get(`${API_BASE_URL}/api/v1/units/${unit._id}/sections`);
-      setSelectedUnitSections(response.data.data);
+      pushToSectionsStack(response.data.data);
     } catch (error) {
       console.error('Error fetching unit sections:', error);
       alert('Error fetching unit sections. Please try again.');
@@ -185,7 +200,6 @@ const BooksSection = () => {
   };
 
   const handleSectionsClick = (unit) => {
-    setSelectedUnitSections(unit);
     fetchUnitSections(unit);
   };
 
@@ -193,7 +207,7 @@ const BooksSection = () => {
     try {
       setSectionsLoading(true);
       const response = await axios.get(`${API_BASE_URL}/api/v1/sections/${section._id}/subsections`);
-      setSelectedUnitSections(response.data.data);
+      pushToSectionsStack(response.data.data);
     } catch (error) {
       console.error('Error fetching section subsections:', error);
       alert('Error fetching section subsections. Please try again.');
@@ -207,7 +221,6 @@ const BooksSection = () => {
   };
 
   const handleSubsectionsClick = (section) => {
-    setSelectedUnitSections(section);
     fetchSectionSubsections(section);
   };
 
@@ -560,14 +573,19 @@ const BooksSection = () => {
       )}
 
       {/* Sections Modal */}
-      {selectedUnitSections && (
+      {sectionsStack.length > 0 && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 max-w-4xl w-full max-h-[80vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-white">Sections for Unit {selectedUnitSections.unitNumber}</h3>
+              <h3 className="text-lg font-semibold text-white">
+                {sectionsStack.length === 1 
+                  ? `Sections for Unit ${sectionsStack[0][0]?.unitNumber || 'Unknown'}`
+                  : `Subsections for Section ${sectionsStack[sectionsStack.length - 1][0]?.sectionNumber || 'Unknown'}`
+                }
+              </h3>
               <div className="flex space-x-2">
                 <button
-                  onClick={() => setSelectedUnitSections(null)}
+                  onClick={() => popFromSectionsStack()}
                   className="text-gray-400 hover:text-white transition-colors"
                 >
                   ✕
@@ -586,7 +604,7 @@ const BooksSection = () => {
                   <table className="w-full text-white">
                     <thead>
                       <tr className="border-b border-white/10">
-                        <th className="text-left py-3 px-4 font-medium">#Section</th>
+                        <th className="text-left py-3 px-4 font-medium">#{sectionsStack.length === 1 ? 'Section' : 'Subsection'}</th>
                         <th className="text-left py-3 px-4 font-medium">Title</th>
                         <th className="text-left py-3 px-4 font-medium">Starting Page</th>
                         <th className="text-left py-3 px-4 font-medium">Ending Page</th>
@@ -594,8 +612,8 @@ const BooksSection = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {selectedUnitSections && Array.isArray(selectedUnitSections) ? (
-                        selectedUnitSections.map((section) => (
+                      {getCurrentSections() && Array.isArray(getCurrentSections()) ? (
+                        getCurrentSections().map((section) => (
                           <tr key={section._id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                             <td className="py-4 px-4">
                               <span className="px-2 py-1 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-full text-xs font-medium">
@@ -632,7 +650,7 @@ const BooksSection = () => {
                       ) : (
                         <tr>
                           <td colSpan="6" className="py-4 px-4 text-center text-gray-400">
-                            No sections found for this unit.
+                            No {sectionsStack.length === 1 ? 'sections' : 'subsections'} found.
                           </td>
                         </tr>
                       )}
@@ -810,7 +828,6 @@ const BooksSection = () => {
                                 href={resource.link}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                // className="text-purple-400 hover:text-purple-300 transition-colors underline"
                                 className="px-3 py-3 rounded-full text-xs font-medium bg-black-500/20 text-gray-400 border border-white-500/30"
                               >
                                 Open
