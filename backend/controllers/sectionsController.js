@@ -72,7 +72,7 @@ export const updateSection = async (req, res, next) => {
   const section = await Sections.findOne({ _id: id, isDeleted: false })
   
   if (!section) next(new Error('Section not found'))
-  section.aiClarification = aiClarification
+  if (aiClarification) section.aiClarification = aiClarification
   await section.save()
   
   res.status(200).json({data: section})

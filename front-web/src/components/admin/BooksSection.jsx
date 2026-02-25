@@ -19,6 +19,8 @@ const BooksSection = () => {
   const [selectedSection, setSelectedSection] = useState(null);
   const [selectedSectionResources, setSelectedSectionResources] = useState(null);
   const [resourcesLoading, setResourcesLoading] = useState(false);
+  const [isSectionEditModalOpen, setIsSectionEditModalOpen] = useState(false);
+  const [editingSection, setEditingSection] = useState(null);
 
   // Helper function to get the current sections/subsections from the stack
   const getCurrentSections = () => {
@@ -278,6 +280,42 @@ const BooksSection = () => {
   const handleResourcesClick = (section) => {
     setSelectedSectionResources(section);
     fetchSectionResources(section);
+  };
+
+  const handleEditSection = (section) => {
+    setEditingSection(section);
+    setIsSectionEditModalOpen(true);
+  };
+
+  const handleUpdateSection = async (e) => {
+    e.preventDefault();
+    
+    try {
+      const response = await axios.put(`${API_BASE_URL}/api/v1/sections/${editingSection._id}`, {
+        aiClarification: editingSection.aiClarification
+      });
+
+      // Update the section in the current stack
+      setSectionsStack(prevStack => {
+        return prevStack.map(sections => 
+          sections.map(section => 
+            section._id === editingSection._id ? response.data.data : section
+          )
+        );
+      });
+      
+      alert('Section updated successfully!');
+      setIsSectionEditModalOpen(false);
+      setEditingSection(null);
+    } catch (error) {
+      console.error('Error updating section:', error);
+      alert('Error updating section. Please try again.');
+    }
+  };
+
+  const handleSectionEditInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditingSection(prev => ({ ...prev, [name]: value }));
   };
 
   const categories = [...new Set(books.map(book => book.subject))];
@@ -674,6 +712,12 @@ const BooksSection = () => {
                                   className="px-3 py-1 bg-green-500/20 text-green-400 border border-green-500/30 rounded text-sm hover:bg-green-500/30 transition-colors"
                                 >
                                   View
+                                </button>
+                                <button 
+                                  onClick={() => handleEditSection(section)}
+                                  className="px-3 py-1 bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded text-sm hover:bg-yellow-500/30 transition-colors"
+                                >
+                                  Edit
                                 </button>
                                 <button 
                                   onClick={() => handleSubsectionsClick(section)}
@@ -1113,6 +1157,61 @@ const BooksSection = () => {
                   className="px-4 py-2 bg-green-500/20 text-green-400 border border-green-500/30 rounded hover:bg-green-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {uploading ? 'Uploading...' : 'Upload Book'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Section Modal */}
+      {isSectionEditModalOpen && editingSection && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-white">Edit Section</h3>
+              <button
+                onClick={() => {
+                  setIsSectionEditModalOpen(false);
+                  setEditingSection(null);
+                }}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <form onSubmit={handleUpdateSection} className="space-y-4">              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">AI Clarification</label>
+                <textarea
+                  name="aiClarification"
+                  value={editingSection.aiClarification || ''}
+                  onChange={handleSectionEditInputChange}
+                  rows="15"
+                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-yellow-500 resize-none"
+                  placeholder="Enter AI clarification for this section..."
+                />
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsSectionEditModalOpen(false);
+                    setEditingSection(null);
+                  }}
+                  className="px-4 py-2 bg-gray-500/20 text-gray-400 border border-gray-500/30 rounded hover:bg-gray-500/30 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded hover:bg-yellow-500/30 transition-colors"
+                >
+                  Update Section
                 </button>
               </div>
             </form>
