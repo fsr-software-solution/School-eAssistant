@@ -34,6 +34,9 @@ const premiumPlanSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  deletedAt: {
+    type: Date
+  },
   createdAt: {
     type: Date,
     default: Date.now
@@ -49,6 +52,20 @@ premiumPlanSchema.index({ isDeleted: 1 });
 premiumPlanSchema.index({ amount: 1 });
 
 // Note: updatedAt is automatically handled by timestamps: true option
+
+premiumPlanSchema.pre('save', function() {
+  this.updatedAt = new Date();
+});
+
+premiumPlanSchema.statics.findActive = function() {
+  return this.find({ isDeleted: false });
+};
+
+premiumPlanSchema.methods.softDelete = function() {
+  this.isDeleted = true;
+  this.deletedAt = new Date();
+  return this.save();
+};
 
 premiumPlanSchema.statics.getActivePlans = function () {
   return this.find({ isDeleted: false });
