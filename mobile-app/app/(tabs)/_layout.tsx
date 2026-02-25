@@ -1,40 +1,54 @@
-import { Tabs, Redirect } from 'expo-router';
+import { Tabs } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS } from '../../constants/config';
-import { Platform } from 'react-native';
+import { SPACING } from '../../constants/config';
+import { Platform, View, StyleSheet } from 'react-native';
+import Text from '../../components/ui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Button from '../../components/ui/Button';
+import LoadingScreen from '../../components/ui/LoadingScreen';
 
 export default function TabsLayout() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, retryAuth } = useAuth();
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
 
   if (isLoading) {
-    return null;
+    return <LoadingScreen />;
   }
 
   if (!isAuthenticated) {
-    return <Redirect href="/login" />;
+    return (
+      <View style={[styles.errorContainer, { backgroundColor: colors.background }]}>
+        <Ionicons name="wifi-outline" size={64} color={colors.textSecondary} />
+        <Text variant="h2" color={colors.text} style={styles.errorTitle}>Connection Error</Text>
+        <Text variant="body" color={colors.textSecondary} style={styles.errorText}>
+          We couldn't connect to the server to verify your account. Please check your internet connection and try again.
+        </Text>
+        <Button title="Retry Connection" onPress={retryAuth} style={styles.retryButton} />
+      </View>
+    );
   }
 
   // Calculate tab bar height and padding based on safe area insets
-  const tabBarHeight = Platform.OS === 'ios' 
-    ? 49 + insets.bottom 
+  const tabBarHeight = Platform.OS === 'ios'
+    ? 49 + insets.bottom
     : 56 + insets.bottom;
-  
-  const tabBarPaddingBottom = Platform.OS === 'ios' 
-    ? insets.bottom 
+
+  const tabBarPaddingBottom = Platform.OS === 'ios'
+    ? insets.bottom
     : Math.max(insets.bottom, 8);
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: COLORS.primary,
-        tabBarInactiveTintColor: COLORS.textSecondary,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textSecondary,
         tabBarStyle: {
-          backgroundColor: COLORS.surface,
-          borderTopColor: COLORS.border,
+          backgroundColor: colors.surface,
+          borderTopColor: colors.border,
           borderTopWidth: 1,
           height: tabBarHeight,
           paddingBottom: tabBarPaddingBottom,
@@ -96,15 +110,35 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="profile"
+        name="progress"
         options={{
-          title: 'Profile',
+          title: 'Progress',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person" size={size} color={color} />
+            <Ionicons name="stats-chart" size={size} color={color} />
           ),
         }}
       />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: SPACING.xl,
+  },
+  errorTitle: {
+    marginTop: SPACING.lg,
+    marginBottom: SPACING.sm,
+  },
+  errorText: {
+    textAlign: 'center',
+    marginBottom: SPACING.xl,
+  },
+  retryButton: {
+    minWidth: 200,
+  },
+});
 

@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, TextInput, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING, BORDER_RADIUS, TYPOGRAPHY } from '../../constants/config';
+import { SPACING, BORDER_RADIUS } from '../../constants/config';
+import { useTheme } from '../../context/ThemeContext';
 
 interface SearchBarProps {
   value: string;
@@ -10,13 +11,15 @@ interface SearchBarProps {
 }
 
 export default function SearchBar({ value, onChangeText, placeholder = 'Search...' }: SearchBarProps) {
+  const { colors, typography } = useTheme();
+
   return (
-    <View style={styles.container}>
-      <Ionicons name="search" size={20} color={COLORS.textSecondary} style={styles.icon} />
+    <View style={[styles.container, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+      <Ionicons name="search" size={20} color={colors.textSecondary} style={styles.icon} />
       <TextInput
-        style={styles.input}
+        style={[styles.input, typography.body, { color: colors.text }]}
         placeholder={placeholder}
-        placeholderTextColor={COLORS.textSecondary}
+        placeholderTextColor={colors.textSecondary}
         value={value}
         onChangeText={onChangeText}
         autoCapitalize="none"
@@ -26,7 +29,7 @@ export default function SearchBar({ value, onChangeText, placeholder = 'Search..
         <Ionicons
           name="close-circle"
           size={20}
-          color={COLORS.textSecondary}
+          color={colors.textSecondary}
           style={styles.clearIcon}
           onPress={() => onChangeText('')}
         />
@@ -39,20 +42,16 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.surface,
     borderRadius: BORDER_RADIUS.md,
     paddingHorizontal: SPACING.md,
     height: 48,
     borderWidth: 1,
-    borderColor: COLORS.border,
   },
   icon: {
     marginRight: SPACING.sm,
   },
   input: {
     flex: 1,
-    ...TYPOGRAPHY.body,
-    color: COLORS.text,
     padding: 0,
   },
   clearIcon: {

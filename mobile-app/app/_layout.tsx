@@ -1,8 +1,38 @@
 import { Stack } from 'expo-router';
 import { AuthProvider } from '../context/AuthContext';
+import { ThemeProvider, useTheme } from '../context/ThemeContext';
 import { useEffect } from 'react';
 import { getOrCreateDeviceId } from '../utils/deviceId';
 import Toast from 'react-native-toast-message';
+
+function AppContent() {
+  const { colors } = useTheme();
+
+  return (
+    <>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: colors.background },
+        }}
+      >
+        <Stack.Screen name="index" />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen
+          name="settings"
+          options={{
+            headerShown: true,
+            title: 'Settings',
+            headerStyle: { backgroundColor: colors.surface },
+            headerTintColor: colors.text,
+            headerShadowVisible: false,
+          }}
+        />
+      </Stack>
+      <Toast />
+    </>
+  );
+}
 
 export default function RootLayout() {
   useEffect(() => {
@@ -11,19 +41,10 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <AuthProvider>
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: '#F9FAFB' },
-        }}
-      >
-        <Stack.Screen name="index" />
-        <Stack.Screen name="login" />
-        <Stack.Screen name="register" />
-        <Stack.Screen name="(tabs)" />
-      </Stack>
-      <Toast />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

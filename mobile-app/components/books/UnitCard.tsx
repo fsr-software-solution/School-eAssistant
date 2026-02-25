@@ -1,7 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS } from '../../constants/config';
+import { SPACING, BORDER_RADIUS } from '../../constants/config';
+import { useTheme } from '../../context/ThemeContext';
+import Text from '../ui/Text';
 import { Unit } from '../../services/books';
 
 interface UnitCardProps {
@@ -10,38 +12,40 @@ interface UnitCardProps {
 }
 
 export default function UnitCard({ unit, onPress }: UnitCardProps) {
+  const { colors } = useTheme();
+
   const pageRange = `${unit.startingPage}-${unit.endingPage}`;
   const totalPages = unit.endingPage - unit.startingPage + 1;
 
   return (
     <TouchableOpacity
-      style={styles.card}
+      style={[styles.card, { backgroundColor: colors.surface }]}
       onPress={onPress}
       activeOpacity={0.7}
     >
       <View style={styles.header}>
-        <View style={styles.unitNumber}>
-          <Text style={styles.unitNumberText}>Unit {unit.unitNumber}</Text>
+        <View style={[styles.unitNumber, { backgroundColor: colors.primaryLight + '20' }]}>
+          <Text variant="bodySmall" color={colors.primary} style={styles.unitNumberText}>Unit {unit.unitNumber}</Text>
         </View>
         <View style={styles.pages}>
-          <Ionicons name="document-text" size={14} color={COLORS.textSecondary} />
-          <Text style={styles.pagesText}>{pageRange}</Text>
+          <Ionicons name="document-text" size={14} color={colors.textSecondary} />
+          <Text variant="bodySmall" color={colors.textSecondary} style={styles.pagesText}>{pageRange}</Text>
         </View>
       </View>
-      
-      <Text style={styles.title} numberOfLines={2}>
+
+      <Text variant="h3" color={colors.text} style={styles.title} numberOfLines={2}>
         {unit.title}
       </Text>
-      
+
       {unit.summary && (
-        <Text style={styles.summary} numberOfLines={2}>
+        <Text variant="bodySmall" color={colors.textSecondary} style={styles.summary} numberOfLines={2}>
           {unit.summary}
         </Text>
       )}
 
-      <View style={styles.footer}>
-        <Text style={styles.pageCount}>{totalPages} pages</Text>
-        <Ionicons name="chevron-forward" size={18} color={COLORS.textSecondary} />
+      <View style={[styles.footer, { borderTopColor: colors.border }]}>
+        <Text variant="bodySmall" color={colors.textSecondary} style={styles.pageCount}>{totalPages} pages</Text>
+        <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
       </View>
     </TouchableOpacity>
   );
@@ -49,7 +53,6 @@ export default function UnitCard({ unit, onPress }: UnitCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: COLORS.surface,
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md,
     marginBottom: SPACING.md,
@@ -66,14 +69,11 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.sm,
   },
   unitNumber: {
-    backgroundColor: COLORS.primaryLight + '20',
     paddingHorizontal: SPACING.sm,
     paddingVertical: SPACING.xs,
     borderRadius: BORDER_RADIUS.sm,
   },
   unitNumberText: {
-    ...TYPOGRAPHY.bodySmall,
-    color: COLORS.primary,
     fontWeight: '600',
   },
   pages: {
@@ -81,18 +81,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   pagesText: {
-    ...TYPOGRAPHY.bodySmall,
-    color: COLORS.textSecondary,
     marginLeft: SPACING.xs,
   },
   title: {
-    ...TYPOGRAPHY.h3,
-    color: COLORS.text,
     marginBottom: SPACING.xs,
   },
   summary: {
-    ...TYPOGRAPHY.bodySmall,
-    color: COLORS.textSecondary,
     marginBottom: SPACING.sm,
   },
   footer: {
@@ -102,11 +96,8 @@ const styles = StyleSheet.create({
     marginTop: SPACING.xs,
     paddingTop: SPACING.sm,
     borderTopWidth: 1,
-    borderTopColor: COLORS.border,
   },
   pageCount: {
-    ...TYPOGRAPHY.bodySmall,
-    color: COLORS.textSecondary,
   },
 });
 

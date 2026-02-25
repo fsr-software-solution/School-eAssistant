@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS } from '../../constants/config';
+import { SPACING, BORDER_RADIUS } from '../../constants/config';
+import { useTheme } from '../../context/ThemeContext';
+import Text from '../../components/ui/Text';
 import { Platform } from 'react-native';
 import { booksService, Book, Unit } from '../../services/books';
 import UnitCard from '../../components/books/UnitCard';
@@ -14,6 +16,7 @@ export default function BookDetailsScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
 
   const [book, setBook] = useState<Book | null>(null);
   const [units, setUnits] = useState<Unit[]>([]);
@@ -55,10 +58,10 @@ export default function BookDetailsScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.loadingText}>Loading book details...</Text>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text variant="body" color={colors.textSecondary} style={styles.loadingText}>Loading book details...</Text>
         </View>
       </SafeAreaView>
     );
@@ -69,7 +72,7 @@ export default function BookDetailsScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.content}
@@ -77,33 +80,33 @@ export default function BookDetailsScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <View style={styles.iconContainer}>
-            <Ionicons name="library" size={48} color={COLORS.primary} />
+          <View style={[styles.iconContainer, { backgroundColor: colors.primaryLight + '20' }]}>
+            <Ionicons name="library" size={48} color={colors.primary} />
           </View>
-          <Text style={styles.subject}>{book.subject}</Text>
-          <Text style={styles.meta}>
+          <Text variant="h1" color={colors.text} style={styles.subject}>{book.subject}</Text>
+          <Text variant="body" color={colors.textSecondary} style={styles.meta}>
             {book.gradeLevel} • {book.yearOfPublish} • {book.totalPages} pages
           </Text>
         </View>
 
         {/* Summary */}
         {book.summary && (
-          <View style={styles.summaryCard}>
-            <Text style={styles.summaryTitle}>About this book</Text>
-            <Text style={styles.summaryText}>{book.summary}</Text>
+          <View style={[styles.summaryCard, { backgroundColor: colors.surface }]}>
+            <Text variant="h3" color={colors.text} style={styles.summaryTitle}>About this book</Text>
+            <Text variant="body" color={colors.textSecondary} style={styles.summaryText}>{book.summary}</Text>
           </View>
         )}
 
         {/* Units Section */}
         <View style={styles.unitsSection}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Units</Text>
-            <Text style={styles.unitCount}>{units.length} {units.length === 1 ? 'unit' : 'units'}</Text>
+            <Text variant="h2" color={colors.text} style={styles.sectionTitle}>Units</Text>
+            <Text variant="body" color={colors.textSecondary} style={styles.unitCount}>{units.length} {units.length === 1 ? 'unit' : 'units'}</Text>
           </View>
 
           {units.length === 0 ? (
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No units available</Text>
+              <Text variant="body" color={colors.textSecondary} style={styles.emptyText}>No units available</Text>
             </View>
           ) : (
             units.map((unit) => (
@@ -119,7 +122,6 @@ export default function BookDetailsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
   },
   scrollView: {
     flex: 1,
@@ -133,8 +135,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    ...TYPOGRAPHY.body,
-    color: COLORS.textSecondary,
     marginTop: SPACING.md,
   },
   header: {
@@ -145,36 +145,26 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: BORDER_RADIUS.full,
-    backgroundColor: COLORS.primaryLight + '20',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: SPACING.md,
   },
   subject: {
-    ...TYPOGRAPHY.h1,
-    color: COLORS.text,
     textAlign: 'center',
     marginBottom: SPACING.xs,
   },
   meta: {
-    ...TYPOGRAPHY.body,
-    color: COLORS.textSecondary,
     textAlign: 'center',
   },
   summaryCard: {
-    backgroundColor: COLORS.surface,
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md,
     marginBottom: SPACING.xl,
   },
   summaryTitle: {
-    ...TYPOGRAPHY.h3,
-    color: COLORS.text,
     marginBottom: SPACING.sm,
   },
   summaryText: {
-    ...TYPOGRAPHY.body,
-    color: COLORS.textSecondary,
     lineHeight: 24,
   },
   unitsSection: {
@@ -187,20 +177,14 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
   },
   sectionTitle: {
-    ...TYPOGRAPHY.h2,
-    color: COLORS.text,
   },
   unitCount: {
-    ...TYPOGRAPHY.body,
-    color: COLORS.textSecondary,
   },
   emptyContainer: {
     paddingVertical: SPACING.xl,
     alignItems: 'center',
   },
   emptyText: {
-    ...TYPOGRAPHY.body,
-    color: COLORS.textSecondary,
   },
 });
 

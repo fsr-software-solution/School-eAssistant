@@ -1,7 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS } from '../../constants/config';
+import { SPACING, BORDER_RADIUS } from '../../constants/config';
+import { useTheme } from '../../context/ThemeContext';
+import Text from '../ui/Text';
 import { Book } from '../../services/books';
 
 interface BookCardProps {
@@ -10,37 +12,39 @@ interface BookCardProps {
 }
 
 export default function BookCard({ book, onPress }: BookCardProps) {
+  const { colors } = useTheme();
+
   return (
     <TouchableOpacity
-      style={styles.card}
+      style={[styles.card, { backgroundColor: colors.surface }]}
       onPress={onPress}
       activeOpacity={0.7}
     >
-      <View style={styles.iconContainer}>
-        <Ionicons name="library" size={40} color={COLORS.primary} />
+      <View style={[styles.iconContainer, { backgroundColor: colors.primaryLight + '20' }]}>
+        <Ionicons name="library" size={40} color={colors.primary} />
       </View>
-      
+
       <View style={styles.content}>
-        <Text style={styles.subject} numberOfLines={1}>
+        <Text variant="h3" color={colors.text} style={styles.subject} numberOfLines={1}>
           {book.subject}
         </Text>
-        <Text style={styles.gradeLevel}>
+        <Text variant="bodySmall" color={colors.textSecondary} style={styles.gradeLevel}>
           {book.gradeLevel} • {book.yearOfPublish}
         </Text>
         <View style={styles.meta}>
           <View style={styles.metaItem}>
-            <Ionicons name="document-text" size={14} color={COLORS.textSecondary} />
-            <Text style={styles.metaText}>{book.totalPages} pages</Text>
+            <Ionicons name="document-text" size={14} color={colors.textSecondary} />
+            <Text variant="bodySmall" color={colors.textSecondary} style={styles.metaText}>{book.totalPages} pages</Text>
           </View>
         </View>
         {book.summary && (
-          <Text style={styles.summary} numberOfLines={2}>
+          <Text variant="bodySmall" color={colors.textSecondary} style={styles.summary} numberOfLines={2}>
             {book.summary}
           </Text>
         )}
       </View>
 
-      <Ionicons name="chevron-forward" size={20} color={COLORS.textSecondary} />
+      <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
     </TouchableOpacity>
   );
 }
@@ -48,7 +52,6 @@ export default function BookCard({ book, onPress }: BookCardProps) {
 const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
-    backgroundColor: COLORS.surface,
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md,
     marginBottom: SPACING.md,
@@ -63,7 +66,6 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: BORDER_RADIUS.md,
-    backgroundColor: COLORS.primaryLight + '20',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: SPACING.md,
@@ -72,13 +74,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   subject: {
-    ...TYPOGRAPHY.h3,
-    color: COLORS.text,
     marginBottom: SPACING.xs,
   },
   gradeLevel: {
-    ...TYPOGRAPHY.bodySmall,
-    color: COLORS.textSecondary,
     marginBottom: SPACING.xs,
   },
   meta: {
@@ -91,13 +89,9 @@ const styles = StyleSheet.create({
     marginRight: SPACING.md,
   },
   metaText: {
-    ...TYPOGRAPHY.bodySmall,
-    color: COLORS.textSecondary,
     marginLeft: SPACING.xs,
   },
   summary: {
-    ...TYPOGRAPHY.bodySmall,
-    color: COLORS.textSecondary,
     marginTop: SPACING.xs,
   },
 });

@@ -13,7 +13,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (username: string, password: string) => Promise<void>;
   register: (username: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
+  retryAuth: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,6 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const checkAuthStatus = async () => {
+    setIsLoading(true);
     try {
       const isAuth = await authService.isAuthenticated();
 
@@ -69,24 +70,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = async () => {
-    try {
-      await authService.logout();
-      setUser(null);
-    } catch (error) {
-      console.error('Logout error:', error);
-      // Clear local state even if API call fails
-      setUser(null);
-    }
-  };
-
   const value: AuthContextType = {
     user,
     isLoading,
     isAuthenticated: !!user,
     login,
     register,
-    logout,
+    retryAuth: checkAuthStatus,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

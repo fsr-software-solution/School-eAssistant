@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS } from '../../../constants/config';
+import { SPACING, BORDER_RADIUS } from '../../../constants/config';
+import { useTheme } from '../../../context/ThemeContext';
+import Text from '../../../components/ui/Text';
 import { booksService, Unit, Section } from '../../../services/books';
 import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
@@ -11,6 +13,7 @@ import { useContentProtection, textProtectionProps } from '../../../utils/conten
 export default function UnitDetailsScreen() {
   const router = useRouter();
   const { id, bookId } = useLocalSearchParams<{ id: string; bookId: string }>();
+  const { colors } = useTheme();
 
   const [unit, setUnit] = useState<Unit | null>(null);
   const [sections, setSections] = useState<Section[]>([]);
@@ -55,10 +58,10 @@ export default function UnitDetailsScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.loadingText}>Loading unit...</Text>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text variant="body" color={colors.textSecondary} style={styles.loadingText}>Loading unit...</Text>
         </View>
       </SafeAreaView>
     );
@@ -69,7 +72,7 @@ export default function UnitDetailsScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.content}
@@ -77,20 +80,20 @@ export default function UnitDetailsScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <View style={styles.unitBadge}>
-            <Text style={styles.unitBadgeText}>Unit {unit.unitNumber}</Text>
+          <View style={[styles.unitBadge, { backgroundColor: colors.primaryLight + '20' }]}>
+            <Text variant="body" color={colors.primary} style={styles.unitBadgeText}>Unit {unit.unitNumber}</Text>
           </View>
-          <Text style={styles.title}>{unit.title}</Text>
-          <Text style={styles.pageRange}>
+          <Text variant="h1" color={colors.text} style={styles.title}>{unit.title}</Text>
+          <Text variant="body" color={colors.textSecondary} style={styles.pageRange}>
             Pages {unit.startingPage} - {unit.endingPage}
           </Text>
         </View>
 
         {/* Summary */}
         {unit.summary && (
-          <View style={styles.summaryCard}>
-            <Text style={styles.summaryTitle}>Summary</Text>
-            <Text style={styles.summaryText} {...textProtectionProps}>
+          <View style={[styles.summaryCard, { backgroundColor: colors.surface }]}>
+            <Text variant="h3" color={colors.text} style={styles.summaryTitle}>Summary</Text>
+            <Text variant="body" color={colors.textSecondary} style={styles.summaryText} {...textProtectionProps}>
               {unit.summary}
             </Text>
           </View>
@@ -99,37 +102,37 @@ export default function UnitDetailsScreen() {
         {/* Sections */}
         <View style={styles.sectionsSection}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Sections</Text>
-            <Text style={styles.sectionCount}>
+            <Text variant="h2" color={colors.text} style={styles.sectionTitle}>Sections</Text>
+            <Text variant="body" color={colors.textSecondary} style={styles.sectionCount}>
               {sections.length} {sections.length === 1 ? 'section' : 'sections'}
             </Text>
           </View>
 
           {sections.length === 0 ? (
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No sections available</Text>
+              <Text variant="body" color={colors.textSecondary} style={styles.emptyText}>No sections available</Text>
             </View>
           ) : (
             sections.map((section) => (
               <TouchableOpacity
                 key={section._id}
-                style={styles.sectionCard}
+                style={[styles.sectionCard, { backgroundColor: colors.surface }]}
                 onPress={() => handleSectionPress(section)}
                 activeOpacity={0.7}
               >
                 <View style={styles.sectionHeaderContent}>
-                  <View style={styles.sectionNumber}>
-                    <Text style={styles.sectionNumberText}>{section.sectionNumber}</Text>
+                  <View style={[styles.sectionNumber, { backgroundColor: colors.primaryLight + '20' }]}>
+                    <Text variant="bodySmall" color={colors.primary} style={styles.sectionNumberText}>{section.sectionNumber}</Text>
                   </View>
                   <View style={styles.sectionContent}>
-                    <Text style={styles.sectionTitleText} numberOfLines={2}>
+                    <Text variant="body" color={colors.text} style={styles.sectionTitleText} numberOfLines={2}>
                       {section.title}
                     </Text>
-                    <Text style={styles.sectionPages}>
+                    <Text variant="bodySmall" color={colors.textSecondary} style={styles.sectionPages}>
                       Pages {section.startingPage} - {section.endingPage}
                     </Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={20} color={COLORS.textSecondary} />
+                  <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
                 </View>
               </TouchableOpacity>
             ))
@@ -143,7 +146,6 @@ export default function UnitDetailsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
   },
   scrollView: {
     flex: 1,
@@ -157,8 +159,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    ...TYPOGRAPHY.body,
-    color: COLORS.textSecondary,
     marginTop: SPACING.md,
   },
   header: {
@@ -166,41 +166,29 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.xl,
   },
   unitBadge: {
-    backgroundColor: COLORS.primaryLight + '20',
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.xs,
     borderRadius: BORDER_RADIUS.full,
     marginBottom: SPACING.md,
   },
   unitBadgeText: {
-    ...TYPOGRAPHY.body,
-    color: COLORS.primary,
     fontWeight: '600',
   },
   title: {
-    ...TYPOGRAPHY.h1,
-    color: COLORS.text,
     textAlign: 'center',
     marginBottom: SPACING.xs,
   },
   pageRange: {
-    ...TYPOGRAPHY.body,
-    color: COLORS.textSecondary,
   },
   summaryCard: {
-    backgroundColor: COLORS.surface,
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md,
     marginBottom: SPACING.xl,
   },
   summaryTitle: {
-    ...TYPOGRAPHY.h3,
-    color: COLORS.text,
     marginBottom: SPACING.sm,
   },
   summaryText: {
-    ...TYPOGRAPHY.body,
-    color: COLORS.textSecondary,
     lineHeight: 24,
   },
   sectionsSection: {
@@ -213,15 +201,10 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
   },
   sectionTitle: {
-    ...TYPOGRAPHY.h2,
-    color: COLORS.text,
   },
   sectionCount: {
-    ...TYPOGRAPHY.body,
-    color: COLORS.textSecondary,
   },
   sectionCard: {
-    backgroundColor: COLORS.surface,
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.md,
     marginBottom: SPACING.md,
@@ -239,36 +222,27 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: BORDER_RADIUS.sm,
-    backgroundColor: COLORS.primaryLight + '20',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: SPACING.md,
   },
   sectionNumberText: {
-    ...TYPOGRAPHY.bodySmall,
-    color: COLORS.primary,
     fontWeight: '600',
   },
   sectionContent: {
     flex: 1,
   },
   sectionTitleText: {
-    ...TYPOGRAPHY.body,
-    color: COLORS.text,
     fontWeight: '500',
     marginBottom: SPACING.xs,
   },
   sectionPages: {
-    ...TYPOGRAPHY.bodySmall,
-    color: COLORS.textSecondary,
   },
   emptyContainer: {
     paddingVertical: SPACING.xl,
     alignItems: 'center',
   },
   emptyText: {
-    ...TYPOGRAPHY.body,
-    color: COLORS.textSecondary,
   },
 });
 
