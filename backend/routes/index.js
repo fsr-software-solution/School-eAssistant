@@ -12,7 +12,6 @@ import referencesRoutes from './referencesRoutes.js';
 import progressRoutes from './progressRoutes.js';
 import paymentRoutes from './paymentRoutes.js';
 import hardDeleteRoutes from './hardDeleteRoutes.js'
-import restoreRoutes from './restoreRoutes.js'
 import adminDashboard from '../controllers/adminDashboardController.js';
 import protect from '../middleware/authMiddleware.js';
 import adminOnly from '../middleware/adminMiddleware.js';
@@ -31,8 +30,7 @@ router.use('/quizzes', quizzesRoutes);
 router.use('/resources', resourcesRoutes);
 router.use('/references', referencesRoutes);
 router.use('/progress', progressRoutes);
-router.use('/admin/hard-delete', hardDeleteRoutes);
-router.use('/admin/restore', restoreRoutes);
+router.use('/admin/delete', hardDeleteRoutes);
 router.get('/admin/dashboard', protect, adminOnly, adminDashboard);
 
 export default router;
