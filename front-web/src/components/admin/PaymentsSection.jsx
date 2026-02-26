@@ -32,6 +32,7 @@ const PaymentsSection = () => {
   });
   const [editingPlan, setEditingPlan] = useState(null);
   const [viewingPlan, setViewingPlan] = useState(null);
+  const [viewingAccount, setViewingAccount] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   
   // Payment status update state
@@ -312,13 +313,22 @@ const PaymentsSection = () => {
       <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-white">Account Management</h2>
-          <button
-            onClick={updateAccount}
-            disabled={accountLoading}
-            className="px-4 py-2 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-lg hover:bg-blue-500/30 transition-colors disabled:opacity-50"
-          >
-            {accountLoading ? 'Updating...' : 'Update Account'}
-          </button>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setViewingAccount(account)}
+              disabled={!account}
+              className="px-3 py-1 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded text-sm hover:bg-blue-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              View Account
+            </button>
+            <button
+              onClick={updateAccount}
+              disabled={accountLoading}
+              className="px-4 py-2 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-lg hover:bg-blue-500/30 transition-colors disabled:opacity-50"
+            >
+              {accountLoading ? 'Updating...' : 'Update Account'}
+            </button>
+          </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
@@ -436,6 +446,75 @@ const PaymentsSection = () => {
           </table>
         </div>
       </div>
+
+      {/* View Account Modal */}
+      {viewingAccount && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 w-full max-w-2xl">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-white">Account Details</h3>
+              <button
+                onClick={() => setViewingAccount(null)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-gray-400 text-sm mb-2 font-medium">Account ID</label>
+                  <p className="text-gray-300 text-sm">{viewingAccount._id}</p>
+                </div>
+                <div>
+                  <label className="block text-gray-400 text-sm mb-2 font-medium">Status</label>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${viewingAccount.isActive ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'}`}>
+                    {viewingAccount.isActive ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-gray-400 text-sm mb-2 font-medium">Account Number</label>
+                <p className="text-white font-mono">{viewingAccount.accountNumber}</p>
+              </div>
+              
+              <div>
+                <label className="block text-gray-400 text-sm mb-2 font-medium">Account Holder Name</label>
+                <p className="text-white">{viewingAccount.accountHolderFullName}</p>
+              </div>
+              
+              <div>
+                <label className="block text-gray-400 text-sm mb-2 font-medium">Bank Name</label>
+                <p className="text-white">{viewingAccount.bankName}</p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-gray-400 text-sm mb-2 font-medium">Created At</label>
+                  <p className="text-gray-300 text-sm">{new Date(viewingAccount.createdAt).toLocaleString()}</p>
+                </div>
+                <div>
+                  <label className="block text-gray-400 text-sm mb-2 font-medium">Updated At</label>
+                  <p className="text-gray-300 text-sm">{new Date(viewingAccount.updatedAt).toLocaleString()}</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={() => setViewingAccount(null)}
+                className="px-4 py-2 bg-gray-500/20 text-gray-400 border border-gray-500/30 rounded-lg hover:bg-gray-500/30 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* View Plan Modal */}
       {viewingPlan && (
@@ -555,6 +634,7 @@ const PaymentsSection = () => {
                   type="text"
                   value={planForm.planName}
                   onChange={(e) => setPlanForm(prev => ({ ...prev, planName: e.target.value }))}
+                  placeholder="Enter plan name (e.g., Basic, Premium, Enterprise)"
                   className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
                 />
               </div>
@@ -563,16 +643,18 @@ const PaymentsSection = () => {
                 <textarea
                   value={planForm.description}
                   onChange={(e) => setPlanForm(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Enter a detailed description of this plan and what it includes..."
                   className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
                   rows="3"
                 />
               </div>
               <div>
-                <label className="block text-gray-400 text-sm mb-2">Amount</label>
+                <label className="block text-gray-400 text-sm mb-2">Amount (ETB)</label>
                 <input
                   type="number"
                   value={planForm.amount}
                   onChange={(e) => setPlanForm(prev => ({ ...prev, amount: e.target.value }))}
+                  placeholder="Enter amount in ETB (e.g., 500)"
                   className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
                 />
               </div>
@@ -582,6 +664,7 @@ const PaymentsSection = () => {
                   type="number"
                   value={planForm.durationDays}
                   onChange={(e) => setPlanForm(prev => ({ ...prev, durationDays: e.target.value }))}
+                  placeholder="Enter duration in days (e.g., 30, 90, 365)"
                   className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
                 />
               </div>
@@ -590,7 +673,7 @@ const PaymentsSection = () => {
                 <textarea
                   value={planForm.features}
                   onChange={(e) => setPlanForm(prev => ({ ...prev, features: e.target.value }))}
-                  placeholder="e.g., AI Chat, Free Quizzes, Ask any time"
+                  placeholder="e.g., AI Chat, Free Quizzes, Ask any time, Priority Support"
                   className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
                   rows="3"
                 />
