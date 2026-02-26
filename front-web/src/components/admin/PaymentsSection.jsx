@@ -33,6 +33,7 @@ const PaymentsSection = () => {
   const [editingPlan, setEditingPlan] = useState(null);
   const [viewingPlan, setViewingPlan] = useState(null);
   const [viewingAccount, setViewingAccount] = useState(null);
+  const [viewingPayment, setViewingPayment] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   
   // Payment status update state
@@ -702,6 +703,198 @@ const PaymentsSection = () => {
         </div>
       )}
 
+      {/* View Payment Modal */}
+      {viewingPayment && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 w-full max-w-4xl">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-white">Payment Details</h3>
+              <button
+                onClick={() => setViewingPayment(null)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Payment Information */}
+              <div className="space-y-4">
+                <h4 className="text-md font-semibold text-white border-b border-white/20 pb-2">Payment Information</h4>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-2 font-medium">Transaction ID</label>
+                    <p className="text-white font-mono">{viewingPayment.transactionId}</p>
+                  </div>
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-2 font-medium">Payment Date</label>
+                    <p className="text-white">{new Date(viewingPayment.paymentDate).toLocaleString()}</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-2 font-medium">Paid Amount</label>
+                    <p className="text-white text-lg font-semibold">ETB {viewingPayment.paidAmount}</p>
+                  </div>
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-2 font-medium">Status</label>
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(viewingPayment.verificationStatus)}`}>
+                      {viewingPayment.verificationStatus.toUpperCase()}
+                    </span>
+                  </div>
+                </div>
+                
+                {viewingPayment.rejectionReason && viewingPayment.verificationStatus === 'rejected' && (
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-2 font-medium">Rejection Reason</label>
+                    <p className="text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg p-3">{viewingPayment.rejectionReason}</p>
+                  </div>
+                )}
+                
+                <div>
+                  <label className="block text-gray-400 text-sm mb-2 font-medium">Expiration Date</label>
+                  <p className="text-white">{new Date(viewingPayment.expiresAt).toLocaleString()}</p>
+                </div>
+              </div>
+
+              {/* Student Information */}
+              <div className="space-y-4">
+                <h4 className="text-md font-semibold text-white border-b border-white/20 pb-2">Student Information</h4>
+                
+                <div>
+                  <label className="block text-gray-400 text-sm mb-2 font-medium">Student Name</label>
+                  <p className="text-white text-lg">{viewingPayment.studentId?.username || 'Unknown'}</p>
+                </div>
+                
+                <div>
+                  <label className="block text-gray-400 text-sm mb-2 font-medium">Student ID</label>
+                  <p className="text-gray-300 text-sm">{viewingPayment.studentId?._id || 'N/A'}</p>
+                </div>
+              </div>
+
+              {/* Plan Information */}
+              <div className="space-y-4">
+                <h4 className="text-md font-semibold text-white border-b border-white/20 pb-2">Plan Information</h4>
+                
+                <div>
+                  <label className="block text-gray-400 text-sm mb-2 font-medium">Plan Name</label>
+                  <p className="text-white text-lg">{viewingPayment.planId?.planName || 'Unknown'}</p>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-2 font-medium">Plan Amount</label>
+                    <p className="text-white">ETB {viewingPayment.planId?.amount || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-2 font-medium">Duration</label>
+                    <p className="text-white">{viewingPayment.planId?.durationDays || 'N/A'} days</p>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-gray-400 text-sm mb-2 font-medium">Features</label>
+                  <div className="flex flex-wrap gap-2">
+                    {viewingPayment.planId?.features?.map((feature, index) => (
+                      <span key={index} className="px-3 py-1 bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded-full text-sm">
+                        {feature}
+                      </span>
+                    )) || <span className="text-gray-400">No features listed</span>}
+                  </div>
+                </div>
+              </div>
+
+              {/* Sender Information */}
+              <div className="space-y-4">
+                <h4 className="text-md font-semibold text-white border-b border-white/20 pb-2">Sender Information</h4>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-2 font-medium">Sender Name</label>
+                    <p className="text-white">{viewingPayment.senderName}</p>
+                  </div>
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-2 font-medium">Phone Number</label>
+                    <p className="text-white">{viewingPayment.senderPhoneNumber}</p>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-gray-400 text-sm mb-2 font-medium">Account Number</label>
+                  <p className="text-white font-mono">{viewingPayment.senderAccountNumber}</p>
+                </div>
+              </div>
+
+              {/* Recipient Information */}
+              <div className="space-y-4">
+                <h4 className="text-md font-semibold text-white border-b border-white/20 pb-2">Recipient Information</h4>
+                
+                <div>
+                  <label className="block text-gray-400 text-sm mb-2 font-medium">Recipient Name</label>
+                  <p className="text-white">{viewingPayment.recipientName}</p>
+                </div>
+                
+                <div>
+                  <label className="block text-gray-400 text-sm mb-2 font-medium">Account Number</label>
+                  <p className="text-white font-mono">{viewingPayment.recipientAccountNumber}</p>
+                </div>
+              </div>
+
+              {/* Screenshot */}
+              {viewingPayment.screenshotPath && (
+                <div className="lg:col-span-2 space-y-4">
+                  <h4 className="text-md font-semibold text-white border-b border-white/20 pb-2">Payment Screenshot</h4>
+                  
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <img 
+                      src={viewingPayment.screenshotPath} 
+                      alt="Payment Screenshot"
+                      className="w-full max-h-96 object-contain rounded border border-white/20"
+                      onError={(e) => {
+                        e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzMzIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPuKAmCBOb869wq8gSW1hZ2UgQXZhaWxhYmxlIOKAmTwvdGV4dD48L3N2Zz4=';
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Metadata */}
+              <div className="lg:col-span-2 space-y-4">
+                <h4 className="text-md font-semibold text-white border-b border-white/20 pb-2">Metadata</h4>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-2 font-medium">Payment ID</label>
+                    <p className="text-gray-300 text-sm">{viewingPayment._id}</p>
+                  </div>
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-2 font-medium">Created At</label>
+                    <p className="text-gray-300 text-sm">{new Date(viewingPayment.createdAt).toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-2 font-medium">Updated At</label>
+                    <p className="text-gray-300 text-sm">{new Date(viewingPayment.updatedAt).toLocaleString()}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={() => setViewingPayment(null)}
+                className="px-4 py-2 bg-gray-500/20 text-gray-400 border border-gray-500/30 rounded-lg hover:bg-gray-500/30 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Edit Plan Modal */}
       {editingPlan !== null ? (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
@@ -933,7 +1126,10 @@ const PaymentsSection = () => {
                   <td className="py-4 px-4 text-gray-400">{payment.transactionId}</td>
                   <td className="py-4 px-4">
                     <div className="flex space-x-2">
-                      <button className="px-3 py-1 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded text-sm hover:bg-blue-500/30 transition-colors">
+                      <button
+                        onClick={() => setViewingPayment(payment)}
+                        className="px-3 py-1 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded text-sm hover:bg-blue-500/30 transition-colors"
+                      >
                         View Details
                       </button>
                     </div>
