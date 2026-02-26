@@ -52,11 +52,11 @@ const resolveQuizzes = async ({chatSessionId, baseIdea, numberOfQuestions}) => {
 
         await References.create({
             quizId: quiz?._id,
-            bookId: doc?.bookId?.toString(),
-            quotedText: doc?.text,
-            pageNumber: doc?.loc?.pageNumber,
-            lineFrom: doc?.loc?.lines?.from,
-            lineTo: doc?.loc?.lines?.to
+            bookId: doc?.bookId?.toString() || doc?.metadata?.bookId?.toString(),
+            quotedText: doc?.text || doc?.pageContent,
+            pageNumber: doc?.loc?.pageNumber || doc?.metadata?.loc?.pageNumber,
+            lineFrom: doc?.loc?.lines?.from || doc?.metadata?.loc?.lines?.from,
+            lineTo: doc?.loc?.lines?.to || doc?.metadata?.loc?.lines?.to
         })
         
         return quiz
