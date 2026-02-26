@@ -146,32 +146,32 @@ router.put('/resources', restoreAllResources);
 router.delete('/resources/:id', hardDeleteResource);
 router.delete('/resources', hardDeleteAllResources);
 
-router.get('/student-progress/:id', getSoftDeletedStudentProgress);
-router.get('/student-progress', getAllSoftDeletedStudentProgress);
-router.put('/student-progress/:id', restoreStudentProgress);
-router.put('/student-progress', restoreAllStudentProgress);
-router.delete('/student-progress/:id', hardDeleteStudentProgress);
-router.delete('/student-progress', hardDeleteAllStudentProgress);
+router.get('/progress/:id', getSoftDeletedStudentProgress);
+router.get('/progress', getAllSoftDeletedStudentProgress);
+router.put('/progress/:id', restoreStudentProgress);
+router.put('/progress', restoreAllStudentProgress);
+router.delete('/progress/:id', hardDeleteStudentProgress);
+router.delete('/progress', hardDeleteAllStudentProgress);
 
-// router.get('/account/:id', getSoftDeletedPaymentAccount);
-// router.get('/account', getAllSoftDeletedPaymentAccounts);
-// router.put('/account/:id', restorePaymentAccount);
-// router.put('/account', restoreAllPaymentAccounts);
-// router.delete('/account/:id', hardDeletePaymentAccount);
-// router.delete('/account', hardDeleteAllPaymentAccounts);
+router.get('/accounts/:id', getSoftDeletedPaymentAccount);
+router.get('/accounts', getAllSoftDeletedPaymentAccounts);
+router.put('/accounts/:id', restorePaymentAccount);
+router.put('/accounts', restoreAllPaymentAccounts);
+router.delete('/accounts/:id', hardDeletePaymentAccount);
+router.delete('/accounts', hardDeleteAllPaymentAccounts);
 
-router.get('/plan/:id', getSoftDeletedPremiumPlan);
-router.get('/plan', getAllSoftDeletedPremiumPlans);
-router.put('/plan/:id', restorePremiumPlan);
-router.put('/plan', restoreAllPremiumPlans);
-router.delete('/plan/:id', hardDeletePremiumPlan);
-router.delete('/plan', hardDeleteAllPremiumPlans);
+router.get('/plans/:id', getSoftDeletedPremiumPlan);
+router.get('/plans', getAllSoftDeletedPremiumPlans);
+router.put('/plans/:id', restorePremiumPlan);
+router.put('/plans', restoreAllPremiumPlans);
+router.delete('/plans/:id', hardDeletePremiumPlan);
+router.delete('/plans', hardDeleteAllPremiumPlans);
 
-// router.get('/transaction/:id', getSoftDeletedPaymentTransaction);
-// router.get('/transaction', getAllSoftDeletedPaymentTransactions);
-// router.put('/transaction/:id', restorePaymentTransaction);
-// router.put('/transaction', restoreAllPaymentTransactions);
-// router.delete('/transaction/:id', hardDeletePaymentTransaction);
-// router.delete('/transaction', hardDeleteAllPaymentTransactions);
+router.get('/transactions/:id', getSoftDeletedPaymentTransaction);
+router.get('/transactions', getAllSoftDeletedPaymentTransactions);
+router.put('/transactions/:id', restorePaymentTransaction);
+router.put('/transactions', restoreAllPaymentTransactions);
+router.delete('/transactions/:id', hardDeletePaymentTransaction);
+router.delete('/transactions', hardDeleteAllPaymentTransactions);
 
 export default router;
