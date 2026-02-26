@@ -706,18 +706,19 @@ const PaymentsSection = () => {
       {/* View Payment Modal */}
       {viewingPayment && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 w-full max-w-4xl">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-white">Payment Details</h3>
-              <button
-                onClick={() => setViewingPayment(null)}
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-              </button>
-            </div>
+          <div className="bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-white">Payment Details</h3>
+                <button
+                  onClick={() => setViewingPayment(null)}
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
+                </button>
+              </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Payment Information */}
@@ -890,6 +891,7 @@ const PaymentsSection = () => {
               >
                 Close
               </button>
+            </div>
             </div>
           </div>
         </div>
