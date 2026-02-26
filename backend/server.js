@@ -19,7 +19,6 @@ app.use('/api/v1', apiRoutes)
 app.get("/api", (req, res) => {
     res.send("FSR School eAssistant Server is Live ...")
 })
-app.use('/api/auth',authRoutes)
 
 app.use((req, res) => {
     res.status(404).json({error: 'Route not found'})

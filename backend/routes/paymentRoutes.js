@@ -4,6 +4,7 @@ import premiumPlanController from '../controllers/premiumPlanController.js';
 import paymentAccountController from '../controllers/paymentAccountController.js';
 import protect from '../middleware/authMiddleware.js';
 import adminOnly from '../middleware/adminMiddleware.js';
+import { studentOnly } from '../middleware/paymentMiddleware.js';
 
 const router = express.Router();
 
@@ -14,6 +15,7 @@ router.get('/premium-access', protect, PaymentController.checkPremiumAccess);
 router.post(
   '/upload-screenshot',
   protect,
+  studentOnly,
   (req, res, next) => {
     upload.single('screenshot')(req, res, (err) => {
       if (err) {

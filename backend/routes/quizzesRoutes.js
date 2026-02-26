@@ -6,12 +6,13 @@ import {
   deleteQuiz
 } from '../controllers/quizzesController.js';
 import protect from '../middleware/authMiddleware.js';
+import { requirePremiumAccess } from '../middleware/paymentMiddleware.js';
 
 const router = express.Router();
 
-router.get('/:id', getQuizById);
-router.get('/:id/references', getQuizReferences);
-router.post('/', protect, createQuiz);
-router.delete('/:id', deleteQuiz);
+router.get('/:id', protect, requirePremiumAccess, getQuizById);
+router.get('/:id/references', protect, requirePremiumAccess, getQuizReferences);
+router.post('/', protect, requirePremiumAccess, createQuiz);
+router.delete('/:id', protect, requirePremiumAccess, deleteQuiz);
 
 export default router;
