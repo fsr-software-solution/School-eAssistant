@@ -318,6 +318,23 @@ const BooksSection = () => {
     setEditingSection(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleDeleteResource = async (resourceId) => {
+    if (window.confirm('Are you sure you want to delete this resource?')) {
+      try {
+        await axios.delete(`${API_BASE_URL}/api/v1/resources/${resourceId}`);
+        
+        // Update the resources list
+        setSelectedSectionResources(prevResources => 
+          prevResources.filter(resource => resource._id !== resourceId)
+        );
+        alert('Resource deleted successfully!');
+      } catch (error) {
+        console.error('Error deleting resource:', error);
+        alert('Error deleting resource. Please try again.');
+      }
+    }
+  };
+
   const categories = [...new Set(books.map(book => book.subject))];
   const gradeLevels = [...new Set(books.map(book => book.gradeLevel))];
 
@@ -916,10 +933,18 @@ const BooksSection = () => {
                                 href={resource.link}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="px-3 py-3 rounded-full text-xs font-medium bg-black-500/20 text-gray-400 border border-white-500/30"
+                                className="px-3 py-1 bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded text-sm hover:bg-yellow-500/30 transition-colors"
                               >
                                 Open
                               </a>
+                            </td>
+                            <td className="py-4 px-4">
+                              <button
+                                onClick={() => handleDeleteResource(resource._id)}
+                                className="px-3 py-1 bg-red-500/20 text-red-400 border border-red-500/30 rounded text-sm hover:bg-red-500/30 transition-colors"
+                              >
+                                Delete
+                              </button>
                             </td>
                           </tr>
                         ))
