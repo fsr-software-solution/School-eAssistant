@@ -7,7 +7,8 @@ import {
     deleteUser,
     createUser,
     getUserChatInteractions,
-    getUserQuizzes
+    getUserQuizzes,
+    getUserPayments
 } from '../controllers/authController.js';
 import protect from '../middleware/authMiddleware.js';
 import adminOnly from '../middleware/adminMiddleware.js';
@@ -19,6 +20,7 @@ router.get('/:id', protect, getUserById);
 router.get('/:id/progress', protect, getUserProgress);
 router.get('/:id/chat-interactions', protect, getUserChatInteractions);
 router.get('/:id/quizzes', protect, getUserQuizzes);
+router.get('/:id/payments', protect, getUserPayments);
 router.post('/', protect, adminOnly, createUser);
 router.put('/:id', protect, updateUser);
 router.delete('/:id', protect, adminOnly, deleteUser);
