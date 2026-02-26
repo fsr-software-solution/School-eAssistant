@@ -187,7 +187,7 @@ export const hardDeleteAllPremiumPlans = async (req, res) => {
 // GET controller functions for fetching soft deleted documents
 const getSoftDeletedDocument = async (Model, id, res, next) => {
     const document = await Model.findOne({_id: id, isDeleted: true})
-    if (!document) next(new Error(`${Model.modelName} not found`))
+    if (!document) return next(new Error(`${Model.modelName} not found`))
     res.status(200).json({data: document})
 }
 
@@ -305,7 +305,7 @@ export const getAllSoftDeletedPremiumPlans = async (req, res, next) => {
 const restoreSingleDocument = async (Model, id, res, next) => {
     const document = await Model.findOne({_id: id, isDeleted: true})
     
-    if (!document) next(new Error(`${Model.modelName} not found`))
+    if (!document) return next(new Error(`${Model.modelName} not found`))
     document.isDeleted = false
     document.deletedAt = undefined
     await document.save()
