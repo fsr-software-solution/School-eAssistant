@@ -41,6 +41,9 @@ const TrashSection = () => {
 
   // Restore specific item
   const restoreItem = async (id) => {
+    if (!confirm('Are you sure you want to restore this item?')) {
+      return;
+    }
     try {
       await axios.put(`${API_BASE_URL}/api/v1/admin/delete/${selectedModel}/${id}`);
       fetchDeletedData(); // Refresh the list
@@ -51,6 +54,9 @@ const TrashSection = () => {
 
   // Restore all items
   const restoreAll = async () => {
+    if (!confirm(`Are you sure you want to restore all ${selectedModel}? This will restore all deleted items.`)) {
+      return;
+    }
     try {
       await axios.put(`${API_BASE_URL}/api/v1/admin/delete/${selectedModel}`);
       fetchDeletedData(); // Refresh the list
@@ -61,6 +67,9 @@ const TrashSection = () => {
 
   // Permanently delete specific item
   const permanentlyDeleteItem = async (id) => {
+    if (!confirm('Are you sure you want to permanently delete this item? This action cannot be undone.')) {
+      return;
+    }
     try {
       await axios.delete(`${API_BASE_URL}/api/v1/admin/delete/${selectedModel}/${id}`);
       fetchDeletedData(); // Refresh the list
@@ -71,6 +80,9 @@ const TrashSection = () => {
 
   // Permanently delete all items
   const permanentlyDeleteAll = async () => {
+    if (!confirm(`Are you sure you want to permanently delete all ${selectedModel}? This action cannot be undone and will delete all items permanently.`)) {
+      return;
+    }
     try {
       await axios.delete(`${API_BASE_URL}/api/v1/admin/delete/${selectedModel}`);
       fetchDeletedData(); // Refresh the list
