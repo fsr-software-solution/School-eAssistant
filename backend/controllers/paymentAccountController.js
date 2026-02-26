@@ -11,7 +11,7 @@ class PaymentAccountController {
  
   static async getAccount(req, res) {
     try {
-      const account = await PaymentAccount.getActiveAccount();
+      const account = await PaymentAccount.findOne({isActive: true});
       res.status(200).json({
         success: true,
         data: account || null
@@ -38,16 +38,20 @@ class PaymentAccountController {
       }
 
       const { accountNumber, accountHolderFullName, bankName } = validation.data;
-      const adminId = req.user?.id;
-      await PaymentAccount.updateMany({ isActive: true }, { isActive: false });
-      const account = new PaymentAccount({
-        accountNumber,
-        accountHolderFullName,
-        bankName: bankName || 'CBE',
-        isActive: true,
-        updatedBy: adminId
-      });
-      await account.save();
+      
+      let account = await PaymentAccount.findOne({isActive: true});
+      if (account) {
+        account.accountNumber = accountNumber
+        account.accountHolderFullName = accountHolderFullName
+        account.bankName = bankName
+        await account.save()
+      } else {
+        account = await PaymentAccount.create({
+          accountNumber,
+          accountHolderFullName,
+          bankName: bankName || 'CBE'
+        });
+      }
 
       res.status(201).json({
         success: true,

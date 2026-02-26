@@ -22,12 +22,7 @@ export const getSectionById = async (req, res, next) => {
     section.aiClarification = await clarifier({section})
     await section.save()
   }
-      
-  const resources = await Resources.find({ sectionId: id, isDeleted: false }) ?? []
-  if (resources.length === 0) {
-    await addResources({section})
-  }
-  
+    
   res.status(200).json({data: section})
 }
 
@@ -46,7 +41,11 @@ export const getSectionResources = async (req, res, next) => {
   const section = await Sections.findOne({ _id: id, isDeleted: false })
   
   if (!section) next(new Error('Section not found'))
-  const resources = await Resources.find({ sectionId: id, isDeleted: false })
+    
+  let resources = await Resources.find({ sectionId: id, isDeleted: false }) ?? []
+  if (resources.length === 0) {
+    resources = await addResources({section})
+  }
   
   res.status(200).json({data: resources})
 }
@@ -73,7 +72,7 @@ export const updateSection = async (req, res, next) => {
   const section = await Sections.findOne({ _id: id, isDeleted: false })
   
   if (!section) next(new Error('Section not found'))
-  section.aiClarification = aiClarification
+  if (aiClarification) section.aiClarification = aiClarification
   await section.save()
   
   res.status(200).json({data: section})

@@ -146,7 +146,7 @@ function LandingPage() {
         <p className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto">
           Join thousands of students who already use School e-Assistant to study smarter.
         </p>
-        <button className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-4 px-12 rounded-full text-lg transform transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/50">
+        <button className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold py-4 px-12 rounded-full text-lg transform transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/50" onClick={() => window.location.href = '/login'}>
           Get Started Now
         </button>
       </div>

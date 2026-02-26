@@ -5,6 +5,7 @@ import {
   getBookById,
   getBookUnits,
   createBook,
+  updateBookById,
   deleteBookById
 } from '../controllers/booksController.js';
 
@@ -14,6 +15,7 @@ router.get('/', getAllBooks);
 router.get('/:id', getBookById);
 router.get('/:id/units', getBookUnits);
 router.post('/', upload.single('book'), createBook);
+router.put('/:id', updateBookById);
 router.delete('/:id', deleteBookById);
 
 export default router;

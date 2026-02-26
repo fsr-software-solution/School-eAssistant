@@ -10,7 +10,6 @@ import { requirePremiumAccess } from '../middleware/paymentMiddleware.js';
 
 const router = express.Router();
 
-// All quiz routes require authentication and premium access
 router.get('/:id', protect, requirePremiumAccess, getQuizById);
 router.get('/:id/references', protect, requirePremiumAccess, getQuizReferences);
 router.post('/', protect, requirePremiumAccess, createQuiz);

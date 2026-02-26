@@ -73,9 +73,6 @@ const referencesSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Compound index to ensure a reference is linked to exactly one of interaction, quiz, or book
-referencesSchema.index({ interactionId: 1, quizId: 1, bookId: 1 }, { unique: true });
-
 // Index for interactionId to optimize queries
 referencesSchema.index({ interactionId: 1 });
 
@@ -95,14 +92,12 @@ referencesSchema.pre('save', function() {
   const providedReferences = [this.interactionId, this.quizId, this.bookId].filter(Boolean);
   
   if (providedReferences.length === 0) {
-    return next(new Error('Either interactionId, quizId, or bookId must be provided'));
+    return new Error('Either interactionId, quizId, or bookId must be provided');
   }
   
   if (providedReferences.length > 1) {
-    return next(new Error('Reference cannot be linked to more than one entity (interaction, quiz, or book)'));
+    return new Error('Reference cannot be linked to more than one entity (interaction, quiz, or book)');
   }
-  
-  next();
 });
 
 // Static method to find active references

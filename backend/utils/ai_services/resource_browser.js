@@ -52,9 +52,9 @@ const addResources = async ({section, interaction}) => {
         youtubeSearch.search(response.queryForYouTubeVideo)
     ])
 
-
+    let resources = []
     articles?.results?.slice(0, 5)?.map( async (article) => {
-        await Resources.create({
+        let resource = await Resources.create({
             sectionId: section?._id,
             interactionId: interaction?._id,
             title: article.title,
@@ -62,10 +62,11 @@ const addResources = async ({section, interaction}) => {
             type: 'article',
             link: article.url
         })
+        resources.push(resource)
     })
     
     images?.slice(0, 5)?.map( async (image) => {
-        await Resources.create({
+        let resource = await Resources.create({
             sectionId: section?._id,
             interactionId: interaction?._id,
             title: image.title,
@@ -73,18 +74,22 @@ const addResources = async ({section, interaction}) => {
             type: 'image',
             link: image.image
         })
+        resources.push(resource)
     })
 
     videos?.slice(0, 5)?.map( async (video) => {
-        await Resources.create({
+        let resource = await Resources.create({
             sectionId: section?._id,
             interactionId: interaction?._id,
             title: video.title,
             description: video.title,
             type: 'youtube',
             link: `https://www.youtube.com/watch?v=${video.id}`
-        })        
+        }) 
+        resources.push(resource)       
     })
+    
+    return resources
 }
 
 

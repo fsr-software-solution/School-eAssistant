@@ -31,8 +31,11 @@ router.post(
   },
   PaymentController.uploadPaymentScreenshot
 );
-router.get('/history', protect, studentOnly, PaymentController.getPaymentHistory);
-router.get('/status/:transactionId', protect, studentOnly, PaymentController.getPaymentStatus);
+router.get('/history', protect, PaymentController.getPaymentHistory);
+router.get('/status/:transactionId', protect, PaymentController.getPaymentStatus);
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 router.post('/admin/plans', protect, adminOnly, premiumPlanController.createPlan);
 router.get('/admin/plans', protect, adminOnly, premiumPlanController.getAllPlans);
 router.get('/admin/plans/:planId', protect, adminOnly, premiumPlanController.getPlanById);
@@ -44,8 +47,6 @@ router.get('/admin/account', protect, adminOnly, paymentAccountController.getAcc
 router.put('/admin/account', protect, adminOnly, paymentAccountController.upsertAccount);
 
 router.get('/admin/payments', protect, adminOnly, PaymentController.getAllPayments);
-router.put('/admin/payments/:transactionId/status', protect, adminOnly, PaymentController.updatePaymentStatus);
+router.put('/admin/payments/:id/status', protect, adminOnly, PaymentController.updatePaymentStatus);
 
 export default router;
-
-

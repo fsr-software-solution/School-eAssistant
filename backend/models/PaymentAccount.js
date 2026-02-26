@@ -35,4 +35,3 @@ paymentAccountSchema.statics.getActiveAccount = function () {
 };
 
 export default mongoose.model('PaymentAccount', paymentAccountSchema);
-

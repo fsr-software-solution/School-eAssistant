@@ -459,7 +459,7 @@ class PaymentController {
 
   static async updatePaymentStatus(req, res) {
     try {
-      const { transactionId } = req.params;
+      const { id } = req.params;
       const { status, rejectionReason } = req.body;
 
       const validStatuses = ['pending', 'approved', 'rejected'];
@@ -470,7 +470,10 @@ class PaymentController {
         });
       }
 
-      const transaction = await PaymentTransaction.findOne({ transactionId });
+      const transaction = await PaymentTransaction.findOne({ _id: id })
+        .populate('planId', 'planName amount durationDays')
+        .populate('studentId', 'username')
+        
       if (!transaction) {
         return res.status(404).json({
           success: false,
@@ -487,10 +490,7 @@ class PaymentController {
       res.status(200).json({
         success: true,
         message: 'Payment status updated',
-        data: {
-          transactionId: transaction.transactionId,
-          status: transaction.verificationStatus
-        }
+        data: transaction
       });
     } catch (error) {
       console.error('Update payment status error:', error);

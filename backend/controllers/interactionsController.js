@@ -2,6 +2,7 @@ import Interactions from '../models/Interactions.js'
 import Resources from '../models/Resources.js'
 import Section from '../models/Sections.js'
 import resolveInteraction from '../utils/ai_services/resolve_interactions.js'
+import addResources from '../utils/ai_services/resource_browser.js'
 
 export const getInteractionById = async (req, res, next) => {
     const { id } = req.params
@@ -17,7 +18,11 @@ export const getInteractionResources = async (req, res, next) => {
     const interaction = await Interactions.findOne({_id: id, isDeleted: false})
     
     if (!interaction) next(new Error('Interaction not found'))
-    const resources = await Resources.find({interactionId: id, isDeleted: false})
+
+    let resources = await Resources.find({interactionId: id, isDeleted: false}) ?? []
+    if (resources.length === 0) {
+        resources = await addResources({interaction})
+    }
     
     res.status(200).json({data: resources})
 }

@@ -1,4 +1,5 @@
 import Users from '../models/Users.js';
+import ChatSessions from '../models/ChatSessions.js'
 import StudentProgress from '../models/StudentProgress.js';
 import {
     generateAccessToken,
@@ -136,9 +137,9 @@ export const logout = async (req, res) => {
     }
 };
 
-export const createAdmin = async (req, res) => {
+export const createUser = async (req, res) => {
     try {
-        const { username, password } = req.body;
+        const { username, password, role } = req.body;
         const adminId = req.user.id;
 
         // Verify the requesting user is an admin
@@ -171,17 +172,13 @@ export const createAdmin = async (req, res) => {
         const user = await Users.create({
             username,
             password,
-            role: 'admin'
+            role
         });
 
         res.status(201).json({
             success: true,
             message: "Admin user created successfully",
-            user: {
-                id: user._id,
-                username: user.username,
-                role: user.role
-            }
+            data: user
         });
 
     } catch (error) {
@@ -304,31 +301,20 @@ export const getUserProgress = async (req, res, next) => {
         }
 
         // Verify user exists and is a student
-        const user = await Users.findById(id);
-        if (!user || user.isDeleted) {
+        const user = await Users.findOne({_id: id, isDeleted: false});
+        if (!user) {
             return res.status(404).json({
                 success: false,
                 message: 'User not found'
             });
         }
 
-        if (user.role !== 'student') {
-            return res.status(400).json({
-                success: false,
-                message: 'Progress is only available for students'
-            });
-        }
-
         // Get all progress for this student
-        const progress = await StudentProgress.findByStudent(id);
+        const progress = await StudentProgress.find({studentId: id, isDeleted: false});
 
         res.status(200).json({
             success: true,
-            data: {
-                studentId: id,
-                username: user.username,
-                progress: progress
-            }
+            data: progress
         });
     } catch (error) {
         console.error('Get user progress error:', error);
@@ -348,7 +334,7 @@ export const updateUser = async (req, res, next) => {
     try {
         const { id } = req.params;
         const requestingUserId = req.user?.id;
-        const requestingUserRole = req.user?.role;
+        const requestingUserRole = req.user?.role;        
 
         // Users can only update their own profile unless they're admin
         if (requestingUserRole !== 'admin' && requestingUserId !== id) {
@@ -359,6 +345,10 @@ export const updateUser = async (req, res, next) => {
         }
 
         // Validate input
+        if (!req?.body?.password) {
+            delete req.body.password
+        }
+        
         const validation = updateUserSchema.safeParse(req.body);
         if (!validation.success) {
             return res.status(400).json({
@@ -379,8 +369,8 @@ export const updateUser = async (req, res, next) => {
         }
 
         // Find user
-        const user = await Users.findById(id);
-        if (!user || user.isDeleted) {
+        const user = await Users.findOne({_id: id, isDeleted: false});
+        if (!user) {
             return res.status(404).json({
                 success: false,
                 message: 'User not found'
@@ -463,7 +453,7 @@ export const deleteUser = async (req, res, next) => {
         await user.softDelete();
 
         res.status(200).json({
-            success: true,
+            data: true,
             message: 'User deleted successfully'
         });
     } catch (error) {
@@ -471,6 +461,86 @@ export const deleteUser = async (req, res, next) => {
         res.status(500).json({
             success: false,
             message: 'Failed to delete user',
+            error: error.message
+        });
+    }
+};
+
+
+export const getUserChatInteractions = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const requestingUserId = req.user?.id;
+        const requestingUserRole = req.user?.role;
+
+        // Users can only view their own chat interactions unless they're admin
+        if (requestingUserRole !== 'admin' && requestingUserId !== id) {
+            return res.status(403).json({
+                success: false,
+                message: 'You can only view your own chat interactions'
+            });
+        }
+
+        // Verify user exists and is a student
+        const user = await Users.findOne({_id: id, isDeleted: false});
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        const interactions = await ChatSessions.find({studentId: id, type: 'interaction'})
+
+        res.status(200).json({
+            success: true,
+            data: interactions
+        });
+    } catch (error) {
+        console.error('Get user chat interactions error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to retrieve user chat interactions',
+            error: error.message
+        });
+    }
+};
+
+
+export const getUserQuizzes = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const requestingUserId = req.user?.id;
+        const requestingUserRole = req.user?.role;
+
+        // Users can only view their own quizzes unless they're admin
+        if (requestingUserRole !== 'admin' && requestingUserId !== id) {
+            return res.status(403).json({
+                success: false,
+                message: 'You can only view your own quizzes'
+            });
+        }
+
+       // Verify user exists and is a student
+        const user = await Users.findOne({_id: id, isDeleted: false});
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        const quizzes = await ChatSessions.find({studentId: id, type: 'quiz'})
+
+        res.status(200).json({
+            success: true,
+            data: quizzes
+        });
+    } catch (error) {
+        console.error('Get user quizzes error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to retrieve user quizzes',
             error: error.message
         });
     }
