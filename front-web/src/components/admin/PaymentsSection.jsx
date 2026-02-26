@@ -272,11 +272,11 @@ const PaymentsSection = () => {
     return matchesSearch && matchesStatus && matchesType;
   });
 
-  const handleDeletePayment = (paymentId) => {
-    if (window.confirm('Are you sure you want to delete this payment record?')) {
-      setPayments(prevPayments => prevPayments.filter(payment => payment._id !== paymentId));
-    }
-  };
+  // const handleDeletePayment = (paymentId) => {
+  //   if (window.confirm('Are you sure you want to delete this payment record?')) {
+  //     setPayments(prevPayments => prevPayments.filter(payment => payment._id !== paymentId));
+  //   }
+  // };
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -287,18 +287,10 @@ const PaymentsSection = () => {
     }
   };
 
-  const getMethodColor = (method) => {
-    switch (method) {
-      case 'Cash': return 'bg-blue-500/20 text-blue-400 border border-blue-500/30';
-      case 'Bank Transfer': return 'bg-purple-500/20 text-purple-400 border border-purple-500/30';
-      case 'Mobile Money': return 'bg-orange-500/20 text-orange-400 border border-orange-500/30';
-      default: return 'bg-gray-500/20 text-gray-400 border border-gray-500/30';
-    }
-  };
-
   const totalRevenue = filteredPayments.reduce((sum, payment) => sum + payment.paidAmount, 0);
   const approvedPayments = filteredPayments.filter(p => p.verificationStatus === 'approved').length;
   const pendingPayments = filteredPayments.filter(p => p.verificationStatus === 'pending').length;
+  const allPlans = [...new Set(payments.map(payment => payment.planId?.planName))]
 
   if (loading) {
     return (
@@ -887,10 +879,10 @@ const PaymentsSection = () => {
               onChange={(e) => setTypeFilter(e.target.value)}
               className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-500"
             >
-              <option value="all">All Types</option>
-              <option value="Monthly Premium">Monthly Premium</option>
-              <option value="Yearly Premium">Yearly Premium</option>
-              <option value="Basic Plan">Basic Plan</option>
+              <option value="all">All Plans</option>
+              {allPlans.map(plan => 
+                <option key={plan} value={plan}>{plan}</option>
+              )}
             </select>
           </div>
         </div>
