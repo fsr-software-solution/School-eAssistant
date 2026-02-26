@@ -1,50 +1,277 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { API_BASE_URL } from '../../constants';
+import { useAuth } from '../../hooks/useAuth';
 
 const PaymentsSection = () => {
+  const { getValidToken } = useAuth();
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
+  
+  // Account state
+  const [account, setAccount] = useState(null);
+  const [accountLoading, setAccountLoading] = useState(false);
+  const [accountForm, setAccountForm] = useState({
+    accountNumber: '',
+    accountHolderFullName: '',
+    bankName: ''
+  });
+  
+  // Plans state
+  const [plans, setPlans] = useState([]);
+  const [plansLoading, setPlansLoading] = useState(false);
+  const [planForm, setPlanForm] = useState({
+    planName: '',
+    description: '',
+    amount: '',
+    durationDays: '',
+    features: ''
+  });
+  const [editingPlan, setEditingPlan] = useState(null);
+  const [viewingPlan, setViewingPlan] = useState(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  
+  // Payment status update state
+  const [updatingStatus, setUpdatingStatus] = useState({});
 
-  // Mock data for demonstration
-  const mockPayments = [
-    { id: 1, student: 'John Doe', amount: 150, type: 'Book Fee', status: 'completed', date: '2024-02-15', method: 'Cash', reference: 'REF-001' },
-    { id: 2, student: 'Jane Smith', amount: 120, type: 'Library Fee', status: 'pending', date: '2024-02-14', method: 'Bank Transfer', reference: 'REF-002' },
-    { id: 3, student: 'Alice Johnson', amount: 200, type: 'Exam Fee', status: 'failed', date: '2024-02-13', method: 'Mobile Money', reference: 'REF-003' },
-    { id: 4, student: 'Bob Wilson', amount: 180, type: 'Book Fee', status: 'completed', date: '2024-02-12', method: 'Cash', reference: 'REF-004' },
-    { id: 5, student: 'Sarah Brown', amount: 100, type: 'Library Fee', status: 'completed', date: '2024-02-11', method: 'Bank Transfer', reference: 'REF-005' },
-    { id: 6, student: 'Tom Davis', amount: 160, type: 'Exam Fee', status: 'pending', date: '2024-02-10', method: 'Mobile Money', reference: 'REF-006' },
-  ];
+  // Fetch payments
+  const fetchPayments = async () => {
+    try {
+      setLoading(true);
+      const token = await getValidToken();
+      const response = await axios.get(`${API_BASE_URL}/api/v1/admin/payments`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (response.data.success) {
+        setPayments(response.data.data);
+      } else {
+        console.error('Failed to fetch payments');
+      }
+    } catch (err) {
+      console.error('Error fetching payments:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch account
+  const fetchAccount = async () => {
+    try {
+      setAccountLoading(true);
+      const token = await getValidToken();
+      const response = await axios.get(`${API_BASE_URL}/api/v1/admin/account`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (response.data.data) {
+        setAccount(response.data.data);
+        setAccountForm({
+          accountNumber: response.data.data.accountNumber,
+          accountHolderFullName: response.data.data.accountHolderFullName,
+          bankName: response.data.data.bankName
+        });
+      }
+    } catch (err) {
+      console.error('Error fetching account:', err);
+    } finally {
+      setAccountLoading(false);
+    }
+  };
+
+  // Update account
+  const updateAccount = async () => {
+    try {
+      setAccountLoading(true);
+      const token = await getValidToken();
+      const response = await axios.put(`${API_BASE_URL}/api/v1/admin/account`, accountForm, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (response.data.data) {
+        setAccount(response.data.data);
+        alert('Account updated successfully');
+      }
+    } catch (err) {
+      console.error('Error updating account:', err);
+      alert('Failed to update account');
+    } finally {
+      setAccountLoading(false);
+    }
+  };
+
+  // Fetch plans
+  const fetchPlans = async () => {
+    try {
+      setPlansLoading(true);
+      const token = await getValidToken();
+      const response = await axios.get(`${API_BASE_URL}/api/v1/admin/plans`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (response.data.success) {
+        setPlans(response.data.data);
+      }
+    } catch (err) {
+      console.error('Error fetching plans:', err);
+    } finally {
+      setPlansLoading(false);
+    }
+  };
+
+  // Create plan
+  const createPlan = async () => {
+    try {
+      setPlansLoading(true);
+      const token = await getValidToken();
+      const features = planForm.features.split(',').map(f => f.trim());
+      const response = await axios.post(`${API_BASE_URL}/api/v1/admin/plans`, {
+        planName: planForm.planName,
+        description: planForm.description,
+        amount: parseFloat(planForm.amount),
+        durationDays: parseInt(planForm.durationDays),
+        features
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (response.data.data) {
+        setPlans(prev => [...prev, response.data.data]);
+        setPlanForm({
+          planName: '',
+          description: '',
+          amount: '',
+          durationDays: '',
+          features: ''
+        });
+        alert('Plan created successfully');
+        setShowCreateModal(false)
+      }
+    } catch (err) {
+      console.error('Error creating plan:', err);
+      alert('Failed to create plan');
+    } finally {
+      setPlansLoading(false);
+    }
+  };
+
+  // Update plan
+  const updatePlan = async (planId) => {
+    try {
+      setPlansLoading(true);
+      const token = await getValidToken();
+      const features = planForm.features.split(',').map(f => f.trim());
+      const response = await axios.put(`${API_BASE_URL}/api/v1/admin/plans/${planId}`, {
+        planName: planForm.planName,
+        description: planForm.description,
+        amount: parseFloat(planForm.amount),
+        durationDays: parseInt(planForm.durationDays),
+        features
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (response.data.data) {
+        setPlans(prev => prev.map(plan => 
+          plan._id === planId ? response.data.data : plan
+        ));
+        setEditingPlan(null);
+        setPlanForm({
+          planName: '',
+          description: '',
+          amount: '',
+          durationDays: '',
+          features: ''
+        });
+        alert('Plan updated successfully');
+      }
+    } catch (err) {
+      console.error('Error updating plan:', err);
+      alert('Failed to update plan');
+    } finally {
+      setPlansLoading(false);
+    }
+  };
+
+  // Delete plan
+  const deletePlan = async (planId) => {
+    if (!window.confirm('Are you sure you want to delete this plan?')) return;
+    
+    try {
+      setPlansLoading(true);
+      const token = await getValidToken();
+      await axios.delete(`${API_BASE_URL}/api/v1/admin/plans/${planId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      setPlans(prev => prev.filter(plan => plan._id !== planId));
+      alert('Plan deleted successfully');
+    } catch (err) {
+      console.error('Error deleting plan:', err);
+      alert('Failed to delete plan');
+    } finally {
+      setPlansLoading(false);
+    }
+  };
+
+  // Update payment status
+  const updatePaymentStatus = async (transactionId, status, rejectionReason = '') => {
+    try {
+      setUpdatingStatus(prev => ({ ...prev, [transactionId]: true }));
+      const token = await getValidToken();
+      const response = await axios.put(`${API_BASE_URL}/api/v1/admin/payments/${transactionId}/status`, {
+        status,
+        rejectionReason
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (response.data.data) {
+        setPayments(prev => prev.map(payment => 
+          payment._id === transactionId ? response.data.data : payment
+        ));
+      }
+    } catch (err) {
+      console.error('Error updating payment status:', err);
+    } finally {
+      setUpdatingStatus(prev => ({ ...prev, [transactionId]: false }));
+    }
+  };
 
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setPayments(mockPayments);
-      setLoading(false);
-    }, 1000);
+    fetchPayments();
+    fetchAccount();
+    fetchPlans();
+  }, []);
+
+  useEffect(() => {
+    fetchPayments();
   }, []);
 
   const filteredPayments = payments.filter(payment => {
-    const matchesSearch = payment.student.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         payment.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         payment.method.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || payment.status === statusFilter;
-    const matchesType = typeFilter === 'all' || payment.type === typeFilter;
+    const matchesSearch = payment?.studentId?.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         payment?.transactionId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         payment?.planId?.planName?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || payment.verificationStatus === statusFilter;
+    const matchesType = typeFilter === 'all' || payment.planId?.planName === typeFilter;
     return matchesSearch && matchesStatus && matchesType;
   });
 
-  const handleStatusChange = (paymentId, newStatus) => {
-    setPayments(prevPayments =>
-      prevPayments.map(payment =>
-        payment.id === paymentId ? { ...payment, status: newStatus } : payment
-      )
-    );
-  };
-
   const handleDeletePayment = (paymentId) => {
     if (window.confirm('Are you sure you want to delete this payment record?')) {
-      setPayments(prevPayments => prevPayments.filter(payment => payment.id !== paymentId));
+      setPayments(prevPayments => prevPayments.filter(payment => payment._id !== paymentId));
     }
   };
 
@@ -81,6 +308,425 @@ const PaymentsSection = () => {
 
   return (
     <div className="space-y-6">
+      {/* Account Management */}
+      <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold text-white">Account Management</h2>
+          <button
+            onClick={updateAccount}
+            disabled={accountLoading}
+            className="px-4 py-2 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-lg hover:bg-blue-500/30 transition-colors disabled:opacity-50"
+          >
+            {accountLoading ? 'Updating...' : 'Update Account'}
+          </button>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-gray-400 text-sm mb-2">Account Number</label>
+            <input
+              type="text"
+              value={accountForm.accountNumber}
+              onChange={(e) => setAccountForm(prev => ({ ...prev, accountNumber: e.target.value }))}
+              className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-gray-400 text-sm mb-2">Account Holder Name</label>
+            <input
+              type="text"
+              value={accountForm.accountHolderFullName}
+              onChange={(e) => setAccountForm(prev => ({ ...prev, accountHolderFullName: e.target.value }))}
+              className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-gray-400 text-sm mb-2">Bank Name</label>
+            <input
+              type="text"
+              value={accountForm.bankName}
+              onChange={(e) => setAccountForm(prev => ({ ...prev, bankName: e.target.value }))}
+              className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Plans Management */}
+      <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold text-white">Premium Plans</h2>
+          <button
+            onClick={() => {
+              setEditingPlan(null);
+              setPlanForm({
+                planName: '',
+                description: '',
+                amount: '',
+                durationDays: '',
+                features: ''
+              });
+              setShowCreateModal(true);
+            }}
+            className="px-4 py-2 bg-green-500/20 text-green-400 border border-green-500/30 rounded-lg hover:bg-green-500/30 transition-colors"
+          >
+            Create Plan
+          </button>
+        </div>
+        
+        <div className="overflow-x-auto">
+          <table className="w-full text-white">
+            <thead>
+              <tr className="border-b border-white/10">
+                <th className="text-left py-3 px-4 font-medium">Plan Name</th>
+                <th className="text-left py-3 px-4 font-medium">Amount</th>
+                <th className="text-left py-3 px-4 font-medium">Duration</th>
+                <th className="text-left py-3 px-4 font-medium">Features</th>
+                <th className="text-left py-3 px-4 font-medium">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {plans.map((plan) => (
+                <tr key={plan._id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                  <td className="py-4 px-4 font-medium">{plan.planName}</td>
+                  <td className="py-4 px-4">ETB {plan.amount}</td>
+                  <td className="py-4 px-4">{plan.durationDays} days</td>
+                  <td className="py-4 px-4">
+                    <div className="flex flex-wrap gap-1">
+                      {plan.features.map((feature, index) => (
+                        <span key={index} className="px-2 py-1 bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded-full text-xs">
+                          {feature}
+                        </span>
+                      ))}
+                    </div>
+                  </td>
+                  <td className="py-4 px-4">
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => setViewingPlan(plan)}
+                        className="px-3 py-1 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded text-sm hover:bg-blue-500/30 transition-colors"
+                      >
+                        View
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEditingPlan(plan);
+                          setPlanForm({
+                            planName: plan.planName,
+                            description: plan.description,
+                            amount: plan.amount.toString(),
+                            durationDays: plan.durationDays.toString(),
+                            features: plan.features.join(', ')
+                          });
+                        }}
+                        className="px-3 py-1 bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded text-sm hover:bg-yellow-500/30 transition-colors"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => deletePlan(plan._id)}
+                        className="px-3 py-1 bg-red-500/20 text-red-400 border border-red-500/30 rounded text-sm hover:bg-red-500/30 transition-colors"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* View Plan Modal */}
+      {viewingPlan && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 w-full max-w-2xl">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-white">Plan Details</h3>
+              <button
+                onClick={() => setViewingPlan(null)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-gray-400 text-sm mb-2 font-medium">Plan ID</label>
+                  <p className="text-gray-300 text-sm">{viewingPlan._id}</p>
+                </div>
+                <div>
+                  <label className="block text-gray-400 text-sm mb-2 font-medium">Status</label>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${viewingPlan.isDeleted ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-green-500/20 text-green-400 border border-green-500/30'}`}>
+                    {viewingPlan.isDeleted ? 'Deleted' : 'Active'}
+                  </span>
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-gray-400 text-sm mb-2 font-medium">Plan Name</label>
+                <p className="text-white text-lg">{viewingPlan.planName}</p>
+              </div>
+              
+              <div>
+                <label className="block text-gray-400 text-sm mb-2 font-medium">Description</label>
+                <p className="text-gray-300">{viewingPlan.description}</p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-gray-400 text-sm mb-2 font-medium">Amount</label>
+                  <p className="text-white">ETB {viewingPlan.amount}</p>
+                </div>
+                <div>
+                  <label className="block text-gray-400 text-sm mb-2 font-medium">Duration</label>
+                  <p className="text-white">{viewingPlan.durationDays} days</p>
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-gray-400 text-sm mb-2 font-medium">Features</label>
+                <div className="flex flex-wrap gap-2">
+                  {viewingPlan.features.map((feature, index) => (
+                    <span key={index} className="px-3 py-1 bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded-full text-sm">
+                      {feature}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-gray-400 text-sm mb-2 font-medium">Created At</label>
+                  <p className="text-gray-300 text-sm">{new Date(viewingPlan.createdAt).toLocaleString()}</p>
+                </div>
+                <div>
+                  <label className="block text-gray-400 text-sm mb-2 font-medium">Updated At</label>
+                  <p className="text-gray-300 text-sm">{new Date(viewingPlan.updatedAt).toLocaleString()}</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={() => setViewingPlan(null)}
+                className="px-4 py-2 bg-gray-500/20 text-gray-400 border border-gray-500/30 rounded-lg hover:bg-gray-500/30 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Plan Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 w-full max-w-2xl">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-white">Create Plan</h3>
+              <button
+                onClick={() => {
+                  setPlanForm({
+                    planName: '',
+                    description: '',
+                    amount: '',
+                    durationDays: '',
+                    features: ''
+                  });
+                  setShowCreateModal(false);
+                }}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div className="md:col-span-2">
+                <label className="block text-gray-400 text-sm mb-2">Plan Name</label>
+                <input
+                  type="text"
+                  value={planForm.planName}
+                  onChange={(e) => setPlanForm(prev => ({ ...prev, planName: e.target.value }))}
+                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-gray-400 text-sm mb-2">Description</label>
+                <textarea
+                  value={planForm.description}
+                  onChange={(e) => setPlanForm(prev => ({ ...prev, description: e.target.value }))}
+                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                  rows="3"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-400 text-sm mb-2">Amount</label>
+                <input
+                  type="number"
+                  value={planForm.amount}
+                  onChange={(e) => setPlanForm(prev => ({ ...prev, amount: e.target.value }))}
+                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-400 text-sm mb-2">Duration (Days)</label>
+                <input
+                  type="number"
+                  value={planForm.durationDays}
+                  onChange={(e) => setPlanForm(prev => ({ ...prev, durationDays: e.target.value }))}
+                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-gray-400 text-sm mb-2">Features (comma-separated)</label>
+                <textarea
+                  value={planForm.features}
+                  onChange={(e) => setPlanForm(prev => ({ ...prev, features: e.target.value }))}
+                  placeholder="e.g., AI Chat, Free Quizzes, Ask any time"
+                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                  rows="3"
+                />
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setPlanForm({
+                    planName: '',
+                    description: '',
+                    amount: '',
+                    durationDays: '',
+                    features: ''
+                  });
+                  setShowCreateModal(false)
+                }}
+                className="px-4 py-2 bg-gray-500/20 text-gray-400 border border-gray-500/30 rounded-lg hover:bg-gray-500/30 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={createPlan}
+                disabled={plansLoading}
+                className="px-4 py-2 bg-green-500/20 text-green-400 border border-green-500/30 rounded-lg hover:bg-green-500/30 transition-colors disabled:opacity-50"
+              >
+                {plansLoading ? 'Processing...' : 'Create Plan'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Plan Modal */}
+      {editingPlan !== null ? (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 w-full max-w-2xl">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-white">Edit Plan</h3>
+              <button
+                onClick={() => {
+                  setEditingPlan(null);
+                  setPlanForm({
+                    planName: '',
+                    description: '',
+                    amount: '',
+                    durationDays: '',
+                    features: ''
+                  });
+                }}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div className="md:col-span-2">
+                <label className="block text-gray-400 text-sm mb-2">Plan Name</label>
+                <input
+                  type="text"
+                  value={planForm.planName}
+                  onChange={(e) => setPlanForm(prev => ({ ...prev, planName: e.target.value }))}
+                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-gray-400 text-sm mb-2">Description</label>
+                <textarea
+                  value={planForm.description}
+                  onChange={(e) => setPlanForm(prev => ({ ...prev, description: e.target.value }))}
+                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                  rows="3"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-400 text-sm mb-2">Amount</label>
+                <input
+                  type="number"
+                  value={planForm.amount}
+                  onChange={(e) => setPlanForm(prev => ({ ...prev, amount: e.target.value }))}
+                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-400 text-sm mb-2">Duration (Days)</label>
+                <input
+                  type="number"
+                  value={planForm.durationDays}
+                  onChange={(e) => setPlanForm(prev => ({ ...prev, durationDays: e.target.value }))}
+                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-gray-400 text-sm mb-2">Features (comma-separated)</label>
+                <textarea
+                  value={planForm.features}
+                  onChange={(e) => setPlanForm(prev => ({ ...prev, features: e.target.value }))}
+                  placeholder="e.g., AI Chat, Free Quizzes, Ask any time"
+                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                  rows="3"
+                />
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setEditingPlan(null);
+                  setPlanForm({
+                    planName: '',
+                    description: '',
+                    amount: '',
+                    durationDays: '',
+                    features: ''
+                  });
+                }}
+                className="px-4 py-2 bg-gray-500/20 text-gray-400 border border-gray-500/30 rounded-lg hover:bg-gray-500/30 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => updatePlan(editingPlan._id)}
+                disabled={plansLoading}
+                className="px-4 py-2 bg-green-500/20 text-green-400 border border-green-500/30 rounded-lg hover:bg-green-500/30 transition-colors disabled:opacity-50"
+              >
+                {plansLoading ? 'Processing...' : 'Update Plan'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 border border-white/10">
@@ -180,39 +826,47 @@ const PaymentsSection = () => {
             </thead>
             <tbody>
               {filteredPayments.map((payment) => (
-                <tr key={payment.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                  <td className="py-4 px-4 font-medium">{payment.student}</td>
-                  <td className="py-4 px-4">ETB {payment.amount.toLocaleString()}</td>
+                <tr key={payment._id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                  <td className="py-4 px-4 font-medium">{payment.studentId?.username || 'Unknown'}</td>
+                  <td className="py-4 px-4">ETB {payment.paidAmount}</td>
                   <td className="py-4 px-4">
                     <span className="px-2 py-1 bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded-full text-xs font-medium">
-                      {payment.type}
+                      {payment.planId?.planName || 'Unknown'}
                     </span>
                   </td>
                   <td className="py-4 px-4">
                     <select
-                      value={payment.status}
-                      onChange={(e) => handleStatusChange(payment.id, e.target.value)}
-                      className={`px-2 py-1 rounded text-xs font-medium border focus:outline-none ${getStatusColor(payment.status)}`}
+                      value={payment.verificationStatus}
+                      onChange={(e) => {
+                        if (e.target.value === 'rejected') {
+                          const reason = prompt('Enter rejection reason (optional):', payment.rejectionReason || '');
+                          updatePaymentStatus(payment._id, e.target.value, reason || '');
+                        } else {
+                          updatePaymentStatus(payment._id, e.target.value);
+                        }
+                      }}
+                      disabled={updatingStatus[payment._id]}
+                      className={`px-2 py-1 rounded text-xs font-medium border focus:outline-none ${getStatusColor(payment.verificationStatus)}`}
                     >
-                      <option value="completed">Completed</option>
                       <option value="pending">Pending</option>
-                      <option value="failed">Failed</option>
+                      <option value="approved">Approved</option>
+                      <option value="rejected">Rejected</option>
                     </select>
                   </td>
                   <td className="py-4 px-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getMethodColor(payment.method)}`}>
-                      {payment.method}
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getMethodColor(payment.senderName)}`}>
+                      Bank Transfer
                     </span>
                   </td>
-                  <td className="py-4 px-4 text-gray-400">{payment.date}</td>
-                  <td className="py-4 px-4 text-gray-400">{payment.reference}</td>
+                  <td className="py-4 px-4 text-gray-400">{new Date(payment.paymentDate).toLocaleDateString()}</td>
+                  <td className="py-4 px-4 text-gray-400">{payment.transactionId}</td>
                   <td className="py-4 px-4">
                     <div className="flex space-x-2">
                       <button className="px-3 py-1 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded text-sm hover:bg-blue-500/30 transition-colors">
                         View Details
                       </button>
                       <button
-                        onClick={() => handleDeletePayment(payment.id)}
+                        onClick={() => handleDeletePayment(payment._id)}
                         className="px-3 py-1 bg-red-500/20 text-red-400 border border-red-500/30 rounded text-sm hover:bg-red-500/30 transition-colors"
                       >
                         Delete
