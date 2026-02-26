@@ -319,7 +319,7 @@ const PaymentsSection = () => {
               disabled={!account}
               className="px-3 py-1 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded text-sm hover:bg-blue-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              View Account
+              View Details
             </button>
             <button
               onClick={updateAccount}
