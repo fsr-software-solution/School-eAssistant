@@ -122,9 +122,9 @@ const TrashSection = () => {
       case 'accounts':
         return `Account: ${item.accountHolderFullName} (${item.bankName})`
       case 'plans':
-        return `Plan: ${item.planName} (${item.amount} ETB)`
+        return `Plan: ${item.planName} (ETB ${item.amount})`
       case 'transactions':
-        return `Transaction: ${item.senderName} (${item.paidAmount} ETB) ${item.verificationStatus}`
+        return `Transaction: ${item.senderName} (ETB ${item.paidAmount}) ${item.verificationStatus}`
       default:
         return JSON.stringify(item, null, 2);
     }
