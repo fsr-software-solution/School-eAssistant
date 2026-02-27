@@ -23,6 +23,11 @@ const paymentTransactionSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  phoneNumber: {
+    type: String,
+    required: false,
+    trim: true
+  },
   senderAccountNumber: {
     type: String,
     trim: true
