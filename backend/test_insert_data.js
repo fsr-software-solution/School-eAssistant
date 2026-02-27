@@ -24,22 +24,6 @@ async function insertSampleData() {
     await mongoose.connect(MONGODB_URI);
     console.log('Connected to MongoDB');
 
-    // Clear existing data (order matters due to references)
-    console.log('Clearing old data...');
-    await PaymentTransaction.deleteMany({});
-    await PremiumPlan.deleteMany({});
-    await PaymentAccount.deleteMany({});
-    await StudentProgress.deleteMany({});
-    await References.deleteMany({});
-    await Resources.deleteMany({});
-    await Quizzes.deleteMany({});
-    await Interactions.deleteMany({});
-    await ChatSessions.deleteMany({});
-    await Users.deleteMany({});
-    await Sections.deleteMany({});
-    await Units.deleteMany({});
-    await Books.deleteMany({});
-
     // ---------- 1. Create a Book ----------
     const book = await Books.create({
       gradeLevel: 'G-9',
