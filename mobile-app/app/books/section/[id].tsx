@@ -11,6 +11,8 @@ import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
 import { useContentProtection, textProtectionProps } from '../../../utils/contentProtection';
 import Button from '../../../components/ui/Button';
+import YouTubePlayer from '../../../components/ui/YouTubePlayer';
+import ImageViewer from '../../../components/ui/ImageViewer';
 
 export default function SectionReaderScreen() {
   const router = useRouter();
@@ -119,6 +121,13 @@ export default function SectionReaderScreen() {
     }
   };
 
+  // Helper function to extract YouTube video ID from URL
+  const extractYouTubeVideoId = (url: string): string | null => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
@@ -174,33 +183,66 @@ export default function SectionReaderScreen() {
               <Ionicons name="library-outline" size={20} color={colors.primary} />
               <Text variant="h2" color={colors.text} style={styles.resourcesTitle}>Resources & References</Text>
             </View>
-            {resources.map((resource) => (
-              <TouchableOpacity
-                key={resource._id}
-                style={[styles.resourceCard, { backgroundColor: colors.surface }]}
-                onPress={() => handleOpenResource(resource.link)}
-                activeOpacity={0.7}
-              >
-                <View style={[styles.resourceIcon, { backgroundColor: getResourceColor(resource.type) + '20' }]}>
-                  <Ionicons name={getResourceIcon(resource.type)} size={22} color={getResourceColor(resource.type)} />
-                </View>
-                <View style={styles.resourceInfo}>
-                  <Text variant="body" color={colors.text} style={styles.resourceName} numberOfLines={1}>
-                    {resource.title}
-                  </Text>
-                  {resource.description ? (
-                    <Text variant="bodySmall" color={colors.textSecondary} numberOfLines={2}>
-                      {resource.description}
-                    </Text>
-                  ) : (
-                    <Text variant="bodySmall" color={colors.textSecondary}>
-                      {resource.type.charAt(0).toUpperCase() + resource.type.slice(1)}
-                    </Text>
-                  )}
-                </View>
-                <Ionicons name="open-outline" size={18} color={colors.textSecondary} />
-              </TouchableOpacity>
-            ))}
+            {resources.map((resource) => {
+              // Handle different resource types
+              if (resource.type === 'youtube') {
+                // Extract video ID from YouTube URL
+                const videoId = extractYouTubeVideoId(resource.link);
+                if (videoId) {
+                  return (
+                    <View key={resource._id} style={styles.resourceCard}>
+                      <YouTubePlayer
+                        videoId={videoId}
+                        onPlay={() => console.log('YouTube video playing')}
+                        onPause={() => console.log('YouTube video paused')}
+                        onError={(error) => console.error('YouTube error:', error)}
+                      />
+                    </View>
+                  );
+                }
+              } else if (resource.type === 'image') {
+                return (
+                  <View key={resource._id} style={styles.resourceCard}>
+                    <ImageViewer
+                      imageUrl={resource.link}
+                      title={resource.title}
+                      description={resource.description}
+                      onOpen={() => console.log('Image opened')}
+                      onClose={() => console.log('Image closed')}
+                    />
+                  </View>
+                );
+              } else {
+                // For articles and other types, keep the original card layout
+                return (
+                  <TouchableOpacity
+                    key={resource._id}
+                    style={[styles.resourceCard, { backgroundColor: colors.surface }]}
+                    onPress={() => handleOpenResource(resource.link)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[styles.resourceIcon, { backgroundColor: getResourceColor(resource.type) + '20' }]}>
+                      <Ionicons name={getResourceIcon(resource.type)} size={22} color={getResourceColor(resource.type)} />
+                    </View>
+                    <View style={styles.resourceInfo}>
+                      <Text variant="body" color={colors.text} style={styles.resourceName} numberOfLines={1}>
+                        {resource.title}
+                      </Text>
+                      {resource.description ? (
+                        <Text variant="bodySmall" color={colors.textSecondary} numberOfLines={2}>
+                          {resource.description}
+                        </Text>
+                      ) : (
+                        <Text variant="bodySmall" color={colors.textSecondary}>
+                          {resource.type.charAt(0).toUpperCase() + resource.type.slice(1)}
+                        </Text>
+                      )}
+                    </View>
+                    <Ionicons name="open-outline" size={18} color={colors.textSecondary} />
+                  </TouchableOpacity>
+                );
+              }
+            })}
           </View>
         )}
 
