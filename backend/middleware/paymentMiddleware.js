@@ -56,30 +56,4 @@ const requirePremiumAccess = async (req, res, next) => {
   }
 };
 
-/**
- * Middleware to check if user is a student (not admin)
- * Useful for payment routes that should only be accessible to students
- */
-const studentOnly = (req, res, next) => {
-  if (!req.user) {
-    return res.status(401).json({
-      success: false,
-      message: 'Authentication required'
-    });
-  }
-
-  if (req.user.role === 'admin') {
-    return res.status(403).json({
-      success: false,
-      message: 'This route is only accessible to students'
-    });
-  }
-
-  next();
-};
-
-export { requirePremiumAccess, studentOnly };
-
-
-
-
+export default requirePremiumAccess;

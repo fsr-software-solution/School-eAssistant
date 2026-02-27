@@ -7,7 +7,7 @@ import {
   deleteQuiz
 } from '../controllers/quizzesController.js';
 import protect from '../middleware/authMiddleware.js';
-import { requirePremiumAccess } from '../middleware/paymentMiddleware.js';
+import requirePremiumAccess from '../middleware/paymentMiddleware.js';
 
 const router = express.Router();
 
