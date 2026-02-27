@@ -30,7 +30,7 @@ export const getBookUnits = async (req, res, next) => {
   const { id } = req.params
   const book = await Books.findOne({ _id: id, isDeleted: false })
   
-  if (!book) next(new Error('Book not found'))
+  if (!book) return next(new Error('Book not found'))
   const units = await Units.findByBook(id)
 
   res.status(200).json({data: units})
@@ -38,7 +38,7 @@ export const getBookUnits = async (req, res, next) => {
 
 export const createBook = async (req, res, next) => {
   const bookFile = req.file
-  if (!bookFile) next(new Error('No file uploaded'))
+  if (!bookFile) return next(new Error('No file uploaded'))
 
   const {gradeLevel, subject, yearOfPublish, tocStartingPage, tocEndingPage} = req.body
 
@@ -81,7 +81,7 @@ export const deleteBookById = async (req, res, next) => {
   const { id } = req.params
   const book = await Books.findOne({ _id: id, isDeleted: false })
 
-  if (!book) next(new Error('Book not found'))
+  if (!book) return next(new Error('Book not found'))
   await book.softDelete()
 
   res.status(200).json({data: true})

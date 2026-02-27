@@ -1,6 +1,7 @@
 import Users from '../models/Users.js';
 import ChatSessions from '../models/ChatSessions.js'
 import StudentProgress from '../models/StudentProgress.js';
+import PaymentTransaction from '../models/PaymentTransaction.js';
 import {
     generateAccessToken,
     generateRefreshToken
@@ -218,8 +219,8 @@ export const getAllUsers = async (req, res, next) => {
         const users = await Users.find(filter)
             .select('-password -refreshToken')
             .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limitNumber);
+            // .skip(skip)
+            // .limit(limitNumber);
 
         res.status(200).json({
             success: true,
@@ -545,3 +546,35 @@ export const getUserQuizzes = async (req, res, next) => {
         });
     }
 };
+
+export const getUserPayments = async (req, res, next) => {
+    const { id } = req.params;
+    const requestingUserId = req.user?.id;
+    const requestingUserRole = req.user?.role;
+
+    // Users can only view their own quizzes unless they're admin
+    if (requestingUserRole !== 'admin' && requestingUserId !== id) {
+        return res.status(403).json({
+            success: false,
+            message: 'You can only view your own payment histories'
+        });
+    }
+
+    // Verify user exists and is a student
+    const user = await Users.findOne({_id: id, isDeleted: false});
+    if (!user) {
+        return res.status(404).json({
+            success: false,
+            message: 'User not found'
+        });
+    }
+
+    const transactions = await PaymentTransaction.find({ studentId: id })
+        .populate('planId', 'planName amount durationDays features')
+        .sort({ createdAt: -1 });
+
+    res.status(200).json({
+        success: true,
+        data: transactions
+    });
+}

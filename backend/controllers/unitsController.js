@@ -22,7 +22,7 @@ export const getUnitSections = async (req, res, next) => {
   const { id } = req.params
   const unit = await Units.findOne({ _id: id, isDeleted: false })
   
-  if (!unit) next(new Error('Unit not found'))
+  if (!unit) return next(new Error('Unit not found'))
   const sections = await Sections.findByUnit(id)
   
   res.status(200).json({data: sections})

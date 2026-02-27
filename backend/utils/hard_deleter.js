@@ -17,7 +17,7 @@ import { deleteEmbeddedBook } from './ai_services/embeddings.js'
 export const deleteUsers = async ({id}) => {
     if (id) {
         let user = await Users.findOne({_id: id, isDeleted: true})
-        if (user) throw new Error('User not found')
+        if (!user) throw new Error('User not found')
 
         await deleteChatSessions({userId: user._id})
         await deleteInteractions({userId: user._id})
@@ -32,7 +32,7 @@ export const deleteUsers = async ({id}) => {
 export const deleteBooks = async ({id}) => {
     if (id) {
         let book = await Books.findOne({_id: id, isDeleted: true})
-        if (book) throw new Error('Book not found')
+        if (!book) throw new Error('Book not found')
 
         await deleteUnits({bookId: book._id})
         await deleteReferences({bookId: book._id})
@@ -46,7 +46,7 @@ export const deleteBooks = async ({id}) => {
 export const deleteUnits = async ({id, bookId}) => {
     if (id) {
         let unit = await Units.findOne({_id: id, isDeleted: true})
-        if (unit) throw new Error('Unit not found')
+        if (!unit) throw new Error('Unit not found')
 
         await deleteSections({unitId: unit._id})
         await unit.deleteOne()
@@ -55,13 +55,11 @@ export const deleteUnits = async ({id, bookId}) => {
 
     if (bookId) {
         let units = await Units.find({bookId, isDeleted: true}) ?? []
-        units.map( async (unit) => {
-            if (unit) throw new Error('Unit not found')
-
+        for (let unit of units) {
             await deleteSections({unitId: unit._id})
             await unit.deleteOne()
-            return true
-        })
+        }
+        return true
     }
     return false
 }

@@ -38,8 +38,8 @@ const resolveInteraction = async ({sectionId, chatSessionId, studentId, studentQ
         aiAnswer: response.answer,
         confidenceScore: response.confidenceScore
     })
-    await addReferences({interaction, similaritySearchResults})
-    return interaction
+    let references = await addReferences({interaction, similaritySearchResults})    
+    return {interaction, references}
 }
 
 export default resolveInteraction

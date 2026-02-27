@@ -12,7 +12,8 @@ const UsersSection = () => {
   const [userDetails, setUserDetails] = useState({
     chatInteractions: [],
     quizzes: [],
-    progress: []
+    progress: [],
+    payments: []
   });
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [detailsModal, setDetailsModal] = useState({
@@ -106,17 +107,26 @@ const UsersSection = () => {
         }
       });
       
+      // Fetch payments
+      const paymentsResponse = await axios.get(`${API_BASE_URL}/api/v1/users/${userId}/payments`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
       setUserDetails({
         chatInteractions: chatResponse.data.data || [],
         quizzes: quizResponse.data.data || [],
-        progress: progressResponse.data.data || []
+        progress: progressResponse.data.data || [],
+        payments: paymentsResponse.data.data || []
       });
     } catch (error) {
       console.error('Error fetching user details:', error);
       setUserDetails({
         chatInteractions: [],
         quizzes: [],
-        progress: []
+        progress: [],
+        payments: []
       });
     } finally {
       setLoadingDetails(false);
@@ -127,7 +137,8 @@ const UsersSection = () => {
     const titles = {
       chatInteractions: 'Chat Interactions',
       quizzes: 'Quizzes',
-      progress: 'Progress'
+      progress: 'Progress',
+      payments: 'Payments'
     };
     
     setDetailsModal({
@@ -409,7 +420,7 @@ const UsersSection = () => {
       {/* User Details Modal */}
       {isModalOpen && selectedUser && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 w-full max-w-md">
+          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 w-full max-w-lg">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-white">User Details</h3>
               <button
@@ -474,7 +485,7 @@ const UsersSection = () => {
                 <button
                   onClick={() => openDetailsModal('quizzes')}
                   disabled={loadingDetails}
-                  className="px-3 py-2 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded hover:bg-blue-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-2 bg-teal-500/20 text-teal-400 border border-teal-500/30 rounded hover:bg-teal-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loadingDetails ? 'Loading...' : 'Quizzes'}
                 </button>
@@ -487,8 +498,15 @@ const UsersSection = () => {
                 </button>
               </div>
               <button
+                onClick={() => openDetailsModal('payments')}
+                disabled={loadingDetails}
+                className="px-3 mx-2 py-2 bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded hover:bg-yellow-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loadingDetails ? 'Loading...' : 'Payments'}
+              </button>
+              <button
                 onClick={() => setIsModalOpen(false)}
-                className="px-3 mx-2 py-2 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded hover:bg-blue-500/30 transition-colors"
+                className="px-3 py-2 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded hover:bg-blue-500/30 transition-colors"
               >
                 Close
               </button>
@@ -592,6 +610,69 @@ const UsersSection = () => {
                   ) : (
                     <div className="text-center py-8 text-gray-400">
                       No progress data found for this user.
+                    </div>
+                  )
+                )}
+
+                {detailsModal.type === 'payments' && (
+                  userDetails.payments.length > 0 ? (
+                    userDetails.payments.map((payment) => (
+                      <div key={payment._id} className="bg-white/5 rounded-lg p-4 border border-white/20">
+                        <div className="flex justify-between items-start mb-3">
+                          <div>
+                            <h4 className="font-medium text-white">{payment.planId?.planName || 'Payment'}</h4>
+                            <p className="text-sm text-gray-400">Transaction ID: {payment.transactionId}</p>
+                          </div>
+                          <span className={`text-xs px-2 py-1 rounded border ${
+                            payment.verificationStatus === 'approved' ? 'bg-green-500/20 text-green-400 border-green-500/30' :
+                            payment.verificationStatus === 'rejected' ? 'bg-red-500/20 text-red-400 border-red-500/30' :
+                            'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+                          }`}>
+                            {payment.verificationStatus.toUpperCase()}
+                          </span>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4 mb-3">
+                          <div>
+                            <p className="text-xs text-gray-400 uppercase tracking-wide">Amount</p>
+                            <p className="text-white font-medium">${payment.paidAmount}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-400 uppercase tracking-wide">Payment Date</p>
+                            <p className="text-white font-medium">{formatDate(payment.paymentDate)}</p>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 mb-3">
+                          <div>
+                            <p className="text-xs text-gray-400 uppercase tracking-wide">Sender</p>
+                            <p className="text-white">{payment.senderName}</p>
+                            <p className="text-sm text-gray-400">{payment.senderAccountNumber}</p>
+                            <p className="text-sm text-gray-400">{payment.senderPhoneNumber}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-400 uppercase tracking-wide">Recipient</p>
+                            <p className="text-white">{payment.recipientName}</p>
+                            <p className="text-sm text-gray-400">{payment.recipientAccountNumber}</p>
+                          </div>
+                        </div>
+
+                        {payment.rejectionReason && payment.verificationStatus === 'rejected' && (
+                          <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 mb-3">
+                            <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Rejection Reason</p>
+                            <p className="text-white">{payment.rejectionReason}</p>
+                          </div>
+                        )}
+
+                        <div className="flex justify-between text-sm text-gray-400">
+                          <span>Student ID: {payment.studentId}</span>
+                          <span>Expires: {formatDate(payment.expiresAt)}</span>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-gray-400">
+                      No payment history found for this user.
                     </div>
                   )
                 )}
