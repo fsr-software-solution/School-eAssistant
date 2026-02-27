@@ -50,7 +50,7 @@ const resolveQuizzes = async ({ chatSessionId, baseIdea, numberOfQuestions }) =>
             explanation: response.explanation
         })
 
-        await References.create({
+        let reference = await References.create({
             quizId: quiz?._id,
             bookId: doc?.bookId?.toString() || doc?.metadata?.bookId?.toString(),
             quotedText: doc?.text || doc?.pageContent,
@@ -58,8 +58,9 @@ const resolveQuizzes = async ({ chatSessionId, baseIdea, numberOfQuestions }) =>
             lineFrom: doc?.loc?.lines?.from || doc?.metadata?.loc?.lines?.from,
             lineTo: doc?.loc?.lines?.to || doc?.metadata?.loc?.lines?.to
         })
+        reference = await reference.populate('bookId', 'subject gradeLevel yearOfPublish filePath')
         
-        return quiz
+        return {quiz, reference}
     })   
 
     return await Promise.all(generatedQuizzes)
