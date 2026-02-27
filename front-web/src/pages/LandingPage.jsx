@@ -5,6 +5,14 @@ function LandingPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white">
       {/* Hero Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        {/* Logo Section */}
+        <div className="mb-8">
+          <img 
+            src="/logo.jpg" 
+            alt="School e-Assistant Logo" 
+            className="w-72 mx-auto rounded-full shadow-2xl shadow-blue-500/30 border-4 border-white/20"
+          />
+        </div>          
         <div className="text-center">
           <h1 className="text-5xl md:text-7xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent animate-pulse">
             School e-Assistant
