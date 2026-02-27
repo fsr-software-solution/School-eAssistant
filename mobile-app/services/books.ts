@@ -103,7 +103,27 @@ export const booksService = {
     const response = await api.get<{ data: Section[] }>(`/sections/${sectionId}/subsections`);
     return response.data.data;
   },
+
+  /**
+   * Get resources for a section
+   */
+  async getSectionResources(sectionId: string): Promise<Resource[]> {
+    const response = await api.get<{ data: Resource[] }>(`/sections/${sectionId}/resources`);
+    return response.data.data;
+  },
 };
+
+export interface Resource {
+  _id: string;
+  sectionId?: string;
+  interactionId?: string;
+  title: string;
+  description?: string;
+  type: 'article' | 'youtube' | 'image' | 'other';
+  link: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 /**
  * Progress Types

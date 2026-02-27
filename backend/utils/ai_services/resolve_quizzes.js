@@ -7,16 +7,16 @@ import * as z from 'zod'
 
 const choiceKeySchema = z.enum(["a", "b", "c", "d", "e"])
 const questionSchema = z.object({
-  question: z.string().describe("The multiple choice question text"),
-  choices: z.object({
-    a: z.string().describe("Choice A"),
-    b: z.string().describe("Choice B"),
-    c: z.string().describe("Choice C"),
-    d: z.string().describe("Choice D"),
-    e: z.string().optional().describe("Optional Choice E")
-  }),
-  answer: choiceKeySchema.describe("The correct answer key. Must be one of: a, b, c, d, or e" ),
-  explanation: z.string().describe("Short explanation why the answer is correct")
+    question: z.string().describe("The multiple choice question text"),
+    choices: z.object({
+        a: z.string().describe("Choice A"),
+        b: z.string().describe("Choice B"),
+        c: z.string().describe("Choice C"),
+        d: z.string().describe("Choice D"),
+        e: z.string().optional().describe("Optional Choice E")
+    }),
+    answer: choiceKeySchema.describe("The correct answer key. Must be one of: a, b, c, d, or e"),
+    explanation: z.string().describe("Short explanation why the answer is correct")
 })
 // const structuredSchema = z.object({
 //   quizzes: z.array(questionSchema).describe("List of multiple choice questions")
@@ -24,8 +24,8 @@ const questionSchema = z.object({
 
 
 
-const resolveQuizzes = async ({chatSessionId, baseIdea, numberOfQuestions}) => {
-    let llm = new ChatOllama({model: 'smollm2:135m'})
+const resolveQuizzes = async ({ chatSessionId, baseIdea, numberOfQuestions }) => {
+    let llm = new ChatOllama({ model: 'smollm2:135m' })
     let structuredLLM = llm.withStructuredOutput(questionSchema)
 
     let similaritySearchResults = []

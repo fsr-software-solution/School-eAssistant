@@ -7,7 +7,7 @@ import { summarizer } from '../utils/ai_services/content_generator.js'
 
 export const getAllChats = async (req, res, next) => {
   const chats = await ChatSessions.findActive()
-  res.status(200).json({data: chats})
+  res.status(200).json({ data: chats })
 }
 
 export const getChatById = async (req, res, next) => {
@@ -16,7 +16,7 @@ export const getChatById = async (req, res, next) => {
   
   if (!chat) return next(new Error('Chat session not found'))
 
-  res.status(200).json({data: chat})
+  res.status(200).json({ data: chat })
 }
 
 export const getChatInteractions = async (req, res, next) => {
@@ -28,11 +28,11 @@ export const getChatInteractions = async (req, res, next) => {
 
   const interactions = await Interactions.findByChatSession(id) ?? []
   if (!chat.summary && interactions.length != 0) {
-    chat.summary = await summarizer({interaction: interactions[0]})
+    chat.summary = await summarizer({ interaction: interactions[0] })
     await chat.save()
   }
-  
-  res.status(200).json({data: interactions})
+
+  res.status(200).json({ data: interactions })
 }
 
 export const getChatQuizzes = async (req, res, next) => {
@@ -44,11 +44,11 @@ export const getChatQuizzes = async (req, res, next) => {
 
   const quizzes = await Quizzes.findByChatSession(id) ?? []
   if (!chat.summary && quizzes.length != 0) {
-    chat.summary = await summarizer({quiz: quizzes[0]})
+    chat.summary = await summarizer({ quiz: quizzes[0] })
     await chat.save()
   }
 
-  res.status(200).json({data: quizzes})
+  res.status(200).json({ data: quizzes })
 }
 
 export const createChat = async (req, res, next) => {
@@ -64,8 +64,8 @@ export const createChat = async (req, res, next) => {
     studentId,
     type
   })
-  
-  res.status(201).json({data: chat})
+
+  res.status(201).json({ data: chat })
 }
 
 export const deleteChat = async (req, res, next) => {
@@ -74,6 +74,6 @@ export const deleteChat = async (req, res, next) => {
   
   if (!chat || chat.isDeleted) return next(new Error('Chat session not found'))
   await chat.softDelete()
-  
-  res.status(200).json({data: true})
+
+  res.status(200).json({ data: true })
 }

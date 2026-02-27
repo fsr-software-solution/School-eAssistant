@@ -15,7 +15,8 @@ cloudinary.v2.config({
 
 // Request validation schema
 const uploadPaymentSchema = z.object({
-  planId: z.string().min(1, 'Plan ID is required')
+  planId: z.string().min(1, 'Plan ID is required'),
+  phoneNumber: z.string().optional()
 });
 
 // Multer config for file upload
@@ -117,7 +118,7 @@ class PaymentController {
       }
 
       const studentId = req.user?.id;
-      const { planId } = validation.data;
+      const { planId, phoneNumber } = validation.data;
 
       if (!studentId) {
         return res.status(401).json({
@@ -185,11 +186,11 @@ class PaymentController {
         extractedData.recipientName,
         paymentAccount.accountHolderFullName
       );
-      
+
       // Account number validation - only required if extracted (some screenshots don't show full account numbers)
       const extractedAccountNumber = extractedData.recipientAccountNumber?.trim() || '';
       const hasAccountNumber = extractedAccountNumber.length >= 5; // At least 5 digits to be considered valid
-      
+
       let recipientAccountMatch = true;
       if (hasAccountNumber) {
         recipientAccountMatch = accountNumbersMatch(
@@ -275,15 +276,16 @@ class PaymentController {
       // 9. Use payment account number if OCR didn't extract recipient account number
       // (Some screenshots don't show the full account number, so we use the configured account)
       const extractedAccountNum = extractedData.recipientAccountNumber?.trim();
-      const recipientAccountNumber = (extractedAccountNum && extractedAccountNum.length >= 5) 
-                                    ? extractedAccountNum 
-                                    : paymentAccount.accountNumber;
+      const recipientAccountNumber = (extractedAccountNum && extractedAccountNum.length >= 5)
+        ? extractedAccountNum
+        : paymentAccount.accountNumber;
 
       // 10. Create payment transaction
       const paymentTransaction = new PaymentTransaction({
         transactionId: extractedData.transactionId,
         studentId,
         planId,
+        phoneNumber: phoneNumber || '',
         senderName: extractedData.senderName,
         senderAccountNumber: extractedData.senderAccountNumber || '',
         recipientName: extractedData.recipientName,
@@ -407,10 +409,10 @@ class PaymentController {
         hasAccess: !!activePayment,
         data: activePayment
           ? {
-              planName: activePayment.planId?.planName,
-              features: activePayment.planId?.features,
-              expiresAt: activePayment.expiresAt
-            }
+            planName: activePayment.planId?.planName,
+            features: activePayment.planId?.features,
+            expiresAt: activePayment.expiresAt
+          }
           : null
       });
     } catch (error) {
@@ -473,7 +475,7 @@ class PaymentController {
       const transaction = await PaymentTransaction.findOne({ _id: id })
         .populate('planId', 'planName amount durationDays')
         .populate('studentId', 'username')
-        
+
       if (!transaction) {
         return res.status(404).json({
           success: false,

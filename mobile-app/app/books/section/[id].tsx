@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SPACING, BORDER_RADIUS } from '../../../constants/config';
 import { useTheme } from '../../../context/ThemeContext';
 import Text from '../../../components/ui/Text';
-import { booksService, Section } from '../../../services/books';
+import { booksService, Section, Resource } from '../../../services/books';
 import { useAuth } from '../../../context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
@@ -20,6 +20,7 @@ export default function SectionReaderScreen() {
   const { colors } = useTheme();
   const [section, setSection] = useState<Section | null>(null);
   const [subsections, setSubsections] = useState<Section[]>([]);
+  const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
   const [progressStatus, setProgressStatus] = useState<'not started' | 'in progress' | 'completed'>('not started');
   const [updatingProgress, setUpdatingProgress] = useState(false);
@@ -36,12 +37,19 @@ export default function SectionReaderScreen() {
   const loadSectionData = async () => {
     try {
       setLoading(true);
-      const [sectionData, subsectionsData] = await Promise.all([
-        booksService.getSectionById(id!),
-        booksService.getSectionSubsections(id!).catch(() => []), // Subsections may not exist
-      ]);
+      // Step 1: Fetch section first — this triggers the backend to generate
+      // AI clarification, summary, and resources if they don't exist yet
+      const sectionData = await booksService.getSectionById(id!);
       setSection(sectionData);
+
+      // Step 2: Now fetch subsections and resources in parallel
+      // Resources should be ready now since getSectionById triggers their generation
+      const [subsectionsData, resourcesData] = await Promise.all([
+        booksService.getSectionSubsections(id!).catch(() => []),
+        booksService.getSectionResources(id!).catch(() => []),
+      ]);
       setSubsections(subsectionsData);
+      setResources(resourcesData);
 
       // Load progress status if user is logged in
       // Note: You may need to implement a getProgressBySection endpoint
@@ -63,9 +71,6 @@ export default function SectionReaderScreen() {
 
     try {
       setUpdatingProgress(true);
-      // Mark as completed
-      // Note: You'll need to implement the progress API call
-      // For now, we'll just update local state
       setProgressStatus('completed');
       Toast.show({
         type: 'success',
@@ -80,6 +85,37 @@ export default function SectionReaderScreen() {
       });
     } finally {
       setUpdatingProgress(false);
+    }
+  };
+
+  const handleOpenResource = async (link: string) => {
+    try {
+      const supported = await Linking.canOpenURL(link);
+      if (supported) {
+        await Linking.openURL(link);
+      } else {
+        Toast.show({ type: 'error', text1: 'Cannot open link' });
+      }
+    } catch {
+      Toast.show({ type: 'error', text1: 'Failed to open link' });
+    }
+  };
+
+  const getResourceIcon = (type: Resource['type']): any => {
+    switch (type) {
+      case 'youtube': return 'logo-youtube';
+      case 'article': return 'document-text-outline';
+      case 'image': return 'image-outline';
+      default: return 'link-outline';
+    }
+  };
+
+  const getResourceColor = (type: Resource['type']): string => {
+    switch (type) {
+      case 'youtube': return '#FF0000';
+      case 'article': return colors.primary;
+      case 'image': return '#8B5CF6';
+      default: return colors.textSecondary;
     }
   };
 
@@ -128,6 +164,43 @@ export default function SectionReaderScreen() {
             <Text variant="body" color={colors.textSecondary} style={styles.clarificationText} {...textProtectionProps}>
               {section.aiClarification}
             </Text>
+          </View>
+        )}
+
+        {/* Resources & References */}
+        {resources.length > 0 && (
+          <View style={styles.resourcesSection}>
+            <View style={styles.resourcesSectionHeader}>
+              <Ionicons name="library-outline" size={20} color={colors.primary} />
+              <Text variant="h2" color={colors.text} style={styles.resourcesTitle}>Resources & References</Text>
+            </View>
+            {resources.map((resource) => (
+              <TouchableOpacity
+                key={resource._id}
+                style={[styles.resourceCard, { backgroundColor: colors.surface }]}
+                onPress={() => handleOpenResource(resource.link)}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.resourceIcon, { backgroundColor: getResourceColor(resource.type) + '20' }]}>
+                  <Ionicons name={getResourceIcon(resource.type)} size={22} color={getResourceColor(resource.type)} />
+                </View>
+                <View style={styles.resourceInfo}>
+                  <Text variant="body" color={colors.text} style={styles.resourceName} numberOfLines={1}>
+                    {resource.title}
+                  </Text>
+                  {resource.description ? (
+                    <Text variant="bodySmall" color={colors.textSecondary} numberOfLines={2}>
+                      {resource.description}
+                    </Text>
+                  ) : (
+                    <Text variant="bodySmall" color={colors.textSecondary}>
+                      {resource.type.charAt(0).toUpperCase() + resource.type.slice(1)}
+                    </Text>
+                  )}
+                </View>
+                <Ionicons name="open-outline" size={18} color={colors.textSecondary} />
+              </TouchableOpacity>
+            ))}
           </View>
         )}
 
@@ -245,6 +318,46 @@ const styles = StyleSheet.create({
   },
   clarificationText: {
     lineHeight: 24,
+  },
+  resourcesSection: {
+    marginBottom: SPACING.lg,
+  },
+  resourcesSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: SPACING.md,
+    gap: SPACING.xs,
+  },
+  resourcesTitle: {
+    marginLeft: SPACING.xs,
+  },
+  resourceCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: BORDER_RADIUS.md,
+    padding: SPACING.md,
+    marginBottom: SPACING.sm,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  resourceIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: BORDER_RADIUS.sm,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: SPACING.md,
+  },
+  resourceInfo: {
+    flex: 1,
+    marginRight: SPACING.sm,
+  },
+  resourceName: {
+    fontWeight: '600',
+    marginBottom: 2,
   },
   subsectionsSection: {
     marginBottom: SPACING.lg,

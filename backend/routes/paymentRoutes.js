@@ -15,7 +15,6 @@ router.get('/premium-access', protect, PaymentController.checkPremiumAccess);
 router.post(
   '/upload-screenshot',
   protect,
-  studentOnly,
   (req, res, next) => {
     upload.single('screenshot')(req, res, (err) => {
       if (err) {
