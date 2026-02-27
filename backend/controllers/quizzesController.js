@@ -37,6 +37,26 @@ export const createQuiz = async (req, res, next) => {
     res.status(201).json({data: quizzes})
 }
 
+export const attemptQuiz = async (req, res, next) => {
+    const { id } = req.params
+    const { attempt } = req.body
+  
+    const quiz = await Quizzes.findOne({ _id: id, isDeleted: false })
+    if (!quiz) return next(new Error('Quiz not found'))
+
+    const chat = await ChatSessions.findOne({ _id: quiz.chatSessionId, isDeleted: false })
+    if (!chat) return next(new Error('Chat session not found'))
+
+    if (chat.studentId.toString() !== req.user?._id.toString()) {
+        return next(new Error('You attempt only your questions'))
+    }
+
+    if (attempt) quiz.studentAttempt = attempt
+    await quiz.save()
+    
+    res.status(200).json({data: quiz})
+}
+
 export const deleteQuiz = async (req, res, next) => {
     const { id } = req.params
   

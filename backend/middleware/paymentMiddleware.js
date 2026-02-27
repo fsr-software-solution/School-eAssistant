@@ -13,6 +13,10 @@ const requirePremiumAccess = async (req, res, next) => {
       });
     }
 
+    if (req.user.role === 'admin') {
+      return next()
+    }
+
     const studentId = req.user.id;
     const now = new Date();
 
