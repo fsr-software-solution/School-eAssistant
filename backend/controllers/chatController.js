@@ -56,8 +56,8 @@ export const createChat = async (req, res, next) => {
   const studentId = req.user?._id
 
   const student = await Users.findOne({_id: studentId, isDeleted: false})
-  if (!student || student.isDeleted || student.role !== 'student') return next(new Error('Invalid student ID or student not found'))
-  if (!studentId || !type) return next(new Error('StudentId and type are required'))
+  if (!student) return next(new Error('Student not found'))
+  if (!type) return next(new Error('Type are required'))
   if (!['interaction', 'quiz'].includes(type)) return next(new Error('Type must be either "interaction" or "quiz"'))
 
   const chat = await ChatSessions.create({
