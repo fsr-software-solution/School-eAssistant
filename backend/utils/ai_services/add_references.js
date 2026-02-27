@@ -15,7 +15,7 @@ const addReferences = async ({interaction, quiz, similaritySearchResults}) => {
             lineFrom: doc?.metadata?.loc?.lines?.from,
             lineTo: doc?.metadata?.loc?.lines?.to
         })
-        return reference.populate('bookId', 'subject gradeLevel yearOfPublish filePath')
+        return await reference.populate('bookId', 'subject gradeLevel yearOfPublish filePath')
     })
 
     return await Promise.all(references)
