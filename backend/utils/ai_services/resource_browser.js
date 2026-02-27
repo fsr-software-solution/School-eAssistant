@@ -52,8 +52,7 @@ const addResources = async ({section, interaction}) => {
         youtubeSearch.search(response.queryForYouTubeVideo)
     ])
 
-    let resources = []
-    articles?.results?.slice(0, 5)?.map( async (article) => {
+    let articleResources = articles?.results?.slice(0, 5)?.map( async (article) => {
         let resource = await Resources.create({
             sectionId: section?._id,
             interactionId: interaction?._id,
@@ -62,10 +61,10 @@ const addResources = async ({section, interaction}) => {
             type: 'article',
             link: article.url
         })
-        resources.push(resource)
+        return resource
     })
     
-    images?.slice(0, 5)?.map( async (image) => {
+    let imageResources = images?.slice(0, 5)?.map( async (image) => {
         let resource = await Resources.create({
             sectionId: section?._id,
             interactionId: interaction?._id,
@@ -74,10 +73,10 @@ const addResources = async ({section, interaction}) => {
             type: 'image',
             link: image.image
         })
-        resources.push(resource)
+        return resource
     })
 
-    videos?.slice(0, 5)?.map( async (video) => {
+    let videoResources = videos?.slice(0, 5)?.map( async (video) => {
         let resource = await Resources.create({
             sectionId: section?._id,
             interactionId: interaction?._id,
@@ -86,10 +85,10 @@ const addResources = async ({section, interaction}) => {
             type: 'youtube',
             link: `https://www.youtube.com/watch?v=${video.id}`
         }) 
-        resources.push(resource)       
+        return resource   
     })
     
-    return resources
+    return await Promise.all([...articleResources, ...imageResources, ...videoResources])
 }
 
 

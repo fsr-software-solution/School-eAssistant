@@ -8,11 +8,10 @@ import {
   deleteChat
 } from '../controllers/chatController.js';
 import protect from '../middleware/authMiddleware.js';
-import { requirePremiumAccess } from '../middleware/paymentMiddleware.js';
+import requirePremiumAccess from '../middleware/paymentMiddleware.js';
 
 const router = express.Router();
 
-// All chat routes require authentication and premium access
 router.get('/', protect, requirePremiumAccess, getAllChats);
 router.get('/:id', protect, requirePremiumAccess, getChatById);
 router.get('/:id/interactions', protect, requirePremiumAccess, getChatInteractions);
