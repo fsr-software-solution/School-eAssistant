@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text as RNText, StyleSheet, Switch, TouchableOpacity } from 'react-native';
+import { View, Text as RNText, StyleSheet, Switch, TouchableOpacity, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme, FontSizeType } from '../context/ThemeContext';
 import { SPACING } from '../constants/config';
 import { Ionicons } from '@expo/vector-icons';
@@ -33,43 +34,45 @@ export default function SettingsScreen() {
     };
 
     return (
-        <View style={[styles.container, { backgroundColor: colors.background }]}>
-            <View style={[styles.settingItem, { borderBottomColor: colors.border }]}>
-                <View style={styles.settingLabelContainer}>
-                    <Ionicons name="moon-outline" size={24} color={colors.text} style={styles.icon} />
-                    <View>
-                        <RNText style={[typography.body, { color: colors.text, fontWeight: '600' }]}>Dark Mode</RNText>
-                        <RNText style={[typography.caption, { color: colors.textSecondary }]}>
-                            Toggle dark theme
-                        </RNText>
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['bottom']}>
+            <ScrollView showsVerticalScrollIndicator={false}>
+                <View style={[styles.settingItem, { borderBottomColor: colors.border }]}>
+                    <View style={styles.settingLabelContainer}>
+                        <Ionicons name="moon-outline" size={24} color={colors.text} style={styles.icon} />
+                        <View>
+                            <RNText style={[typography.body, { color: colors.text, fontWeight: '600' }]}>Dark Mode</RNText>
+                            <RNText style={[typography.caption, { color: colors.textSecondary }]}>
+                                Toggle dark theme
+                            </RNText>
+                        </View>
                     </View>
-                </View>
-                <Switch
-                    value={isDark}
-                    onValueChange={toggleTheme}
-                    trackColor={{ false: colors.border, true: colors.primary }}
-                    thumbColor={'#fff'}
-                />
-            </View>
-
-            <View style={[styles.settingItem, styles.settingItemVertical, { borderBottomColor: colors.border }]}>
-                <View style={styles.settingLabelContainer}>
-                    <Ionicons name="text-outline" size={24} color={colors.text} style={styles.icon} />
-                    <View>
-                        <RNText style={[typography.body, { color: colors.text, fontWeight: '600' }]}>Font Size</RNText>
-                        <RNText style={[typography.caption, { color: colors.textSecondary }]}>
-                            Adjust text size across the app
-                        </RNText>
-                    </View>
+                    <Switch
+                        value={isDark}
+                        onValueChange={toggleTheme}
+                        trackColor={{ false: colors.border, true: colors.primary }}
+                        thumbColor={'#fff'}
+                    />
                 </View>
 
-                <View style={styles.fontSizeOptionsContainer}>
-                    <FontSizeOption size="small" label="Small" />
-                    <FontSizeOption size="medium" label="Medium" />
-                    <FontSizeOption size="large" label="Large" />
+                <View style={[styles.settingItem, styles.settingItemVertical, { borderBottomColor: colors.border }]}>
+                    <View style={styles.settingLabelContainer}>
+                        <Ionicons name="text-outline" size={24} color={colors.text} style={styles.icon} />
+                        <View>
+                            <RNText style={[typography.body, { color: colors.text, fontWeight: '600' }]}>Font Size</RNText>
+                            <RNText style={[typography.caption, { color: colors.textSecondary }]}>
+                                Adjust text size across the app
+                            </RNText>
+                        </View>
+                    </View>
+
+                    <View style={styles.fontSizeOptionsContainer}>
+                        <FontSizeOption size="small" label="Small" />
+                        <FontSizeOption size="medium" label="Medium" />
+                        <FontSizeOption size="large" label="Large" />
+                    </View>
                 </View>
-            </View>
-        </View>
+            </ScrollView>
+        </SafeAreaView>
     );
 }
 
