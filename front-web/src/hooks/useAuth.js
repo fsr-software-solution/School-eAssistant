@@ -23,7 +23,7 @@ export const useAuth = () => {
         return;
       }
 
-      const response = await axios.post(`${API_BASE_URL}/api/auth/refresh-token`, {
+      const response = await axios.post(`${API_BASE_URL}/api/v1/auth/refresh-token`, {
         refreshToken
       });
 

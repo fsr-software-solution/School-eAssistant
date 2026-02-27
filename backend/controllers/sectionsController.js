@@ -30,7 +30,7 @@ export const getSectionSubsections = async (req, res, next) => {
     const { id } = req.params
     const section = await Sections.findOne({ _id: id, isDeleted: false })
     
-    if (!section) next(new Error('Section not found'))    
+    if (!section) return next(new Error('Section not found'))    
     const subsections = await Sections.findSubsections(id)
     
     res.status(200).json({data: subsections})
@@ -40,7 +40,7 @@ export const getSectionResources = async (req, res, next) => {
   const { id } = req.params
   const section = await Sections.findOne({ _id: id, isDeleted: false })
   
-  if (!section) next(new Error('Section not found'))
+  if (!section) return next(new Error('Section not found'))
     
   let resources = await Resources.find({ sectionId: id, isDeleted: false }) ?? []
   if (resources.length === 0) {
@@ -54,7 +54,7 @@ export const getSectionInteractions = async (req, res, next) => {
   const { id } = req.params
   const section = await Sections.findOne({ _id: id, isDeleted: false })
   
-  if (!section) next(new Error('Section not found'))
+  if (!section) return next(new Error('Section not found'))
 
   let interactions = []
   if (req.user?.role == 'admin')
@@ -71,7 +71,7 @@ export const updateSection = async (req, res, next) => {
   
   const section = await Sections.findOne({ _id: id, isDeleted: false })
   
-  if (!section) next(new Error('Section not found'))
+  if (!section) return next(new Error('Section not found'))
   if (aiClarification) section.aiClarification = aiClarification
   await section.save()
   

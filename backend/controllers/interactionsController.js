@@ -8,7 +8,7 @@ export const getInteractionById = async (req, res, next) => {
     const { id } = req.params
     const interaction = await Interactions.findOne({_id: id, isDeleted: false})
 
-    if (!interaction) next(new Error('Interaction not found'))
+    if (!interaction) return next(new Error('Interaction not found'))
 
     res.status(200).json({data: interaction})
 }
@@ -17,7 +17,7 @@ export const getInteractionResources = async (req, res, next) => {
     const { id } = req.params
     const interaction = await Interactions.findOne({_id: id, isDeleted: false})
     
-    if (!interaction) next(new Error('Interaction not found'))
+    if (!interaction) return next(new Error('Interaction not found'))
 
     let resources = await Resources.find({interactionId: id, isDeleted: false}) ?? []
     if (resources.length === 0) {
@@ -31,7 +31,7 @@ export const createInteraction = async (req, res, next) => {
     const { sectionId, chatSessionId, studentQuestion } = req.body
     const studentId = req.user._id
   
-    if (!studentQuestion) next(new Error('Student question required'))
+    if (!studentQuestion) return next(new Error('Student question required'))
     
     let interaction = null
     if (sectionId) {
@@ -51,7 +51,7 @@ export const deleteInteraction = async (req, res, next) => {
   
     const interaction = await Interactions.findOne({_id: id,isDeleted: false})
     
-    if (!interaction) next(new Error('Interaction not found'))
+    if (!interaction) return next(new Error('Interaction not found'))
     await interaction.softDelete()
     
     res.status(200).json({data: true})
