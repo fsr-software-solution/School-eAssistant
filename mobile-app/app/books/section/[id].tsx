@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Linking } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Linking, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SPACING, BORDER_RADIUS } from '../../../constants/config';
@@ -14,6 +14,71 @@ import Button from '../../../components/ui/Button';
 import YouTubePlayer from '../../../components/ui/YouTubePlayer';
 import ImageViewer from '../../../components/ui/ImageViewer';
 
+// Accordion Section Component
+const AccordionSection = ({ 
+  title, 
+  isOpen, 
+  onPress, 
+  icon, 
+  iconColor, 
+  children 
+}: {
+  title: string;
+  isOpen: boolean;
+  onPress: () => void;
+  icon: string;
+  iconColor: string;
+  children: React.ReactNode;
+}) => {
+  const { colors } = useTheme();
+  const animatedHeight = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(animatedHeight, {
+      toValue: isOpen ? 1 : 0,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+  }, [isOpen]);
+
+  const animatedStyle = {
+    maxHeight: animatedHeight.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0, 1000],
+    }),
+    opacity: animatedHeight.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0, 1],
+    }),
+  };
+
+  return (
+    <View style={[styles.accordionSection, { backgroundColor: colors.surface }]}>
+      <TouchableOpacity
+        style={styles.accordionHeader}
+        onPress={onPress}
+        activeOpacity={0.7}
+      >
+        <View style={styles.accordionHeaderContent}>
+          <Ionicons name={icon as any} size={20} color={iconColor} />
+          <Text variant="h3" color={colors.text} style={styles.accordionTitle}>
+            {title}
+          </Text>
+        </View>
+        <Ionicons 
+          name={isOpen ? "chevron-up" : "chevron-down"} 
+          size={20} 
+          color={colors.textSecondary} 
+        />
+      </TouchableOpacity>
+      
+      <Animated.View style={[styles.accordionContent, animatedStyle]}>
+        {children}
+      </Animated.View>
+    </View>
+  );
+};
+
 export default function SectionReaderScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -26,6 +91,14 @@ export default function SectionReaderScreen() {
   const [loading, setLoading] = useState(true);
   const [progressStatus, setProgressStatus] = useState<'not started' | 'in progress' | 'completed'>('not started');
   const [updatingProgress, setUpdatingProgress] = useState(false);
+  
+  // Accordion states
+  const [accordionStates, setAccordionStates] = useState({
+    clarifications: true,
+    videos: true,
+    images: true,
+    articles: true,
+  });
 
   // Enable content protection - prevent screenshots and text selection
   useContentProtection(true);
@@ -128,6 +201,14 @@ export default function SectionReaderScreen() {
     return (match && match[2].length === 11) ? match[2] : null;
   };
 
+  // Toggle accordion function
+  const toggleAccordion = (section: keyof typeof accordionStates) => {
+    setAccordionStates(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
@@ -163,87 +244,106 @@ export default function SectionReaderScreen() {
           </Text>
         </View>
 
-        {/* AI Clarification */}
+        {/* Accordion Sections */}
         {section.aiClarification && (
-          <View style={[styles.clarificationCard, { backgroundColor: colors.warning + '15', borderLeftColor: colors.warning }]}>
-            <View style={styles.clarificationHeader}>
-              <Ionicons name="bulb" size={20} color={colors.warning} />
-              <Text variant="h3" color={colors.text} style={styles.clarificationTitle}>AI Clarification</Text>
+          <AccordionSection
+            title="Clarifications"
+            isOpen={accordionStates.clarifications}
+            onPress={() => toggleAccordion('clarifications')}
+            icon="bulb"
+            iconColor={colors.warning}
+          >
+            <View style={[styles.clarificationCard, { backgroundColor: colors.warning + '15', borderLeftColor: colors.warning }]}>
+              <Text variant="body" color={colors.textSecondary} style={styles.clarificationText} {...textProtectionProps}>
+                {section.aiClarification}
+              </Text>
             </View>
-            <Text variant="body" color={colors.textSecondary} style={styles.clarificationText} {...textProtectionProps}>
-              {section.aiClarification}
-            </Text>
-          </View>
+          </AccordionSection>
         )}
 
-        {/* Resources & References */}
-        {resources.length > 0 && (
-          <View style={styles.resourcesSection}>
-            <View style={styles.resourcesSectionHeader}>
-              <Ionicons name="library-outline" size={20} color={colors.primary} />
-              <Text variant="h2" color={colors.text} style={styles.resourcesTitle}>Resources & References</Text>
-            </View>
-            {resources.map((resource) => {
-              // Handle different resource types
-              if (resource.type === 'youtube') {
-                // Extract video ID from YouTube URL
-                const videoId = extractYouTubeVideoId(resource.link);
-                if (videoId) {
-                  return (
-                    <View key={resource._id} style={styles.resourceCard}>
-                      <YouTubePlayer
-                        videoId={videoId}
-                        onPlay={() => console.log('YouTube video playing')}
-                        onPause={() => console.log('YouTube video paused')}
-                        onError={(error) => console.error('YouTube error:', error)}
-                      />
-                    </View>
-                  );
-                }
-              } else if (resource.type === 'image') {
+        {/* Videos Section */}
+        {resources.filter(r => r.type === 'youtube').length > 0 && (
+          <AccordionSection
+            title="Videos"
+            isOpen={accordionStates.videos}
+            onPress={() => toggleAccordion('videos')}
+            icon="logo-youtube"
+            iconColor="#FF0000"
+          >
+            {resources.filter(r => r.type === 'youtube').map((resource) => {
+              const videoId = extractYouTubeVideoId(resource.link);
+              if (videoId) {
                 return (
                   <View key={resource._id} style={styles.resourceCard}>
-                    <ImageViewer
-                      imageUrl={resource.link}
-                      title={resource.title}
-                      description={resource.description}
-                      onOpen={() => console.log('Image opened')}
-                      onClose={() => console.log('Image closed')}
-                    />
+                    <YouTubePlayer videoId={videoId} />
                   </View>
                 );
-              } else {
-                // For articles and other types, keep the original card layout
-                return (
-                  <TouchableOpacity
-                    key={resource._id}
-                    style={[styles.resourceCard, { backgroundColor: colors.surface }]}
-                    onPress={() => handleOpenResource(resource.link)}
-                    activeOpacity={0.7}
-                  >
-                    <View style={[styles.resourceIcon, { backgroundColor: getResourceColor(resource.type) + '20' }]}>
-                      <Ionicons name={getResourceIcon(resource.type)} size={22} color={getResourceColor(resource.type)} />
-                    </View>
-                    <View style={styles.resourceInfo}>
-                      <Text variant="body" color={colors.text} style={styles.resourceName} numberOfLines={1}>
-                        {resource.title}
-                      </Text>
-                      {resource.description ? (
-                        <Text variant="bodySmall" color={colors.textSecondary} numberOfLines={2}>
-                          {resource.description}
-                        </Text>
-                      ) : (
-                        <Text variant="bodySmall" color={colors.textSecondary}>
-                          {resource.type.charAt(0).toUpperCase() + resource.type.slice(1)}
-                        </Text>
-                      )}
-                    </View>
-                    <Ionicons name="open-outline" size={18} color={colors.textSecondary} />
-                  </TouchableOpacity>
-                );
               }
+              return null;
             })}
-          </View>
+          </AccordionSection>
+        )}
+
+        {/* Images Section */}
+        {resources.filter(r => r.type === 'image').length > 0 && (
+          <AccordionSection
+            title="Images"
+            isOpen={accordionStates.images}
+            onPress={() => toggleAccordion('images')}
+            icon="image-outline"
+            iconColor="#8B5CF6"
+          >
+            {resources.filter(r => r.type === 'image').map((resource) => (
+              <View key={resource._id} style={styles.resourceCard}>
+                <ImageViewer
+                  imageUrl={resource.link}
+                  title={resource.title}
+                  description={resource.description}
+                  onOpen={() => console.log('Image opened')}
+                  onClose={() => console.log('Image closed')}
+                />
+              </View>
+            ))}
+          </AccordionSection>
+        )}
+
+        {/* Articles Section */}
+        {resources.filter(r => r.type === 'article').length > 0 && (
+          <AccordionSection
+            title="Articles"
+            isOpen={accordionStates.articles}
+            onPress={() => toggleAccordion('articles')}
+            icon="document-text-outline"
+            iconColor={colors.primary}
+          >
+            {resources.filter(r => r.type === 'article').map((resource) => (
+              <TouchableOpacity
+                key={resource._id}
+                style={[styles.resourceCard, { backgroundColor: colors.surface }]}
+                onPress={() => handleOpenResource(resource.link)}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.resourceIcon, { backgroundColor: getResourceColor(resource.type) + '20' }]}>
+                  <Ionicons name={getResourceIcon(resource.type)} size={22} color={getResourceColor(resource.type)} />
+                </View>
+                <View style={styles.resourceInfo}>
+                  <Text variant="body" color={colors.text} style={styles.resourceName} numberOfLines={1}>
+                    {resource.title}
+                  </Text>
+                  {resource.description ? (
+                    <Text variant="bodySmall" color={colors.textSecondary} numberOfLines={2}>
+                      {resource.description}
+                    </Text>
+                  ) : (
+                    <Text variant="bodySmall" color={colors.textSecondary}>
+                      Article
+                    </Text>
+                  )}
+                </View>
+                <Ionicons name="open-outline" size={18} color={colors.textSecondary} />
+              </TouchableOpacity>
+            ))}
+          </AccordionSection>
         )}
 
         {/* Subsections */}
@@ -455,5 +555,34 @@ const styles = StyleSheet.create({
   },
   progressButton: {
     marginTop: SPACING.sm,
+  },
+  accordionSection: {
+    borderRadius: BORDER_RADIUS.md,
+    marginBottom: SPACING.md,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  accordionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: SPACING.md,
+    backgroundColor: 'transparent',
+  },
+  accordionHeaderContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  accordionTitle: {
+    marginLeft: SPACING.sm,
+    fontWeight: '600',
+  },
+  accordionContent: {
+    overflow: 'hidden',
   },
 });

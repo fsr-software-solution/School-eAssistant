@@ -3,12 +3,10 @@ import { API_BASE_URL } from '../constants/config';
 import { tokenStorage } from '../utils/storage';
 import { getOrCreateDeviceId } from '../utils/deviceId';
 
-/**
- * Create axios instance with default config
- */
+
 const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 30000,
+  timeout: 300000,
   headers: {
     'Content-Type': 'application/json',
   },

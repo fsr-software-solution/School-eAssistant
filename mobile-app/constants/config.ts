@@ -1,7 +1,7 @@
 /**
  * App Configuration
  */
-export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
+export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://brittny-reprehensible-joel.ngrok-free.dev/api/v1';
 
 export const STORAGE_KEYS = {
   ACCESS_TOKEN: 'access_token',
