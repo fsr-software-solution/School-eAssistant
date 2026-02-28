@@ -13,15 +13,16 @@ import { useContentProtection, textProtectionProps } from '../../../utils/conten
 import Button from '../../../components/ui/Button';
 import YouTubePlayer from '../../../components/ui/YouTubePlayer';
 import ImageViewer from '../../../components/ui/ImageViewer';
+import AskAISection from '../../../components/AskAISection';
 
 // Accordion Section Component
-const AccordionSection = ({ 
-  title, 
-  isOpen, 
-  onPress, 
-  icon, 
-  iconColor, 
-  children 
+const AccordionSection = ({
+  title,
+  isOpen,
+  onPress,
+  icon,
+  iconColor,
+  children
 }: {
   title: string;
   isOpen: boolean;
@@ -65,13 +66,13 @@ const AccordionSection = ({
             {title}
           </Text>
         </View>
-        <Ionicons 
-          name={isOpen ? "chevron-up" : "chevron-down"} 
-          size={20} 
-          color={colors.textSecondary} 
+        <Ionicons
+          name={isOpen ? "chevron-up" : "chevron-down"}
+          size={20}
+          color={colors.textSecondary}
         />
       </TouchableOpacity>
-      
+
       <Animated.View style={[styles.accordionContent, animatedStyle]}>
         {children}
       </Animated.View>
@@ -91,7 +92,7 @@ export default function SectionReaderScreen() {
   const [loading, setLoading] = useState(true);
   const [progressStatus, setProgressStatus] = useState<'not started' | 'in progress' | 'completed'>('not started');
   const [updatingProgress, setUpdatingProgress] = useState(false);
-  
+
   // Accordion states
   const [accordionStates, setAccordionStates] = useState({
     clarifications: true,
@@ -345,6 +346,13 @@ export default function SectionReaderScreen() {
             ))}
           </AccordionSection>
         )}
+
+        {/* Ask AI Section */}
+        <AskAISection
+          contextTitle={section.title}
+          contextType="section"
+          contextId={id!}
+        />
 
         {/* Subsections */}
         {subsections.length > 0 && (

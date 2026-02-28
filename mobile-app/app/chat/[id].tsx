@@ -14,11 +14,14 @@ import { useContentProtection } from '../../utils/contentProtection';
 import { SPACING, BORDER_RADIUS } from '../../constants/config';
 
 export default function ChatConversationScreen() {
-    const { id } = useLocalSearchParams<{ id: string }>();
+    const { id, initialQuestion, sectionId } = useLocalSearchParams<{ id: string; initialQuestion?: string; sectionId?: string }>();
     const { colors } = useTheme();
     const router = useRouter();
     const insets = useSafeAreaInsets();
     const flatListRef = useRef<FlatList>(null);
+
+    // To prevent processing the same initialQuestion multiple times (e.g., on re-renders)
+    const processedInitialQuestion = useRef<string | null>(null);
 
     // Content protection: prevent screenshots in chat
     useContentProtection(true);
@@ -28,7 +31,19 @@ export default function ChatConversationScreen() {
     const [input, setInput] = useState('');
     const [sending, setSending] = useState(false);
 
-    useEffect(() => { if (id) loadMessages(); }, [id]);
+    useEffect(() => {
+        if (id) {
+            loadMessages().then(() => {
+                if (initialQuestion && processedInitialQuestion.current !== initialQuestion) {
+                    processedInitialQuestion.current = initialQuestion;
+                    sendInitialQuestion(initialQuestion);
+
+                    // Clear the initial question from the URL/params to prevent re-triggering
+                    router.setParams({ initialQuestion: '' });
+                }
+            });
+        }
+    }, [id]);
 
     const loadMessages = async () => {
         try {
@@ -42,9 +57,37 @@ export default function ChatConversationScreen() {
         }
     };
 
+    const sendInitialQuestion = async (q: string) => {
+        if (!q || sending) return;
+        setSending(true);
+
+        const tempId = `temp-${Date.now()}`;
+        const tempMsg: Interaction = {
+            _id: tempId,
+            chatSessionId: id!,
+            studentId: '',
+            studentQuestion: q,
+            aiAnswer: '...',
+            createdAt: new Date().toISOString(),
+        };
+        setMessages((prev) => [...prev, tempMsg]);
+        setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
+
+        try {
+            const response = await chatService.sendMessage(id!, q, sectionId);
+            setMessages((prev) => prev.map((m) => (m._id === tempId ? response : m)));
+        } catch (error: any) {
+            setMessages((prev) => prev.filter((m) => m._id !== tempId));
+            Toast.show({ type: 'error', text1: 'Failed to send', text2: error.message });
+        } finally {
+            setSending(false);
+            setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
+        }
+    };
+
     const handleSend = async () => {
         const q = input.trim();
-        if (!q) return;
+        if (!q || sending) return;
         setInput('');
         setSending(true);
 
@@ -62,7 +105,7 @@ export default function ChatConversationScreen() {
         setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
 
         try {
-            const response = await chatService.sendMessage(id!, q);
+            const response = await chatService.sendMessage(id!, q, sectionId);
             setMessages((prev) => prev.map((m) => (m._id === tempId ? response : m)));
         } catch (error: any) {
             setMessages((prev) => prev.filter((m) => m._id !== tempId));
