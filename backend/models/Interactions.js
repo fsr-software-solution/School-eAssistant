@@ -30,9 +30,9 @@ const interactionsSchema = new mongoose.Schema({
     validate: {
       validator: async function(value) {
         const user = await mongoose.model('Users').findById(value);
-        return user && !user.isDeleted && user.role === 'student';
+        return user && !user.isDeleted;
       },
-      message: 'Referenced student does not exist, has been deleted, or is not a student'
+      message: 'Referenced student does not exist, has been deleted'
     }
   },
   studentQuestion: {

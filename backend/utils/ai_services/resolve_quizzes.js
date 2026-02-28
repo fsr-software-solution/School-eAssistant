@@ -38,7 +38,7 @@ const resolveQuizzes = async ({ chatSessionId, baseIdea, numberOfQuestions }) =>
     let generatedQuizzes = similaritySearchResults?.map( async (doc) => {
         let response = await structuredLLM.invoke(`
                 Generate multiple choice question based on the following context:
-                CONTEXT: ${doc?.text}
+                CONTEXT: ${doc?.text || doc?.pageContent}
                 QUESTIONS:
             `.trim())
 
