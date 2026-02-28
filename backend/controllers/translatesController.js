@@ -261,9 +261,11 @@ export const getEthiopianLanguages = async (req, res, next) => {
 
 export const textTranslators = async (req, res, next) => {
     const { text, to } = req.body
-    
-    const response = await textTranslator(text, 'auto', to)
-    console.log(response);
-    
-    res.status(200).json({data: response})
+    try {        
+        const response = await textTranslator(text, 'auto', to)        
+        res.status(200).json({data: response})
+    } catch (error) {
+        const response = await translate.single(text, to)
+        res.status(200).json({data: response.data.target.text})        
+    }
 }
