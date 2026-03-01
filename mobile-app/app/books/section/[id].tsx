@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Linking, Animated } from 'react-native';
+import { View, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Linking, Animated, Modal, TouchableWithoutFeedback } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SPACING, BORDER_RADIUS } from '../../../constants/config';
@@ -14,6 +14,47 @@ import Button from '../../../components/ui/Button';
 import YouTubePlayer from '../../../components/ui/YouTubePlayer';
 import ImageViewer from '../../../components/ui/ImageViewer';
 import AskAISection from '../../../components/AskAISection';
+import { translationService, Language } from '../../../services/translation';
+import Markdown from 'react-native-markdown-display';
+
+// Custom styles for Markdown based on theme
+const markdownStyles = (colors: any) => ({
+  body: {
+    color: colors.textSecondary,
+    fontSize: 15,
+    lineHeight: 22,
+  },
+  heading1: {
+    color: colors.text,
+    fontSize: 22,
+    fontWeight: 'bold' as const,
+    marginBottom: 10,
+  },
+  heading2: {
+    color: colors.text,
+    fontSize: 18,
+    fontWeight: 'bold' as const,
+    marginBottom: 8,
+  },
+  paragraph: {
+    marginBottom: 10,
+  },
+  strong: {
+    fontWeight: 'bold' as const,
+  },
+  em: {
+    fontStyle: 'italic' as const,
+  },
+  list_item: {
+    marginBottom: 5,
+  },
+  bullet_list: {
+    marginBottom: 10,
+  },
+  ordered_list: {
+    marginBottom: 10,
+  },
+});
 
 // Accordion Section Component
 const AccordionSection = ({
@@ -93,6 +134,13 @@ export default function SectionReaderScreen() {
   const [progressStatus, setProgressStatus] = useState<'not started' | 'in progress' | 'completed'>('not started');
   const [updatingProgress, setUpdatingProgress] = useState(false);
 
+  // Translation states
+  const [languages, setLanguages] = useState<Language[]>([]);
+  const [selectedLanguageCode, setSelectedLanguageCode] = useState('en');
+  const [translatedText, setTranslatedText] = useState<string | null>(null);
+  const [translating, setTranslating] = useState(false);
+  const [showLanguagePicker, setShowLanguagePicker] = useState(false);
+
   // Accordion states
   const [accordionStates, setAccordionStates] = useState({
     clarifications: true,
@@ -113,13 +161,9 @@ export default function SectionReaderScreen() {
   const loadSectionData = async () => {
     try {
       setLoading(true);
-      // Step 1: Fetch section first — this triggers the backend to generate
-      // AI clarification, summary, and resources if they don't exist yet
       const sectionData = await booksService.getSectionById(id!);
       setSection(sectionData);
 
-      // Step 2: Now fetch subsections and resources in parallel
-      // Resources should be ready now since getSectionById triggers their generation
       const [subsectionsData, resourcesData] = await Promise.all([
         booksService.getSectionSubsections(id!).catch(() => []),
         booksService.getSectionResources(id!).catch(() => []),
@@ -127,9 +171,14 @@ export default function SectionReaderScreen() {
       setSubsections(subsectionsData);
       setResources(resourcesData);
 
-      // Load progress status if user is logged in
-      // Note: You may need to implement a getProgressBySection endpoint
-      // For now, we'll default to 'not started'
+      // Fetch Ethiopian languages
+      try {
+        const langs = await translationService.getEthiopianLanguages();
+        setLanguages(langs);
+      } catch (error) {
+        console.error('Failed to load languages', error);
+      }
+
     } catch (error: any) {
       Toast.show({
         type: 'error',
@@ -210,6 +259,40 @@ export default function SectionReaderScreen() {
     }));
   };
 
+  const handleTranslate = async (langCode: string) => {
+    if (langCode === 'en' || langCode === 'english') {
+      setSelectedLanguageCode('en');
+      setTranslatedText(null);
+      return;
+    }
+
+    if (!section?.aiClarification) return;
+
+    try {
+      setTranslating(true);
+      setSelectedLanguageCode(langCode);
+      const translated = await translationService.translateText(section.aiClarification, langCode);
+      setTranslatedText(translated);
+    } catch (error: any) {
+      Toast.show({
+        type: 'error',
+        text1: 'Translation Failed',
+        text2: error.message || 'Could not translate text',
+      });
+      setSelectedLanguageCode('en');
+      setTranslatedText(null);
+    } finally {
+      setTranslating(false);
+      setShowLanguagePicker(false);
+    }
+  };
+
+  const getLanguageName = (code: string) => {
+    if (code === 'en' || code === 'english') return 'English';
+    const lang = languages.find(l => l.code === code || l.lang === code);
+    return lang ? lang.language : code;
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
@@ -255,9 +338,78 @@ export default function SectionReaderScreen() {
             iconColor={colors.warning}
           >
             <View style={[styles.clarificationCard, { backgroundColor: colors.warning + '15', borderLeftColor: colors.warning }]}>
-              <Text variant="body" color={colors.textSecondary} style={styles.clarificationText} {...textProtectionProps}>
-                {section.aiClarification}
-              </Text>
+              {/* Language Selector Dropdown */}
+              <View style={styles.translationHeader}>
+                <TouchableOpacity
+                  style={[styles.dropdownButton, { backgroundColor: colors.surface, borderColor: colors.warning + '40' }]}
+                  onPress={() => setShowLanguagePicker(true)}
+                  activeOpacity={0.7}
+                  disabled={translating}
+                >
+                  <Ionicons name="language" size={16} color={colors.warning} />
+                  <Text variant="bodySmall" color={colors.text} style={styles.dropdownButtonText}>
+                    {getLanguageName(selectedLanguageCode)}
+                  </Text>
+                  <Ionicons name="chevron-down" size={16} color={colors.textSecondary} />
+                </TouchableOpacity>
+
+                {translating && (
+                  <View style={styles.translatingIndicator}>
+                    <ActivityIndicator size="small" color={colors.warning} />
+                  </View>
+                )}
+              </View>
+
+              {/* Language Picker Modal */}
+              <Modal
+                visible={showLanguagePicker}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setShowLanguagePicker(false)}
+              >
+                <TouchableWithoutFeedback onPress={() => setShowLanguagePicker(false)}>
+                  <View style={styles.modalOverlay}>
+                    <TouchableWithoutFeedback>
+                      <View style={[styles.dropdownMenu, { backgroundColor: colors.surface }]}>
+                        <Text variant="h3" color={colors.text} style={styles.dropdownMenuTitle}>Select Language</Text>
+
+                        <TouchableOpacity
+                          style={[styles.dropdownItem, selectedLanguageCode === 'en' && { backgroundColor: colors.warning + '20' }]}
+                          onPress={() => handleTranslate('en')}
+                        >
+                          <Text variant="body" color={selectedLanguageCode === 'en' ? colors.warning : colors.text}>English</Text>
+                          {selectedLanguageCode === 'en' && <Ionicons name="checkmark" size={20} color={colors.warning} />}
+                        </TouchableOpacity>
+
+                        {languages.filter(l => l.code !== 'en' && l.lang !== 'english').map((lang) => (
+                          <TouchableOpacity
+                            key={lang.code}
+                            style={[styles.dropdownItem, selectedLanguageCode === lang.code && { backgroundColor: colors.warning + '20' }]}
+                            onPress={() => handleTranslate(lang.code)}
+                          >
+                            <Text variant="body" color={selectedLanguageCode === lang.code ? colors.warning : colors.text}>
+                              {lang.language}
+                            </Text>
+                            {selectedLanguageCode === lang.code && <Ionicons name="checkmark" size={20} color={colors.warning} />}
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    </TouchableWithoutFeedback>
+                  </View>
+                </TouchableWithoutFeedback>
+              </Modal>
+
+              {translating ? (
+                <View style={styles.translatingContainer}>
+                  <Text variant="bodySmall" color={colors.textSecondary}>Translating clarification...</Text>
+                </View>
+              ) : (
+                <View {...textProtectionProps}>
+                  <Markdown style={markdownStyles(colors)}>
+                    {translatedText || section.aiClarification || ''}
+                  </Markdown>
+                </View>
+              )}
             </View>
           </AccordionSection>
         )}
@@ -592,5 +744,60 @@ const styles = StyleSheet.create({
   },
   accordionContent: {
     overflow: 'hidden',
+  },
+  translationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: SPACING.md,
+  },
+  dropdownButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.md,
+    paddingVertical: 8,
+    borderRadius: BORDER_RADIUS.md,
+    borderWidth: 1,
+    gap: SPACING.xs,
+  },
+  dropdownButtonText: {
+    fontWeight: '600',
+    minWidth: 80,
+  },
+  translatingIndicator: {
+    paddingRight: SPACING.xs,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: SPACING.xl,
+  },
+  dropdownMenu: {
+    width: '100%',
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  dropdownMenuTitle: {
+    marginBottom: SPACING.md,
+    textAlign: 'center',
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.lg,
+    borderRadius: BORDER_RADIUS.md,
+  },
+  translatingContainer: {
+    paddingVertical: SPACING.md,
+    alignItems: 'center',
   },
 });
