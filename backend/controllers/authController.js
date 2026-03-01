@@ -11,9 +11,9 @@ import { z } from 'zod';
 
 // Validation schema for updating user
 const updateUserSchema = z.object({
-  username: z.string().min(3, 'Username must be at least 3 characters').optional(),
-  password: z.string().min(6, 'Password must be at least 6 characters').optional(),
-  role: z.enum(['student', 'admin']).optional()
+    username: z.string().min(3, 'Username must be at least 3 characters').optional(),
+    password: z.string().min(6, 'Password must be at least 6 characters').optional(),
+    role: z.enum(['student', 'admin']).optional()
 });
 
 
@@ -28,7 +28,7 @@ export const login = async (req, res) => {
         });
 
         let user;
-        
+
         if (existingUser) {
             // User exists, verify password
             if (!(await existingUser.comparePassword(password))) {
@@ -48,11 +48,11 @@ export const login = async (req, res) => {
 
         const accessToken = generateAccessToken(user);
         const refreshToken = generateRefreshToken(user);
-        
+
         user.refreshToken = refreshToken;
         await user.save();
         user.password = null
-        
+
         res.json({
             success: true,
             accessToken,
@@ -203,7 +203,7 @@ export const getAllUsers = async (req, res, next) => {
 
         // Build filter
         const filter = { isDeleted: false };
-        
+
         if (role && ['student', 'admin'].includes(role)) {
             filter.role = role;
         }
@@ -302,7 +302,7 @@ export const getUserProgress = async (req, res, next) => {
         }
 
         // Verify user exists and is a student
-        const user = await Users.findOne({_id: id, isDeleted: false});
+        const user = await Users.findOne({ _id: id, isDeleted: false });
         if (!user) {
             return res.status(404).json({
                 success: false,
@@ -335,7 +335,7 @@ export const updateUser = async (req, res, next) => {
     try {
         const { id } = req.params;
         const requestingUserId = req.user?.id;
-        const requestingUserRole = req.user?.role;        
+        const requestingUserRole = req.user?.role;
 
         // Users can only update their own profile unless they're admin
         if (requestingUserRole !== 'admin' && requestingUserId !== id) {
@@ -349,7 +349,7 @@ export const updateUser = async (req, res, next) => {
         if (!req?.body?.password) {
             delete req.body.password
         }
-        
+
         const validation = updateUserSchema.safeParse(req.body);
         if (!validation.success) {
             return res.status(400).json({
@@ -370,7 +370,7 @@ export const updateUser = async (req, res, next) => {
         }
 
         // Find user
-        const user = await Users.findOne({_id: id, isDeleted: false});
+        const user = await Users.findOne({ _id: id, isDeleted: false });
         if (!user) {
             return res.status(404).json({
                 success: false,
@@ -380,18 +380,18 @@ export const updateUser = async (req, res, next) => {
 
         // Check if username is being changed and if it's already taken
         if (updateData.username && updateData.username !== user.username) {
-            const existingUser = await Users.findOne({ 
+            const existingUser = await Users.findOne({
                 username: updateData.username,
                 _id: { $ne: id }
             });
-            
+
             if (existingUser) {
                 return res.status(409).json({
                     success: false,
                     message: 'Username already exists'
                 });
             }
-            
+
             user.username = updateData.username;
         }
 
@@ -442,7 +442,7 @@ export const deleteUser = async (req, res, next) => {
         }
 
         const user = await Users.findById(id);
-        
+
         if (!user || user.isDeleted) {
             return res.status(404).json({
                 success: false,
@@ -483,7 +483,7 @@ export const getUserChatInteractions = async (req, res, next) => {
         }
 
         // Verify user exists and is a student
-        const user = await Users.findOne({_id: id, isDeleted: false});
+        const user = await Users.findOne({ _id: id, isDeleted: false });
         if (!user) {
             return res.status(404).json({
                 success: false,
@@ -522,8 +522,8 @@ export const getUserQuizzes = async (req, res, next) => {
             });
         }
 
-       // Verify user exists and is a student
-        const user = await Users.findOne({_id: id, isDeleted: false});
+        // Verify user exists and is a student
+        const user = await Users.findOne({ _id: id, isDeleted: false });
         if (!user) {
             return res.status(404).json({
                 success: false,
@@ -561,7 +561,7 @@ export const getUserPayments = async (req, res, next) => {
     }
 
     // Verify user exists and is a student
-    const user = await Users.findOne({_id: id, isDeleted: false});
+    const user = await Users.findOne({ _id: id, isDeleted: false });
     if (!user) {
         return res.status(404).json({
             success: false,

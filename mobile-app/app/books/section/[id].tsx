@@ -16,6 +16,8 @@ import ImageViewer from '../../../components/ui/ImageViewer';
 import AskAISection from '../../../components/AskAISection';
 import { translationService, Language } from '../../../services/translation';
 import Markdown from 'react-native-markdown-display';
+import { progressService, ProgressStatus } from '../../../services/progress';
+
 
 // Custom styles for Markdown based on theme
 const markdownStyles = (colors: any) => ({
@@ -131,8 +133,10 @@ export default function SectionReaderScreen() {
   const [subsections, setSubsections] = useState<Section[]>([]);
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
-  const [progressStatus, setProgressStatus] = useState<'not started' | 'in progress' | 'completed'>('not started');
+  const [progressStatus, setProgressStatus] = useState<ProgressStatus>('not started');
+  const [currentProgressRecordId, setCurrentProgressRecordId] = useState<string | null>(null);
   const [updatingProgress, setUpdatingProgress] = useState(false);
+
 
   // Translation states
   const [languages, setLanguages] = useState<Language[]>([]);
@@ -179,6 +183,25 @@ export default function SectionReaderScreen() {
         console.error('Failed to load languages', error);
       }
 
+      // Fetch user progress for this section
+      if (user) {
+        try {
+          const userProgress = await progressService.getStudentProgress(user.id);
+          const sectionProgress = userProgress.find(p => p.sectionId === id);
+          if (sectionProgress) {
+            setProgressStatus(sectionProgress.status);
+            setCurrentProgressRecordId(sectionProgress._id);
+          } else {
+            // Auto-create "in progress" when viewing section if not already present
+            const newProgress = await progressService.createProgress(user.id, id!, 'in progress');
+            setProgressStatus(newProgress.status);
+            setCurrentProgressRecordId(newProgress._id);
+          }
+        } catch (error) {
+          console.error('Failed to load or create progress', error);
+        }
+      }
+
     } catch (error: any) {
       Toast.show({
         type: 'error',
@@ -192,15 +215,25 @@ export default function SectionReaderScreen() {
   };
 
   const handleMarkComplete = async () => {
-    if (!user || !section) return;
+    if (!user || !section || !id) return;
 
     try {
       setUpdatingProgress(true);
-      setProgressStatus('completed');
+      const newStatus: ProgressStatus = progressStatus === 'not started' ? 'in progress' : 'completed';
+
+      if (currentProgressRecordId) {
+        const updated = await progressService.updateProgress(currentProgressRecordId, newStatus);
+        setProgressStatus(updated.status);
+      } else {
+        const created = await progressService.createProgress(user.id, id, newStatus);
+        setProgressStatus(created.status);
+        setCurrentProgressRecordId(created._id);
+      }
+
       Toast.show({
         type: 'success',
         text1: 'Progress Updated',
-        text2: 'Section marked as completed',
+        text2: `Section marked as ${newStatus}`,
       });
     } catch (error: any) {
       Toast.show({
@@ -212,6 +245,7 @@ export default function SectionReaderScreen() {
       setUpdatingProgress(false);
     }
   };
+
 
   const handleOpenResource = async (link: string) => {
     try {
