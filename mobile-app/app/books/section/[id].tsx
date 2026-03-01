@@ -136,6 +136,7 @@ export default function SectionReaderScreen() {
   const [progressStatus, setProgressStatus] = useState<ProgressStatus>('not started');
   const [currentProgressRecordId, setCurrentProgressRecordId] = useState<string | null>(null);
   const [updatingProgress, setUpdatingProgress] = useState(false);
+  const [isAutoCreating, setIsAutoCreating] = useState(false);
 
 
   // Translation states
@@ -160,7 +161,7 @@ export default function SectionReaderScreen() {
     if (id) {
       loadSectionData();
     }
-  }, [id]);
+  }, [id, user]);
 
   const loadSectionData = async () => {
     try {
@@ -183,19 +184,38 @@ export default function SectionReaderScreen() {
         console.error('Failed to load languages', error);
       }
 
-      // Fetch user progress for this section
-      if (user) {
+      if (user && !isAutoCreating) {
         try {
           const userProgress = await progressService.getStudentProgress(user.id);
-          const sectionProgress = userProgress.find(p => p.sectionId === id);
+          // Fixed comparison: convert to string to handle ObjectId objects or string IDs
+          const sectionProgress = userProgress.find(p => String(p.sectionId) === id);
+
           if (sectionProgress) {
             setProgressStatus(sectionProgress.status);
             setCurrentProgressRecordId(sectionProgress._id);
           } else {
             // Auto-create "in progress" when viewing section if not already present
-            const newProgress = await progressService.createProgress(user.id, id!, 'in progress');
-            setProgressStatus(newProgress.status);
-            setCurrentProgressRecordId(newProgress._id);
+            try {
+              setIsAutoCreating(true);
+              const newProgress = await progressService.createProgress(user.id, id!, 'in progress');
+              setProgressStatus(newProgress.status);
+              setCurrentProgressRecordId(newProgress._id);
+            } catch (createErr: any) {
+              const errorMessage = createErr.response?.data?.message || createErr.message || '';
+              // If it already exists (race condition or someone created it in between), try a silent re-fetch
+              if (errorMessage.includes('already exists')) {
+                const refreshedProgress = await progressService.getStudentProgress(user.id);
+                const found = refreshedProgress.find(p => String(p.sectionId) === id);
+                if (found) {
+                  setProgressStatus(found.status);
+                  setCurrentProgressRecordId(found._id);
+                }
+              } else {
+                console.error('Failed to auto-create progress', createErr);
+              }
+            } finally {
+              setIsAutoCreating(false);
+            }
           }
         } catch (error) {
           console.error('Failed to load or create progress', error);
@@ -203,10 +223,11 @@ export default function SectionReaderScreen() {
       }
 
     } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to load section content';
       Toast.show({
         type: 'error',
         text1: 'Error Loading Section',
-        text2: error.message || 'Failed to load section content',
+        text2: errorMessage,
       });
       router.back();
     } finally {
@@ -225,9 +246,27 @@ export default function SectionReaderScreen() {
         const updated = await progressService.updateProgress(currentProgressRecordId, newStatus);
         setProgressStatus(updated.status);
       } else {
-        const created = await progressService.createProgress(user.id, id, newStatus);
-        setProgressStatus(created.status);
-        setCurrentProgressRecordId(created._id);
+        try {
+          const created = await progressService.createProgress(user.id, id, newStatus);
+          setProgressStatus(created.status);
+          setCurrentProgressRecordId(created._id);
+        } catch (createErr: any) {
+          const errorMessage = createErr.response?.data?.message || createErr.message || '';
+          // If it fails with "already exists", it means it was created in the background
+          // (e.g., during loadSectionData auto-creation)
+          if (errorMessage.includes('already exists')) {
+            const refreshed = await progressService.getStudentProgress(user.id);
+            const found = refreshed.find(p => String(p.sectionId) === id);
+            if (found) {
+              // If it matches, we'll try to update it instead
+              const updated = await progressService.updateProgress(found._id, newStatus);
+              setProgressStatus(updated.status);
+              setCurrentProgressRecordId(updated._id);
+            }
+          } else {
+            throw createErr;
+          }
+        }
       }
 
       Toast.show({
@@ -236,10 +275,11 @@ export default function SectionReaderScreen() {
         text2: `Section marked as ${newStatus}`,
       });
     } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to update progress';
       Toast.show({
         type: 'error',
         text1: 'Error',
-        text2: error.message || 'Failed to update progress',
+        text2: errorMessage,
       });
     } finally {
       setUpdatingProgress(false);
