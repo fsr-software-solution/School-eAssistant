@@ -37,10 +37,10 @@ export const createInteraction = async (req, res, next) => {
     if (sectionId) {
         const section = await Section.findOne({_id: sectionId, isDeleted: false})
         const histories = await Interactions.find({sectionId, isDeleted: false})
-        interaction = await resolveInteraction({sectionId, studentId, studentQuestion, histories: histories.slice(-5), section})
+        interaction = await resolveInteraction({sectionId, chatSessionId, studentId, studentQuestion, histories: histories.slice(-5), section})
     } else if (chatSessionId) {
         const histories = await Interactions.find({chatSessionId, isDeleted: false})
-        interaction = await resolveInteraction({chatSessionId, studentId, studentQuestion, histories: histories.slice(-5)})
+        interaction = await resolveInteraction({sectionId, chatSessionId, studentId, studentQuestion, histories: histories.slice(-5)})
     } else next(new Error('sectionId or chatSessionId is required'))
     
     res.status(201).json({data: interaction})
