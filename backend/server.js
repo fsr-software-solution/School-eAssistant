@@ -1,17 +1,30 @@
 import express from 'express'
 import dotenv from 'dotenv'
 import cors from 'cors'
+import morgan from 'morgan'
+import helmet from 'helmet'
+import rateLimit from 'express-rate-limit'
 import connectDb from './config/database.js'
 import apiRoutes from './routes/index.js'
 import initializeAdmin from './utils/adminInit.js'
 import { initializePaymentAccount, initializePremiumPlans } from './utils/paymentInit.js'
-import authRoutes from './routes/authRoutes.js'
 
 dotenv.config()
 connectDb()
 
 const app = express()
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: {
+    error: 'Too many requests from this IP, please try again later.'
+  }
+})
+// app.use(limiter)
+// app.use(helmet())
+
 app.use(cors())
+app.use(morgan('dev'))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
