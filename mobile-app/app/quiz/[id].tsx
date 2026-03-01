@@ -10,9 +10,10 @@ import Toast from 'react-native-toast-message';
 import Text from '../../components/ui/Text';
 import Button from '../../components/ui/Button';
 import { useTheme } from '../../context/ThemeContext';
-import { chatService, Quiz } from '../../services/chat';
+import { chatService, Quiz, Reference } from '../../services/chat';
 import { useContentProtection } from '../../utils/contentProtection';
 import { SPACING, BORDER_RADIUS } from '../../constants/config';
+import ReferenceList from '../../components/ReferenceList';
 
 export default function QuizTakingScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
@@ -37,11 +38,38 @@ export default function QuizTakingScreen() {
         try {
             setLoading(true);
             const data = await chatService.getChatQuizzes(id!);
-            setQuizzes(data);
+
+            // Fetch references for each question
+            const quizzesWithRefs = await Promise.all(data.map(async (q) => {
+                try {
+                    const rawRefs = await chatService.getQuizReferences(q._id);
+
+                    // Populate book details for each reference
+                    const populatedRefs = await Promise.all(rawRefs.map(async (ref) => {
+                        const bid = typeof ref.bookId === 'string' ? ref.bookId : (ref.bookId as any)?._id;
+                        if (bid) {
+                            try {
+                                const book = await chatService.getBookById(bid);
+                                return { ...ref, bookId: book };
+                            } catch (e) {
+                                console.error('Failed to fetch book:', bid, e);
+                            }
+                        }
+                        return ref;
+                    }));
+
+                    return { ...q, references: populatedRefs };
+                } catch (err) {
+                    console.error('Failed to load refs for quiz:', q._id, err);
+                    return { ...q, references: [] };
+                }
+            }));
+
+            setQuizzes(quizzesWithRefs);
 
             // Pre-fill existing attempts if any
             const existingAnswers: Record<string, string> = {};
-            data.forEach(q => {
+            quizzesWithRefs.forEach(q => {
                 if (q.studentAttempt) {
                     existingAnswers[q._id] = q.studentAttempt;
                 }
@@ -184,6 +212,9 @@ export default function QuizTakingScreen() {
                                             💡 {q.explanation}
                                         </Text>
                                     )}
+                                    {q.references && q.references.length > 0 && (
+                                        <ReferenceList references={q.references} />
+                                    )}
                                 </View>
                             </View>
                         );
@@ -269,13 +300,30 @@ export default function QuizTakingScreen() {
                     );
                 })}
 
-                {/* Explanation after submit */}
-                {submitted && current.explanation && (
-                    <View style={[styles.explanationCard, { backgroundColor: colors.primary + '12' }]}>
-                        <Ionicons name="bulb" size={16} color={colors.primary} />
-                        <Text variant="bodySmall" color={colors.primary} style={{ flex: 1, marginLeft: SPACING.xs, lineHeight: 20 }}>
-                            {current.explanation}
-                        </Text>
+                {/* Clarification after submit */}
+                {submitted && (current.explanation || (current.references && current.references.length > 0)) && (
+                    <View style={[styles.explanationCard, { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 }]}>
+                        <View style={{ flex: 1 }}>
+                            {current.explanation && (
+                                <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: current.references?.length ? SPACING.md : 0 }}>
+                                    <View style={[styles.aiAvatar, { backgroundColor: colors.accent + '20', marginRight: SPACING.sm }]}>
+                                        <Ionicons name="bulb" size={16} color={colors.accent} />
+                                    </View>
+                                    <View style={{ flex: 1 }}>
+                                        <Text variant="h3" color={colors.text} style={{ marginBottom: 4 }}>AI Clarification</Text>
+                                        <Text variant="bodySmall" color={colors.textSecondary} style={{ lineHeight: 20 }}>
+                                            {current.explanation}
+                                        </Text>
+                                    </View>
+                                </View>
+                            )}
+
+                            {current.references && current.references.length > 0 && (
+                                <View style={{ borderTopWidth: current.explanation ? 1 : 0, borderTopColor: colors.border, paddingTop: current.explanation ? SPACING.md : 0 }}>
+                                    <ReferenceList references={current.references} />
+                                </View>
+                            )}
+                        </View>
                     </View>
                 )}
             </ScrollView>
@@ -320,8 +368,11 @@ const styles = StyleSheet.create({
         justifyContent: 'center', alignItems: 'center', marginRight: SPACING.md,
     },
     explanationCard: {
-        flexDirection: 'row', alignItems: 'flex-start',
-        borderRadius: BORDER_RADIUS.md, padding: SPACING.md, marginTop: SPACING.sm,
+        borderRadius: BORDER_RADIUS.md, padding: SPACING.md, marginTop: SPACING.md,
+    },
+    aiAvatar: {
+        width: 32, height: 32, borderRadius: 16,
+        justifyContent: 'center', alignItems: 'center',
     },
     bottomBar: {
         position: 'absolute', bottom: 0, left: 0, right: 0,
