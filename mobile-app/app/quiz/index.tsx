@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     View, StyleSheet, FlatList, ActivityIndicator,
     TouchableOpacity, Platform, TextInput, Alert,
@@ -27,6 +27,13 @@ export default function QuizListScreen() {
     const [numQ, setNumQ] = useState('5');
     const [creating, setCreating] = useState(false);
 
+    const showCreateRef = useRef(showCreate);
+    const abortControllerRef = useRef<AbortController | null>(null);
+
+    useEffect(() => {
+        showCreateRef.current = showCreate;
+    }, [showCreate]);
+
     useEffect(() => { loadSessions(); }, []);
 
     const loadSessions = async () => {
@@ -53,17 +60,30 @@ export default function QuizListScreen() {
         }
         try {
             setCreating(true);
-            const session = await chatService.createChat(user!.id, 'quiz');
+
+            // Generate AbortController
+            abortControllerRef.current = new AbortController();
+            const signal = abortControllerRef.current.signal;
+
+            const session = await chatService.createChat(user!.id, 'quiz', signal);
+
             // Generate quizzes immediately
-            await chatService.generateQuizzes(session._id, topic.trim(), n);
+            await chatService.generateQuizzes(session._id, topic.trim(), n, signal);
+
             setShowCreate(false);
             setTopic('');
             setNumQ('5');
             router.push({ pathname: '/quiz/[id]', params: { id: session._id } });
         } catch (error: any) {
+            // Only show toast if it's NOT a cancellation
+            if (error.name === 'CanceledError' || error.message === 'canceled') {
+                console.log('Quiz creation cancelled by user');
+                return;
+            }
             Toast.show({ type: 'error', text1: 'Failed to create quiz', text2: error.message });
         } finally {
             setCreating(false);
+            abortControllerRef.current = null;
         }
     };
 
@@ -81,6 +101,16 @@ export default function QuizListScreen() {
                 },
             },
         ]);
+    };
+
+    const handleCancel = () => {
+        // Abort ongoing request if any
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+        setShowCreate(false);
+        setTopic('');
+        setNumQ('5');
     };
 
     const renderSession = ({ item }: { item: ChatSession }) => (
@@ -142,8 +172,9 @@ export default function QuizListScreen() {
                     <View style={styles.createActions}>
                         <Button
                             title="Cancel"
-                            onPress={() => setShowCreate(false)}
-                            style={{ flex: 1, backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 }}
+                            onPress={handleCancel}
+                            variant="outline"
+                            style={{ flex: 1, borderColor: colors.border }}
                         />
                         <Button
                             title={creating ? 'Generating...' : 'Start Quiz'}

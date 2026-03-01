@@ -38,6 +38,16 @@ export default function QuizTakingScreen() {
             setLoading(true);
             const data = await chatService.getChatQuizzes(id!);
             setQuizzes(data);
+
+            // Pre-fill existing attempts if any
+            const existingAnswers: Record<string, string> = {};
+            data.forEach(q => {
+                if (q.studentAttempt) {
+                    existingAnswers[q._id] = q.studentAttempt;
+                }
+            });
+            setAnswers(existingAnswers);
+
         } catch (error: any) {
             Toast.show({ type: 'error', text1: 'Failed to load quiz', text2: error.message });
             router.back();
@@ -48,18 +58,36 @@ export default function QuizTakingScreen() {
 
     const current = quizzes[currentIndex];
 
-    const handleSelectAnswer = (choice: string) => {
+    useEffect(() => {
+        const q = quizzes[currentIndex];
+        if (q && answers[q._id]) {
+            setSelectedAnswer(answers[q._id]);
+            setSubmitted(true);
+        } else {
+            setSelectedAnswer(null);
+            setSubmitted(false);
+        }
+    }, [currentIndex, quizzes, answers]);
+
+    const handleSelectAnswer = (choiceKey: string) => {
         if (submitted) return;
-        setSelectedAnswer(choice);
+        setSelectedAnswer(choiceKey);
     };
 
-    const handleNext = () => {
-        if (!selectedAnswer) {
-            Toast.show({ type: 'error', text1: 'Please select an answer' });
-            return;
+    const handleNext = async () => {
+        if (!selectedAnswer || !current) return;
+
+        try {
+            // Track attempt in backend
+            await chatService.submitQuizAttempt(current._id, selectedAnswer);
+
+            // Store locally - this will trigger useEffect to setSubmitted(true)
+            setAnswers((prev) => ({ ...prev, [current._id]: selectedAnswer }));
+        } catch (error) {
+            console.error('Failed to submit attempt:', error);
+            // Fallback: update locally anyway
+            setAnswers((prev) => ({ ...prev, [current._id]: selectedAnswer }));
         }
-        setAnswers((prev) => ({ ...prev, [current._id]: selectedAnswer }));
-        setSubmitted(true);
     };
 
     const handleContinue = () => {
@@ -67,15 +95,13 @@ export default function QuizTakingScreen() {
             setShowResult(true);
         } else {
             setCurrentIndex((i) => i + 1);
-            setSelectedAnswer(null);
-            setSubmitted(false);
         }
     };
 
     const score = quizzes.reduce((acc, q) => {
-        const userAns = answers[q._id]?.trim().toLowerCase();
-        const correct = q.answer?.trim().toLowerCase();
-        return acc + (userAns === correct ? 1 : 0);
+        const userAnsKey = answers[q._id]?.trim().toLowerCase();
+        const correctKey = q.answer?.trim().toLowerCase();
+        return acc + (userAnsKey === correctKey ? 1 : 0);
     }, 0);
 
     const pct = quizzes.length > 0 ? Math.round((score / quizzes.length) * 100) : 0;
@@ -113,8 +139,20 @@ export default function QuizTakingScreen() {
 
                     {/* Review each question */}
                     {quizzes.map((q, i) => {
-                        const userAns = answers[q._id];
-                        const isCorrect = userAns?.trim().toLowerCase() === q.answer?.trim().toLowerCase();
+                        const userAnsKey = answers[q._id];
+                        const correctKey = q.answer?.trim().toLowerCase();
+                        const isCorrect = userAnsKey?.trim().toLowerCase() === correctKey;
+                        const choices = q.choices as any;
+
+                        const getChoiceText = (key: string) => {
+                            if (!choices) return key;
+                            if (Array.isArray(choices)) {
+                                const idx = key.charCodeAt(0) - 97; // a -> 0
+                                return choices[idx] || key;
+                            }
+                            return choices[key] || key;
+                        };
+
                         return (
                             <View key={q._id} style={[styles.reviewCard, { backgroundColor: colors.surface }]}>
                                 <View style={styles.reviewHeader}>
@@ -130,20 +168,14 @@ export default function QuizTakingScreen() {
                                     <View style={[styles.answerRow, { backgroundColor: colors.success + '15' }]}>
                                         <Ionicons name="checkmark-circle" size={16} color={colors.success} />
                                         <Text variant="bodySmall" color={colors.success} style={{ marginLeft: 6, flex: 1 }}>
-                                            Correct: {(() => {
-                                                if (q.choices && !Array.isArray(q.choices) && typeof q.choices === 'object') {
-                                                    const key = q.answer?.toLowerCase();
-                                                    return (q.choices as any)[key] || q.answer;
-                                                }
-                                                return q.answer;
-                                            })()}
+                                            Correct: ({correctKey.toUpperCase()}) {getChoiceText(correctKey)}
                                         </Text>
                                     </View>
                                     {!isCorrect && (
                                         <View style={[styles.answerRow, { backgroundColor: colors.error + '15' }]}>
                                             <Ionicons name="close-circle" size={16} color={colors.error} />
                                             <Text variant="bodySmall" color={colors.error} style={{ marginLeft: 6, flex: 1 }}>
-                                                Your answer: {userAns || '(not answered)'}
+                                                Your answer: {userAnsKey ? `(${userAnsKey.toUpperCase()}) ${getChoiceText(userAnsKey)}` : '(not answered)'}
                                             </Text>
                                         </View>
                                     )}
@@ -165,24 +197,22 @@ export default function QuizTakingScreen() {
 
     if (!current) return null;
 
-    // Handle choices that might be an object {a: "...", b: "..."} or an array
-    const choicesList = Array.isArray(current.choices)
-        ? current.choices
-        : Object.values(current.choices || {}).filter(c => c !== null);
-
-    // Handle answer that might be a key (a, b, c, d) or an actual choice text
-    const getAnswerText = () => {
-        if (!current.answer) return '';
-        // If it's a key and choices is an object
-        if (!Array.isArray(current.choices) && typeof current.choices === 'object') {
-            const key = current.answer.toLowerCase();
-            if (current.choices[key]) return current.choices[key];
+    // Convert choices to standardized list of { key: 'a', text: 'Some text' }
+    const choicesList: { key: string, text: string }[] = [];
+    if (current.choices) {
+        if (Array.isArray(current.choices)) {
+            current.choices.forEach((text, i) => {
+                choicesList.push({ key: String.fromCharCode(97 + i), text });
+            });
+        } else {
+            Object.entries(current.choices).forEach(([key, text]) => {
+                if (text) choicesList.push({ key, text });
+            });
         }
-        return current.answer;
-    };
+    }
 
-    const correctAnswerText = getAnswerText();
-    const isCorrect = submitted && selectedAnswer?.trim().toLowerCase() === correctAnswerText?.trim().toLowerCase();
+    const correctKey = current.answer?.trim().toLowerCase();
+    const isCorrectChoice = (key: string) => submitted && key.toLowerCase() === correctKey;
 
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
@@ -209,35 +239,32 @@ export default function QuizTakingScreen() {
                 </View>
 
                 {/* Choices */}
-                {choicesList.map((choice: any, i) => {
-                    const choiceStr = String(choice || '');
-                    const isSelected = selectedAnswer === choiceStr;
-                    const choiceIsCorrect = submitted && choiceStr.trim().toLowerCase() === correctAnswerText?.trim().toLowerCase();
-                    const choiceIsWrong = submitted && isSelected && !choiceIsCorrect;
+                {choicesList.map((item, i) => {
+                    const isSelected = selectedAnswer === item.key;
+                    const correct = isCorrectChoice(item.key);
+                    const wrong = submitted && isSelected && !correct;
 
                     let bg = colors.surface;
                     let border = colors.border;
-                    if (choiceIsCorrect) { bg = colors.success + '20'; border = colors.success; }
-                    else if (choiceIsWrong) { bg = colors.error + '20'; border = colors.error; }
+                    if (correct) { bg = colors.success + '20'; border = colors.success; }
+                    else if (wrong) { bg = colors.error + '20'; border = colors.error; }
                     else if (isSelected && !submitted) { bg = colors.primary + '15'; border = colors.primary; }
-
-                    if (!choiceStr) return null;
 
                     return (
                         <TouchableOpacity
-                            key={i}
+                            key={item.key}
                             style={[styles.choiceCard, { backgroundColor: bg, borderColor: border }]}
-                            onPress={() => handleSelectAnswer(choiceStr)}
+                            onPress={() => handleSelectAnswer(item.key)}
                             activeOpacity={submitted ? 1 : 0.7}
                         >
                             <View style={[styles.choiceLetter, { backgroundColor: border + '30' }]}>
                                 <Text variant="bodySmall" style={{ color: border, fontWeight: '700' }}>
-                                    {String.fromCharCode(65 + i)}
+                                    {item.key.toUpperCase()}
                                 </Text>
                             </View>
-                            <Text variant="body" color={colors.text} style={{ flex: 1 }}>{choiceStr}</Text>
-                            {choiceIsCorrect && <Ionicons name="checkmark-circle" size={20} color={colors.success} />}
-                            {choiceIsWrong && <Ionicons name="close-circle" size={20} color={colors.error} />}
+                            <Text variant="body" color={colors.text} style={{ flex: 1 }}>{item.text}</Text>
+                            {correct && <Ionicons name="checkmark-circle" size={20} color={colors.success} />}
+                            {wrong && <Ionicons name="close-circle" size={20} color={colors.error} />}
                         </TouchableOpacity>
                     );
                 })}

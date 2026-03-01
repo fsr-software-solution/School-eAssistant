@@ -32,13 +32,6 @@ export default function Button({
   textStyle,
 }: ButtonProps) {
   const { colors, typography } = useTheme();
-  const buttonStyle = [
-    styles.button,
-    styles[variant],
-    styles[`size_${size}`],
-    (disabled || loading) && styles.disabled,
-    style,
-  ];
 
   const textStyles = [
     typography.body,
@@ -59,7 +52,14 @@ export default function Button({
 
   return (
     <TouchableOpacity
-      style={[buttonStyle, ...dynamicButtonStyle]}
+      style={[
+        styles.button,
+        styles[variant],
+        styles[`size_${size}`],
+        ...dynamicButtonStyle,
+        (disabled || loading) && styles.disabled,
+        style,
+      ]}
       onPress={onPress}
       disabled={disabled || loading}
       activeOpacity={0.7}
