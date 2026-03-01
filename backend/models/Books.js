@@ -69,17 +69,17 @@ booksSchema.index({ isDeleted: 1 });
 
 // Static method to find active books
 booksSchema.statics.findActive = function() {
-  return this.find({ isDeleted: false });
+  return this.find({ isDeleted: false }).sort({ updatedAt: -1 });
 };
 
 // Static method to find books by grade level
 booksSchema.statics.findByGradeLevel = function(gradeLevel) {
-  return this.find({ gradeLevel, isDeleted: false });
+  return this.find({ gradeLevel, isDeleted: false }).sort({ updatedAt: -1 });
 };
 
 // Static method to find books by subject
 booksSchema.statics.findBySubject = function(subject) {
-  return this.find({ subject, isDeleted: false });
+  return this.find({ subject, isDeleted: false }).sort({ updatedAt: -1 });
 };
 
 // Instance method to mark as deleted

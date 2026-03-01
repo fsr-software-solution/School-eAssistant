@@ -19,7 +19,7 @@ export const getInteractionResources = async (req, res, next) => {
     
     if (!interaction) return next(new Error('Interaction not found'))
 
-    let resources = await Resources.find({interactionId: id, isDeleted: false}) ?? []
+    let resources = await Resources.find({interactionId: id, isDeleted: false}).sort({ updatedAt: -1 }) ?? []
     if (resources.length === 0) {
         resources = await addResources({interaction})
     }
@@ -36,11 +36,11 @@ export const createInteraction = async (req, res, next) => {
     let interaction = null
     if (sectionId) {
         const section = await Section.findOne({_id: sectionId, isDeleted: false})
-        const histories = await Interactions.find({sectionId, isDeleted: false})
-        interaction = await resolveInteraction({sectionId, studentId, studentQuestion, histories: histories.slice(-5), section})
+        const histories = await Interactions.find({sectionId, isDeleted: false}).sort({ updatedAt: -1 })
+        interaction = await resolveInteraction({sectionId, chatSessionId, studentId, studentQuestion, histories: histories.slice(-5), section})
     } else if (chatSessionId) {
-        const histories = await Interactions.find({chatSessionId, isDeleted: false})
-        interaction = await resolveInteraction({chatSessionId, studentId, studentQuestion, histories: histories.slice(-5)})
+        const histories = await Interactions.find({chatSessionId, isDeleted: false}).sort({ updatedAt: -1 })
+        interaction = await resolveInteraction({sectionId, chatSessionId, studentId, studentQuestion, histories: histories.slice(-5)})
     } else next(new Error('sectionId or chatSessionId is required'))
     
     res.status(201).json({data: interaction})

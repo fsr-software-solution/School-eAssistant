@@ -218,7 +218,7 @@ export const getAllUsers = async (req, res, next) => {
         // Get users
         const users = await Users.find(filter)
             .select('-password -refreshToken')
-            .sort({ createdAt: -1 })
+            .sort({ updatedAt: -1 })
             // .skip(skip)
             // .limit(limitNumber);
 
@@ -311,7 +311,7 @@ export const getUserProgress = async (req, res, next) => {
         }
 
         // Get all progress for this student
-        const progress = await StudentProgress.find({studentId: id, isDeleted: false});
+        const progress = await StudentProgress.find({studentId: id, isDeleted: false}).sort({ updatedAt: -1 });
 
         res.status(200).json({
             success: true,
@@ -491,7 +491,7 @@ export const getUserChatInteractions = async (req, res, next) => {
             });
         }
 
-        const interactions = await ChatSessions.find({studentId: id, type: 'interaction'})
+        const interactions = await ChatSessions.find({studentId: id, type: 'interaction'}).sort({ updatedAt: -1 })
 
         res.status(200).json({
             success: true,
@@ -531,7 +531,7 @@ export const getUserQuizzes = async (req, res, next) => {
             });
         }
 
-        const quizzes = await ChatSessions.find({studentId: id, type: 'quiz'})
+        const quizzes = await ChatSessions.find({studentId: id, type: 'quiz'}).sort({ updatedAt: -1 })
 
         res.status(200).json({
             success: true,
@@ -571,7 +571,7 @@ export const getUserPayments = async (req, res, next) => {
 
     const transactions = await PaymentTransaction.find({ studentId: id })
         .populate('planId', 'planName amount durationDays features')
-        .sort({ createdAt: -1 });
+        .sort({ updatedAt: -1 });
 
     res.status(200).json({
         success: true,

@@ -58,7 +58,7 @@ premiumPlanSchema.pre('save', function() {
 });
 
 premiumPlanSchema.statics.findActive = function() {
-  return this.find({ isDeleted: false });
+  return this.find({ isDeleted: false }).sort({ updatedAt: -1 });
 };
 
 premiumPlanSchema.methods.softDelete = function() {
@@ -68,7 +68,7 @@ premiumPlanSchema.methods.softDelete = function() {
 };
 
 premiumPlanSchema.statics.getActivePlans = function () {
-  return this.find({ isDeleted: false });
+  return this.find({ isDeleted: false }).sort({ updatedAt: -1 });
 };
 
 premiumPlanSchema.methods.softDelete = function () {

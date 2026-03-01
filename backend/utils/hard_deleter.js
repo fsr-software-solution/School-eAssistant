@@ -54,7 +54,7 @@ export const deleteUnits = async ({id, bookId}) => {
     }
 
     if (bookId) {
-        let units = await Units.find({bookId, isDeleted: true}) ?? []
+        let units = await Units.find({bookId, isDeleted: true}).sort({ updatedAt: -1 }) ?? []
         for (let unit of units) {
             await deleteSections({unitId: unit._id})
             await unit.deleteOne()
@@ -77,7 +77,7 @@ export const deleteSections = async ({id, unitId, parentSectionId}) => {
     }
 
     if (unitId) {
-        let sections = await Sections.find({unitId, isDeleted: true}) ?? []
+        let sections = await Sections.find({unitId, isDeleted: true}).sort({ updatedAt: -1 }) ?? []
         for (let section of sections) {
             await deleteResources({sectionId: section._id})
             await deleteInteractions({sectionId: section._id})
@@ -88,7 +88,7 @@ export const deleteSections = async ({id, unitId, parentSectionId}) => {
     }
 
     if (parentSectionId) {
-        let sections = await Sections.find({parentSectionId, isDeleted: true}) ?? []
+        let sections = await Sections.find({parentSectionId, isDeleted: true}).sort({ updatedAt: -1 }) ?? []
         for (let section of sections) {
             await deleteResources({sectionId: section._id})
             await deleteInteractions({sectionId: section._id})
@@ -112,7 +112,7 @@ export const deleteChatSessions = async ({id, studentId}) => {
     }
 
     if (studentId) {
-        let chatSessions = await ChatSessions.find({studentId, isDeleted: true}) ?? []
+        let chatSessions = await ChatSessions.find({studentId, isDeleted: true}).sort({ updatedAt: -1 }) ?? []
         for (let chatSession of chatSessions) {
             await deleteInteractions({chatSessionId: chatSession._id})
             await deleteQuizzes({chatSessionId: chatSession._id})
@@ -135,7 +135,7 @@ export const deleteInteractions = async ({id, sectionId, chatSessionId, studentI
     }
 
     if (sectionId) {
-        let interactions = await Interactions.find({sectionId, isDeleted: true}) ?? []
+        let interactions = await Interactions.find({sectionId, isDeleted: true}).sort({ updatedAt: -1 }) ?? []
         for (let interaction of interactions) {
             await deleteResources({interactionId: interaction._id})
             await deleteReferences({interactionId: interaction._id})
@@ -145,7 +145,7 @@ export const deleteInteractions = async ({id, sectionId, chatSessionId, studentI
     }
 
     if (chatSessionId) {
-        let interactions = await Interactions.find({chatSessionId, isDeleted: true}) ?? []
+        let interactions = await Interactions.find({chatSessionId, isDeleted: true}).sort({ updatedAt: -1 }) ?? []
         for (let interaction of interactions) {
             await deleteResources({interactionId: interaction._id})
             await deleteReferences({interactionId: interaction._id})
@@ -155,7 +155,7 @@ export const deleteInteractions = async ({id, sectionId, chatSessionId, studentI
     }
 
     if (studentId) {
-        let interactions = await Interactions.find({studentId, isDeleted: true}) ?? []
+        let interactions = await Interactions.find({studentId, isDeleted: true}).sort({ updatedAt: -1 }) ?? []
         for (let interaction of interactions) {
             await deleteResources({interactionId: interaction._id})
             await deleteReferences({interactionId: interaction._id})
@@ -176,7 +176,7 @@ export const deleteResources = async ({id, sectionId, interactionId}) => {
     }
 
     if (sectionId) {
-        let resources = await Resources.find({sectionId, isDeleted: true}) ?? []
+        let resources = await Resources.find({sectionId, isDeleted: true}).sort({ updatedAt: -1 }) ?? []
         for (let resource of resources) {
             await resource.deleteOne()
         }
@@ -184,7 +184,7 @@ export const deleteResources = async ({id, sectionId, interactionId}) => {
     }
 
     if (interactionId) {
-        let resources = await Resources.find({interactionId, isDeleted: true}) ?? []
+        let resources = await Resources.find({interactionId, isDeleted: true}).sort({ updatedAt: -1 }) ?? []
         for (let resource of resources) {
             await resource.deleteOne()
         }
@@ -204,7 +204,7 @@ export const deleteQuizzes = async ({id, chatSessionId}) => {
     }
 
     if (chatSessionId) {
-        let quizzes = await Quizzes.find({chatSessionId, isDeleted: true}) ?? []
+        let quizzes = await Quizzes.find({chatSessionId, isDeleted: true}).sort({ updatedAt: -1 }) ?? []
         for (let quiz of quizzes) {
             await deleteReferences({quizId: quiz._id})
             await quiz.deleteOne()
@@ -224,7 +224,7 @@ export const deleteReferences = async ({id, interactionId, quizId, bookId}) => {
     }
 
     if (interactionId) {
-        let references = await References.find({interactionId, isDeleted: true}) ?? []
+        let references = await References.find({interactionId, isDeleted: true}).sort({ updatedAt: -1 }) ?? []
         for (let reference of references) {
             await reference.deleteOne()
         }
@@ -232,7 +232,7 @@ export const deleteReferences = async ({id, interactionId, quizId, bookId}) => {
     }
 
     if (quizId) {
-        let references = await References.find({quizId, isDeleted: true}) ?? []
+        let references = await References.find({quizId, isDeleted: true}).sort({ updatedAt: -1 }) ?? []
         for (let reference of references) {
             await reference.deleteOne()
         }
@@ -240,7 +240,7 @@ export const deleteReferences = async ({id, interactionId, quizId, bookId}) => {
     }
 
     if (bookId) {
-        let references = await References.find({bookId, isDeleted: true}) ?? []
+        let references = await References.find({bookId, isDeleted: true}).sort({ updatedAt: -1 }) ?? []
         for (let reference of references) {
             await reference.deleteOne()
         }
@@ -259,7 +259,7 @@ export const deleteStudentProgress = async ({id, studentId, sectionId}) => {
     }
 
     if (studentId) {
-        let progressRecords = await StudentProgress.find({studentId, isDeleted: true}) ?? []
+        let progressRecords = await StudentProgress.find({studentId, isDeleted: true}).sort({ updatedAt: -1 }) ?? []
         for (let progress of progressRecords) {
             await progress.deleteOne()
         }
@@ -267,7 +267,7 @@ export const deleteStudentProgress = async ({id, studentId, sectionId}) => {
     }
 
     if (sectionId) {
-        let progressRecords = await StudentProgress.find({sectionId, isDeleted: true}) ?? []
+        let progressRecords = await StudentProgress.find({sectionId, isDeleted: true}).sort({ updatedAt: -1 }) ?? []
         for (let progress of progressRecords) {
             await progress.deleteOne()
         }
@@ -298,7 +298,7 @@ export const deletePaymentTransactions = async ({id, transactionId, studentId, p
     }
 
     if (transactionId) {
-        let transactions = await PaymentTransaction.find({transactionId, isDeleted: true}) ?? []
+        let transactions = await PaymentTransaction.find({transactionId, isDeleted: true}).sort({ updatedAt: -1 }) ?? []
         for (let transaction of transactions) {
             await transaction.deleteOne()
         }
@@ -306,7 +306,7 @@ export const deletePaymentTransactions = async ({id, transactionId, studentId, p
     }
 
     if (studentId) {
-        let transactions = await PaymentTransaction.find({studentId, isDeleted: true}) ?? []
+        let transactions = await PaymentTransaction.find({studentId, isDeleted: true}).sort({ updatedAt: -1 }) ?? []
         for (let transaction of transactions) {
             await transaction.deleteOne()
         }
@@ -314,7 +314,7 @@ export const deletePaymentTransactions = async ({id, transactionId, studentId, p
     }
 
     if (planId) {
-        let transactions = await PaymentTransaction.find({planId, isDeleted: true}) ?? []
+        let transactions = await PaymentTransaction.find({planId, isDeleted: true}).sort({ updatedAt: -1 }) ?? []
         for (let transaction of transactions) {
             await transaction.deleteOne()
         }
@@ -340,79 +340,79 @@ export const deletePremiumPlans = async ({id}) => {
 
 
 export const deleteAllUsers = async () => {
-    const users = await Users.find({isDeleted: true}) ?? []
+    const users = await Users.find({isDeleted: true}).sort({ updatedAt: -1 }) ?? []
     await Promise.all(users.map(async (user) => await deleteUsers({id: user._id})))
     return true
 }
 
 export const deleteAllBooks = async () => {
-    const books = await Books.find({isDeleted: true}) ?? []
+    const books = await Books.find({isDeleted: true}).sort({ updatedAt: -1 }) ?? []
     await Promise.all(books.map(async (book) => await deleteBooks({id: book._id})))
     return true
 }
 
 export const deleteAllUnits = async () => {
-    const units = await Units.find({isDeleted: true}) ?? []
+    const units = await Units.find({isDeleted: true}).sort({ updatedAt: -1 }) ?? []
     await Promise.all(units.map(async (unit) => await deleteUnits({id: unit._id})))
     return true
 }
 
 export const deleteAllSections = async () => {
-    const sections = await Sections.find({isDeleted: true}) ?? []
+    const sections = await Sections.find({isDeleted: true}).sort({ updatedAt: -1 }) ?? []
     await Promise.all(sections.map(async (section) => await deleteSections({id: section._id})))
     return true
 }
 
 export const deleteAllChatSessions = async () => {
-    const chatSessions = await ChatSessions.find({isDeleted: true}) ?? []
+    const chatSessions = await ChatSessions.find({isDeleted: true}).sort({ updatedAt: -1 }) ?? []
     await Promise.all(chatSessions.map(async (chatSession) => await deleteChatSessions({id: chatSession._id})))
     return true
 }
 
 export const deleteAllInteractions = async () => {
-    const interactions = await Interactions.find({isDeleted: true}) ?? []
+    const interactions = await Interactions.find({isDeleted: true}).sort({ updatedAt: -1 }) ?? []
     await Promise.all(interactions.map(async (interaction) => await deleteInteractions({id: interaction._id})))
     return true
 }
 
 export const deleteAllResources = async () => {
-    const resources = await Resources.find({isDeleted: true}) ?? []
+    const resources = await Resources.find({isDeleted: true}).sort({ updatedAt: -1 }) ?? []
     await Promise.all(resources.map(async (resource) => await deleteResources({id: resource._id})))
     return true
 }
 
 export const deleteAllQuizzes = async () => {
-    const quizzes = await Quizzes.find({isDeleted: true}) ?? []
+    const quizzes = await Quizzes.find({isDeleted: true}).sort({ updatedAt: -1 }) ?? []
     await Promise.all(quizzes.map(async (quiz) => await deleteQuizzes({id: quiz._id})))
     return true
 }
 
 export const deleteAllReferences = async () => {
-    const references = await References.find({isDeleted: true}) ?? []
+    const references = await References.find({isDeleted: true}).sort({ updatedAt: -1 }) ?? []
     await Promise.all(references.map(async (reference) => await deleteReferences({id: reference._id})))
     return true
 }
 
 export const deleteAllStudentProgress = async () => {
-    const progressRecords = await StudentProgress.find({isDeleted: true}) ?? []
+    const progressRecords = await StudentProgress.find({isDeleted: true}).sort({ updatedAt: -1 }) ?? []
     await Promise.all(progressRecords.map(async (progress) => await deleteStudentProgress({id: progress._id})))
     return true
 }
 
 export const deleteAllPaymentAccounts = async () => {
-    const accounts = await PaymentAccount.find({isDeleted: true}) ?? []
+    const accounts = await PaymentAccount.find({isDeleted: true}).sort({ updatedAt: -1 }) ?? []
     await Promise.all(accounts.map(async (account) => await deletePaymentAccounts({id: account._id})))
     return true
 }
 
 export const deleteAllPaymentTransactions = async () => {
-    const transactions = await PaymentTransaction.find({isDeleted: true}) ?? []
+    const transactions = await PaymentTransaction.find({isDeleted: true}).sort({ updatedAt: -1 }) ?? []
     await Promise.all(transactions.map(async (transaction) => await deletePaymentTransactions({id: transaction._id})))
     return true
 }
 
 export const deleteAllPremiumPlans = async () => {
-    const plans = await PremiumPlan.find({isDeleted: true}) ?? []
+    const plans = await PremiumPlan.find({isDeleted: true}).sort({ updatedAt: -1 }) ?? []
     await Promise.all(plans.map(async (plan) => await deletePremiumPlans({id: plan._id})))
     return true
 }

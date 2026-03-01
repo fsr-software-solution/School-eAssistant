@@ -338,7 +338,7 @@ class PaymentController {
       const studentId = req.user?.id;
       const transactions = await PaymentTransaction.find({ studentId })
         .populate('planId', 'planName amount durationDays features')
-        .sort({ createdAt: -1 });
+        .sort({ updatedAt: -1 });
 
       res.status(200).json({
         success: true,
@@ -443,7 +443,7 @@ class PaymentController {
       const transactions = await PaymentTransaction.find(filter)
         .populate('planId', 'planName amount durationDays')
         .populate('studentId', 'username')
-        .sort({ createdAt: -1 });
+        .sort({ updatedAt: -1 });
 
       res.status(200).json({
         success: true,

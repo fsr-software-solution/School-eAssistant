@@ -102,19 +102,17 @@ sectionsSchema.pre('save', function() {
 
 // Static method to find active sections
 sectionsSchema.statics.findActive = function() {
-  return this.find({ isDeleted: false });
+  return this.find({ isDeleted: false }).sort({ updatedAt: -1 });
 };
 
 // Static method to find sections by unit
 sectionsSchema.statics.findByUnit = function(unitId) {
-  return this.find({ unitId, isDeleted: false, parentSectionId: null })
-    .sort({ sectionNumber: 1 });
+  return this.find({ unitId, isDeleted: false, parentSectionId: null }).sort({ updatedAt: -1 })
 };
 
 // Static method to find subsections by parent section
 sectionsSchema.statics.findSubsections = function(parentSectionId) {
-  return this.find({ parentSectionId, isDeleted: false })
-    .sort({ sectionNumber: 1 });
+  return this.find({ parentSectionId, isDeleted: false }).sort({ sectionNumber: 1 });
 };
 
 // Static method to find all sections in a hierarchy

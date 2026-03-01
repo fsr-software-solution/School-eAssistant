@@ -19,20 +19,20 @@ import translatesRoutes from './translatesRoutes.js'
 
 const router = express.Router();
 
-router.use(paymentRoutes);
 router.use('/auth', authRoutes);
-router.use('/users', usersRoutes);
-router.use('/books', booksRoutes);
-router.use('/units', unitsRoutes);
-router.use('/sections', sectionsRoutes);
-router.use('/chats', chatRoutes);
-router.use('/interactions', interactionsRoutes);
-router.use('/quizzes', quizzesRoutes);
-router.use('/resources', resourcesRoutes);
-router.use('/references', referencesRoutes);
-router.use('/progress', progressRoutes);
-router.use('/translates', translatesRoutes)
-router.use('/admin/delete', hardDeleteRoutes);
+router.use(protect, paymentRoutes);
+router.use('/users', protect, usersRoutes);
+router.use('/books', protect, booksRoutes);
+router.use('/units', protect, unitsRoutes);
+router.use('/sections', protect, sectionsRoutes);
+router.use('/chats', protect, chatRoutes);
+router.use('/interactions', protect, interactionsRoutes);
+router.use('/quizzes', protect, quizzesRoutes);
+router.use('/resources', protect, resourcesRoutes);
+router.use('/references', protect, referencesRoutes);
+router.use('/progress', protect, progressRoutes);
+router.use('/translates', protect, translatesRoutes)
+router.use('/admin/delete', protect, hardDeleteRoutes);
 router.get('/admin/dashboard', protect, adminOnly, adminDashboard);
 
 export default router;

@@ -66,13 +66,12 @@ quizzesSchema.pre('save', function() {
 
 // Static method to find active quizzes
 quizzesSchema.statics.findActive = function() {
-  return this.find({ isDeleted: false });
+  return this.find({ isDeleted: false }).sort({ updatedAt: -1 });
 };
 
 // Static method to find quizzes by chat session
 quizzesSchema.statics.findByChatSession = function(chatSessionId) {
-  return this.find({ chatSessionId, isDeleted: false })
-    .sort({ createdAt: 1 });
+  return this.find({ chatSessionId, isDeleted: false }).sort({ updatedAt: -1 })
 };
 
 // Instance method to mark as deleted

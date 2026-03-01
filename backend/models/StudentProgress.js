@@ -75,7 +75,7 @@ studentProgressSchema.pre('save', function() {
 
 // Static method to find active student progress
 studentProgressSchema.statics.findActive = function() {
-  return this.find({ isDeleted: false });
+  return this.find({ isDeleted: false }).sort({ updatedAt: -1 });
 };
 
 // Static method to find progress by student
@@ -89,7 +89,7 @@ studentProgressSchema.statics.findByStudent = function(studentId) {
 // Static method to find progress by section
 studentProgressSchema.statics.findBySection = function(sectionId) {
   return this.find({ sectionId, isDeleted: false })
-    .populate('studentId', 'username');
+    .populate('studentId', 'username').sort({ updatedAt: -1 });
 };
 
 // Static method to find progress by student and section
@@ -99,7 +99,7 @@ studentProgressSchema.statics.findByStudentAndSection = function(studentId, sect
 
 // Static method to find progress by status
 studentProgressSchema.statics.findByStatus = function(status) {
-  return this.find({ status, isDeleted: false });
+  return this.find({ status, isDeleted: false }).sort({ updatedAt: -1 });
 };
 
 // Instance method to mark as deleted
