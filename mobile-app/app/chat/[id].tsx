@@ -9,9 +9,10 @@ import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
 import Text from '../../components/ui/Text';
 import { useTheme } from '../../context/ThemeContext';
-import { chatService, Interaction } from '../../services/chat';
+import { chatService, Interaction, Reference } from '../../services/chat';
 import { useContentProtection } from '../../utils/contentProtection';
 import { SPACING, BORDER_RADIUS } from '../../constants/config';
+import ReferenceList from '../../components/ReferenceList';
 
 export default function ChatConversationScreen() {
     const { id, initialQuestion, sectionId } = useLocalSearchParams<{ id: string; initialQuestion?: string; sectionId?: string }>();
@@ -148,6 +149,11 @@ export default function ChatConversationScreen() {
                                     <Text variant="bodySmall" color={colors.textSecondary} style={{ marginTop: SPACING.xs }}>
                                         Confidence: {Math.round(item.confidenceScore * 100)}%
                                     </Text>
+                                )}
+                                {item.references && item.references.length > 0 && (
+                                    <View style={{ marginTop: SPACING.md, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: SPACING.sm }}>
+                                        <ReferenceList references={item.references} />
+                                    </View>
                                 )}
                             </>
                         )}
