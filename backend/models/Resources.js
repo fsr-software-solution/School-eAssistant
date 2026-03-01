@@ -101,22 +101,22 @@ resourcesSchema.pre('save', function() {
 
 // Static method to find active resources
 resourcesSchema.statics.findActive = function() {
-  return this.find({ isDeleted: false });
+  return this.find({ isDeleted: false }).sort({ updatedAt: -1 });
 };
 
 // Static method to find resources by section
 resourcesSchema.statics.findBySection = function(sectionId) {
-  return this.find({ sectionId, isDeleted: false });
+  return this.find({ sectionId, isDeleted: false }).sort({ updatedAt: -1 });
 };
 
 // Static method to find resources by interaction
 resourcesSchema.statics.findByInteraction = function(interactionId) {
-  return this.find({ interactionId, isDeleted: false });
+  return this.find({ interactionId, isDeleted: false }).sort({ updatedAt: -1 });
 };
 
 // Static method to find resources by type
 resourcesSchema.statics.findByType = function(type) {
-  return this.find({ type, isDeleted: false });
+  return this.find({ type, isDeleted: false }).sort({ updatedAt: -1 });
 };
 
 // Instance method to mark as deleted

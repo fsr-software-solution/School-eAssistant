@@ -18,7 +18,7 @@ export const getQuizReferences = async (req, res, next) => {
     const quiz = await Quizzes.findOne({ _id: id, isDeleted: false })
     if (!quiz) return next(new Error('Quiz not found'))
     
-    const references = await References.find({ quizId: id, isDeleted: false })    
+    const references = await References.find({ quizId: id, isDeleted: false }).sort({ updatedAt: -1 })
     res.status(200).json({data: references})
 }
 

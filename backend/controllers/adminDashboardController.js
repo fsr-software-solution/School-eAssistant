@@ -149,7 +149,7 @@ async function getPaymentTransactionsStats() {
   }, {});
   // Include a few recent pending transactions for quick review
   const recentPending = await PaymentTransaction.find({ verificationStatus: 'pending' })
-    .sort({ createdAt: -1 })
+    .sort({ updatedAt: -1 })
     .limit(5)
     .populate('studentId', 'username')
     .populate('planId', 'planName amount')

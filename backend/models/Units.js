@@ -74,7 +74,7 @@ unitsSchema.pre('save', function() {
 
 // Static method to find active units
 unitsSchema.statics.findActive = function() {
-  return this.find({ isDeleted: false });
+  return this.find({ isDeleted: false }).sort({ updatedAt: -1 });
 };
 
 // Static method to find units by book

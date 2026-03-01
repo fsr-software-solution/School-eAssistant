@@ -60,7 +60,7 @@ class PremiumPlanController {
       const { includeDeleted = false } = req.query;
       const filter = includeDeleted === 'true' ? {} : { isDeleted: false };
 
-      const plans = await PremiumPlan.find(filter).sort({ createdAt: -1 });
+      const plans = await PremiumPlan.find(filter).sort({ updatedAt: -1 });
 
       res.status(200).json({
         success: true,

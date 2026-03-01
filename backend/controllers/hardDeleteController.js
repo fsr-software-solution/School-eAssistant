@@ -192,7 +192,7 @@ const getSoftDeletedDocument = async (Model, id, res, next) => {
 }
 
 const getAllSoftDeletedDocuments = async (Model, res, next) => {
-    const documents = await Model.find({isDeleted: true})
+    const documents = await Model.find({isDeleted: true}).sort({ updatedAt: -1 })
     res.status(200).json({data: documents})
 }
 

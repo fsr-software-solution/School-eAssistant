@@ -1,4 +1,3 @@
-import connectDb from '../config/database.js';
 import PaymentAccount from '../models/PaymentAccount.js';
 
 /**
@@ -41,4 +40,3 @@ const verifyPaymentAccount = async () => {
 };
 
 verifyPaymentAccount();
-

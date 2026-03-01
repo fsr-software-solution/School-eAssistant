@@ -42,7 +42,7 @@ export const getSectionResources = async (req, res, next) => {
   
   if (!section) return next(new Error('Section not found'))
     
-  let resources = await Resources.find({ sectionId: id, isDeleted: false }) ?? []
+  let resources = await Resources.find({ sectionId: id, isDeleted: false }).sort({ updatedAt: -1 }) ?? []
   if (resources.length === 0) {
     resources = await addResources({section})
   }
@@ -58,9 +58,9 @@ export const getSectionInteractions = async (req, res, next) => {
 
   let interactions = []
   if (req.user?.role == 'admin')
-    interactions = await Interactions.find({ sectionId: id, isDeleted: false })
+    interactions = await Interactions.find({ sectionId: id, isDeleted: false }).sort({ updatedAt: -1 })
   else
-    interactions = await Interactions.find({ sectionId: id, studentId: req.user?._id, isDeleted: false })
+    interactions = await Interactions.find({ sectionId: id, studentId: req.user?._id, isDeleted: false }).sort({ updatedAt: -1 })
   
   res.status(200).json({data: interactions})
 }

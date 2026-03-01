@@ -102,22 +102,22 @@ referencesSchema.pre('save', function() {
 
 // Static method to find active references
 referencesSchema.statics.findActive = function() {
-  return this.find({ isDeleted: false });
+  return this.find({ isDeleted: false }).sort({ updatedAt: -1 });
 };
 
 // Static method to find references by interaction
 referencesSchema.statics.findByInteraction = function(interactionId) {
-  return this.find({ interactionId, isDeleted: false });
+  return this.find({ interactionId, isDeleted: false }).sort({ updatedAt: -1 });
 };
 
 // Static method to find references by quiz
 referencesSchema.statics.findByQuiz = function(quizId) {
-  return this.find({ quizId, isDeleted: false });
+  return this.find({ quizId, isDeleted: false }).sort({ updatedAt: -1 });
 };
 
 // Static method to find references by book
 referencesSchema.statics.findByBook = function(bookId) {
-  return this.find({ bookId, isDeleted: false });
+  return this.find({ bookId, isDeleted: false }).sort({ updatedAt: -1 });
 };
 
 // Instance method to mark as deleted
