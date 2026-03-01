@@ -24,7 +24,7 @@ export interface Quiz {
     _id: string;
     chatSessionId: string;
     question: string;
-    choices: string[];
+    choices: string[] | Record<string, string>;
     answer: string;
     explanation?: string;
     studentAttempt?: string;
@@ -43,8 +43,8 @@ export const chatService = {
         return response.data.data;
     },
 
-    async createChat(studentId: string, type: 'interaction' | 'quiz'): Promise<ChatSession> {
-        const response = await api.post<{ data: ChatSession }>('/chats', { studentId, type });
+    async createChat(studentId: string, type: 'interaction' | 'quiz', signal?: AbortSignal): Promise<ChatSession> {
+        const response = await api.post<{ data: ChatSession }>('/chats', { studentId, type }, { signal });
         return response.data.data;
     },
 
@@ -76,12 +76,20 @@ export const chatService = {
     async generateQuizzes(
         chatSessionId: string,
         baseIdea: string,
-        numberOfQuestions: number = 5
+        numberOfQuestions: number = 5,
+        signal?: AbortSignal
     ): Promise<Quiz[]> {
         const response = await api.post<{ data: Quiz[] }>('/quizzes', {
             chatSessionId,
             baseIdea,
             numberOfQuestions,
+        }, { signal });
+        return response.data.data;
+    },
+
+    async submitQuizAttempt(quizId: string, attempt: string): Promise<Quiz> {
+        const response = await api.put<{ data: Quiz }>(`/quizzes/${quizId}`, {
+            attempt,
         });
         return response.data.data;
     },
