@@ -16,8 +16,8 @@ export const createStudentProgress = async (req, res, next) => {
 
     if (!studentId || !sectionId) return next(new Error('Student ID and section ID are required'))
 
-    if (['not started', 'in progress', 'completed'].includes(status)) 
-        next(new Error('Invalid status. Must be one of: not started, in progress, completed'))
+    if (!['not started', 'in progress', 'completed'].includes(status)) 
+        return next(new Error('Invalid status. Must be one of: not started, in progress, completed'))
 
     const student = await Users.findOne({_id: studentId, isDeleted: false, role: 'student'})
     if (!student) return next(new Error('Invalid student ID or student not found'))
@@ -28,7 +28,7 @@ export const createStudentProgress = async (req, res, next) => {
     const existingProgress = await StudentProgress.findOne({studentId, sectionId, isDeleted: false})
     if (existingProgress) return next(new Error('Progress record already exists for this student and section'))
 
-    const progress = StudentProgress.create({
+    const progress = await StudentProgress.create({
       studentId,
       sectionId,
       status
@@ -41,8 +41,8 @@ export const updateStudentProgress = async (req, res, next) => {
     const { id } = req.params
     const { status = '' } = req.body
 
-    if (['not started', 'in progress', 'completed'].includes(status)) 
-        next(new Error('Invalid status. Must be one of: not started, in progress, completed'))
+    if (!['not started', 'in progress', 'completed'].includes(status)) 
+        return next(new Error('Invalid status. Must be one of: not started, in progress, completed'))
 
     const progress = await StudentProgress.findOne({_id: id, isDeleted: false})
     if (!progress) return next(new Error('Student progress record not found'))

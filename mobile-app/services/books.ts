@@ -125,47 +125,4 @@ export interface Resource {
   updatedAt: string;
 }
 
-/**
- * Progress Types
- */
-export interface StudentProgress {
-  _id: string;
-  studentId: string;
-  sectionId: string;
-  status: 'not started' | 'in progress' | 'completed';
-  createdAt: string;
-  updatedAt: string;
-}
-
-/**
- * Progress Service
- */
-export const progressService = {
-  /**
-   * Get progress by ID
-   */
-  async getProgressById(id: string): Promise<StudentProgress> {
-    const response = await api.get<{ data: StudentProgress }>(`/progress/${id}`);
-    return response.data.data;
-  },
-
-  /**
-   * Create or update progress for a section
-   */
-  async updateSectionProgress(sectionId: string, status: 'not started' | 'in progress' | 'completed'): Promise<StudentProgress> {
-    try {
-      // Try to create first
-      const response = await api.post<{ data: StudentProgress }>('/progress', {
-        sectionId,
-        status,
-      });
-      return response.data.data;
-    } catch (error: any) {
-      // If already exists, we need to find and update it
-      // For now, we'll handle this on the backend or create a separate endpoint
-      // This is a simplified version - you may need to adjust based on your backend
-      throw error;
-    }
-  },
-};
 

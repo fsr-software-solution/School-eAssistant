@@ -52,6 +52,12 @@ export const authService = {
     });
 
     if (response.data.success) {
+      // Normalize user object: ensure it has 'id' property
+      const userData = response.data.user as any;
+      if (userData._id && !userData.id) {
+        userData.id = userData._id;
+      }
+
       // Save tokens
       await tokenStorage.saveTokens(
         response.data.accessToken,
@@ -59,7 +65,7 @@ export const authService = {
       );
 
       // Save user data
-      await userStorage.saveUser(response.data.user);
+      await userStorage.saveUser(userData);
     }
 
     return response.data;
@@ -80,6 +86,12 @@ export const authService = {
     });
 
     if (response.data.success) {
+      // Normalize user data
+      const userData = response.data.user as any;
+      if (userData._id && !userData.id) {
+        userData.id = userData._id;
+      }
+
       // Save tokens
       await tokenStorage.saveTokens(
         response.data.accessToken,
@@ -87,7 +99,7 @@ export const authService = {
       );
 
       // Save user data
-      await userStorage.saveUser(response.data.user);
+      await userStorage.saveUser(userData);
     }
 
     return response.data;
@@ -134,7 +146,11 @@ export const authService = {
    * Get current user from storage
    */
   async getCurrentUser() {
-    return await userStorage.getUser();
+    const user = await userStorage.getUser();
+    if (user && user._id && !user.id) {
+      user.id = user._id;
+    }
+    return user;
   },
 
   /**

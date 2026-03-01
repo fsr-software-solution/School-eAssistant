@@ -8,6 +8,10 @@ import Button from '../../components/ui/Button';
 import { SPACING, BORDER_RADIUS } from '../../constants/config';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { progressService, StudentProgress } from '../../services/progress';
+import { booksService } from '../../services/books';
+import { useState, useEffect, useCallback } from 'react';
+
 
 export default function HomeScreen() {
   const { user, isPremium, premiumData } = useAuth();
@@ -18,9 +22,51 @@ export default function HomeScreen() {
   const tabBarHeight = Platform.OS === 'ios' ? 49 : 56;
   const bottomPadding = tabBarHeight + insets.bottom + SPACING.md;
 
+  const [lastProgress, setLastProgress] = useState<StudentProgress | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const loadLastProgress = useCallback(async () => {
+    if (!user) return;
+    try {
+      const data = await progressService.getStudentProgress(user.id);
+      if (data && data.length > 0) {
+        // Sort by date
+        const sorted = [...data].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+        const last = sorted[0];
+
+        // Enrich with section and unit details
+        try {
+          const section = await booksService.getSectionById(last.sectionId);
+          const unit = await booksService.getUnitById(section.unitId);
+
+          setLastProgress({
+            ...last,
+            sectionId: {
+              ...section,
+              unitId: unit
+            }
+          } as any);
+        } catch (detailErr) {
+          console.error('Failed to enrich last progress details', detailErr);
+          setLastProgress(last);
+        }
+      }
+    } catch (error) {
+
+      console.error('Failed to load last progress', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    loadLastProgress();
+  }, [loadLastProgress]);
+
   const expiryLabel = premiumData?.expiresAt
     ? `Expires ${new Date(premiumData.expiresAt).toLocaleDateString()}`
     : null;
+
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
@@ -74,6 +120,34 @@ export default function HomeScreen() {
             <Ionicons name="chevron-forward" size={20} color={colors.primary} />
           </TouchableOpacity>
         )}
+
+        {/* Continue Learning Card */}
+        {lastProgress && (
+          <TouchableOpacity
+            style={[styles.continueCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+            onPress={() => {
+              const section = lastProgress.sectionId as any;
+              router.push({ pathname: '/books/section/[id]', params: { id: section._id } });
+            }}
+            activeOpacity={0.8}
+          >
+            <View style={styles.continueHeader}>
+              <View style={[styles.continueIcon, { backgroundColor: colors.primary + '15' }]}>
+                <Ionicons name="play" size={20} color={colors.primary} />
+              </View>
+              <View style={{ flex: 1, marginLeft: SPACING.md }}>
+                <Text variant="bodySmall" color={colors.textSecondary} style={{ fontWeight: '700', letterSpacing: 0.5 }}>CONTINUE LEARNING</Text>
+                <Text variant="body" color={colors.text} style={{ fontWeight: '700', marginTop: 2 }} numberOfLines={1}>
+                  {(lastProgress.sectionId as any).title}
+                </Text>
+                <Text variant="bodySmall" color={colors.textSecondary}>
+                  {(lastProgress.sectionId as any).unitId.title}
+                </Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+        )}
+
 
         {/* Quick Access Cards */}
         <View style={[styles.card, { backgroundColor: colors.surface }]}>
@@ -152,4 +226,27 @@ const styles = StyleSheet.create({
   cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: SPACING.sm },
   cardTitle: { marginLeft: SPACING.sm },
   cardText: { marginTop: SPACING.xs },
+  continueCard: {
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.md,
+    marginBottom: SPACING.lg,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
+  },
+  continueHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  continueIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: BORDER_RADIUS.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });
+
