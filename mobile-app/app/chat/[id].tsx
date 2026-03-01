@@ -151,7 +151,7 @@ export default function ChatConversationScreen() {
                                     </Text>
                                 )}
                                 {item.references && item.references.length > 0 && (
-                                    <View style={{ marginTop: SPACING.md, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: SPACING.sm }}>
+                                    <View style={{ marginTop: SPACING.xs, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: SPACING.xs }}>
                                         <ReferenceList references={item.references} />
                                     </View>
                                 )}
@@ -165,51 +165,52 @@ export default function ChatConversationScreen() {
 
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
-            {/* Header */}
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()}>
-                    <Ionicons name="arrow-back" size={24} color={colors.text} />
-                </TouchableOpacity>
-                <View style={{ flex: 1, marginLeft: SPACING.md }}>
-                    <Text variant="h3" color={colors.text}>AI Assistant</Text>
-                    <Text variant="bodySmall" color={colors.textSecondary}>Ask me anything about your studies</Text>
-                </View>
-                <View style={[styles.onlineDot, { backgroundColor: colors.success }]} />
-            </View>
-
-            {/* Messages */}
-            {loading ? (
-                <View style={styles.center}>
-                    <ActivityIndicator size="large" color={colors.primary} />
-                </View>
-            ) : (
-                <FlatList
-                    ref={flatListRef}
-                    data={messages}
-                    keyExtractor={(item) => item._id}
-                    renderItem={renderMessage}
-                    contentContainerStyle={styles.messageList}
-                    showsVerticalScrollIndicator={false}
-                    ListEmptyComponent={
-                        <View style={styles.emptyState}>
-                            <View style={[styles.aiAvatarLg, { backgroundColor: colors.accent + '20' }]}>
-                                <Ionicons name="hardware-chip" size={40} color={colors.accent} />
-                            </View>
-                            <Text variant="h3" color={colors.text} style={{ marginTop: SPACING.md }}>How can I help?</Text>
-                            <Text variant="body" color={colors.textSecondary} style={{ textAlign: 'center', lineHeight: 24, marginTop: SPACING.xs }}>
-                                Ask me anything about your learning materials, homework, or concepts.
-                            </Text>
-                        </View>
-                    }
-                    onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
-                />
-            )}
-
-            {/* Input */}
             <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-                keyboardVerticalOffset={insets.bottom}
+                style={{ flex: 1 }}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? insets.top : 0}
             >
+                {/* Header */}
+                <View style={styles.header}>
+                    <TouchableOpacity onPress={() => router.back()}>
+                        <Ionicons name="arrow-back" size={24} color={colors.text} />
+                    </TouchableOpacity>
+                    <View style={{ flex: 1, marginLeft: SPACING.md }}>
+                        <Text variant="h3" color={colors.text}>AI Assistant</Text>
+                        <Text variant="bodySmall" color={colors.textSecondary}>Ask me anything about your studies</Text>
+                    </View>
+                    <View style={[styles.onlineDot, { backgroundColor: colors.success }]} />
+                </View>
+
+                {/* Messages */}
+                {loading ? (
+                    <View style={styles.center}>
+                        <ActivityIndicator size="large" color={colors.primary} />
+                    </View>
+                ) : (
+                    <FlatList
+                        ref={flatListRef}
+                        data={messages}
+                        keyExtractor={(item) => item._id}
+                        renderItem={renderMessage}
+                        contentContainerStyle={styles.messageList}
+                        showsVerticalScrollIndicator={false}
+                        ListEmptyComponent={
+                            <View style={styles.emptyState}>
+                                <View style={[styles.aiAvatarLg, { backgroundColor: colors.accent + '20' }]}>
+                                    <Ionicons name="hardware-chip" size={40} color={colors.accent} />
+                                </View>
+                                <Text variant="h3" color={colors.text} style={{ marginTop: SPACING.md }}>How can I help?</Text>
+                                <Text variant="body" color={colors.textSecondary} style={{ textAlign: 'center', lineHeight: 24, marginTop: SPACING.xs }}>
+                                    Ask me anything about your learning materials, homework, or concepts.
+                                </Text>
+                            </View>
+                        }
+                        onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
+                    />
+                )}
+
+                {/* Input */}
                 <View style={[styles.inputBar, { backgroundColor: colors.surface, borderTopColor: colors.border, paddingBottom: insets.bottom + SPACING.sm }]}>
                     <TextInput
                         style={[styles.textInput, { backgroundColor: colors.background, color: colors.text, borderColor: colors.border }]}
@@ -246,13 +247,13 @@ const styles = StyleSheet.create({
     },
     onlineDot: { width: 10, height: 10, borderRadius: 5 },
     center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    messageList: { padding: SPACING.lg, flexGrow: 1, justifyContent: 'flex-end' },
+    messageList: { padding: SPACING.sm, flexGrow: 1, justifyContent: 'flex-end' },
     emptyState: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: SPACING.xxl },
     aiAvatarLg: { width: 80, height: 80, borderRadius: 40, justifyContent: 'center', alignItems: 'center' },
-    messageGroup: { marginBottom: SPACING.lg },
+    messageGroup: { marginBottom: SPACING.md },
     questionRow: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'flex-end', marginBottom: SPACING.xs },
     answerRow: { flexDirection: 'row', alignItems: 'flex-start' },
-    bubble: { maxWidth: '80%', borderRadius: BORDER_RADIUS.lg, padding: SPACING.md },
+    bubble: { maxWidth: '90%', borderRadius: BORDER_RADIUS.lg, padding: SPACING.md },
     questionBubble: { borderBottomRightRadius: 4 },
     answerBubble: { borderTopLeftRadius: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 2, elevation: 1 },
     avatar: { width: 28, height: 28, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginLeft: SPACING.xs },
