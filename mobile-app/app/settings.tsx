@@ -34,7 +34,7 @@ export default function SettingsScreen() {
     };
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['bottom']}>
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
             <ScrollView showsVerticalScrollIndicator={false}>
                 <View style={[styles.settingItem, { borderBottomColor: colors.border }]}>
                     <View style={styles.settingLabelContainer}>

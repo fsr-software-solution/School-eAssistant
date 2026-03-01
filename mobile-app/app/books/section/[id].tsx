@@ -75,26 +75,15 @@ const AccordionSection = ({
   children: React.ReactNode;
 }) => {
   const { colors } = useTheme();
-  const animatedHeight = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(isOpen ? 1 : 0)).current;
 
   useEffect(() => {
-    Animated.timing(animatedHeight, {
+    Animated.timing(fadeAnim, {
       toValue: isOpen ? 1 : 0,
-      duration: 300,
-      useNativeDriver: false,
+      duration: 250,
+      useNativeDriver: true,
     }).start();
   }, [isOpen]);
-
-  const animatedStyle = {
-    maxHeight: animatedHeight.interpolate({
-      inputRange: [0, 1],
-      outputRange: [0, 1000],
-    }),
-    opacity: animatedHeight.interpolate({
-      inputRange: [0, 1],
-      outputRange: [0, 1],
-    }),
-  };
 
   return (
     <View style={[styles.accordionSection, { backgroundColor: colors.surface }]}>
@@ -116,9 +105,12 @@ const AccordionSection = ({
         />
       </TouchableOpacity>
 
-      <Animated.View style={[styles.accordionContent, animatedStyle]}>
-        {children}
-      </Animated.View>
+      {/* Render content only when open to avoid layout issues with clipped text */}
+      {isOpen && (
+        <Animated.View style={[styles.accordionContent, { opacity: fadeAnim }]}>
+          {children}
+        </Animated.View>
+      )}
     </View>
   );
 };
@@ -146,12 +138,12 @@ export default function SectionReaderScreen() {
   const [translating, setTranslating] = useState(false);
   const [showLanguagePicker, setShowLanguagePicker] = useState(false);
 
-  // Accordion states
+  // Accordion states — clarifications open by default, media collapsed
   const [accordionStates, setAccordionStates] = useState({
     clarifications: true,
-    videos: true,
-    images: true,
-    articles: true,
+    videos: false,
+    images: false,
+    articles: false,
   });
 
   // Enable content protection - prevent screenshots and text selection
@@ -793,7 +785,6 @@ const styles = StyleSheet.create({
   accordionSection: {
     borderRadius: BORDER_RADIUS.md,
     marginBottom: SPACING.md,
-    overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
