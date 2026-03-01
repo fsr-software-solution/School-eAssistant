@@ -58,12 +58,13 @@ export const chatService = {
         return response.data.data;
     },
 
-    async sendMessage(chatSessionId: string, studentQuestion: string): Promise<Interaction> {
-        const response = await api.post<{ data: Interaction }>('/interactions', {
+    async sendMessage(chatSessionId: string, studentQuestion: string, sectionId?: string): Promise<Interaction> {
+        const response = await api.post<{ data: { interaction: Interaction; references: any[] } }>('/interactions', {
             chatSessionId,
             studentQuestion,
+            sectionId,
         });
-        return response.data.data;
+        return response.data.data.interaction;
     },
 
     // ── Quizzes ────────────────────────────────────────

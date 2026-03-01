@@ -9,6 +9,7 @@ import { booksService, Unit, Section } from '../../../services/books';
 import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
 import { useContentProtection, textProtectionProps } from '../../../utils/contentProtection';
+import AskAISection from '../../../components/AskAISection';
 
 export default function UnitDetailsScreen() {
   const router = useRouter();
@@ -138,6 +139,13 @@ export default function UnitDetailsScreen() {
             ))
           )}
         </View>
+
+        {/* Ask AI Section */}
+        <AskAISection
+          contextTitle={unit.title}
+          contextType="unit"
+          contextId={id!}
+        />
       </ScrollView>
     </SafeAreaView>
   );

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Linking } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Linking, Animated, Modal, TouchableWithoutFeedback } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SPACING, BORDER_RADIUS } from '../../../constants/config';
@@ -11,6 +11,115 @@ import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
 import { useContentProtection, textProtectionProps } from '../../../utils/contentProtection';
 import Button from '../../../components/ui/Button';
+import YouTubePlayer from '../../../components/ui/YouTubePlayer';
+import ImageViewer from '../../../components/ui/ImageViewer';
+import AskAISection from '../../../components/AskAISection';
+import { translationService, Language } from '../../../services/translation';
+import Markdown from 'react-native-markdown-display';
+
+// Custom styles for Markdown based on theme
+const markdownStyles = (colors: any) => ({
+  body: {
+    color: colors.textSecondary,
+    fontSize: 15,
+    lineHeight: 22,
+  },
+  heading1: {
+    color: colors.text,
+    fontSize: 22,
+    fontWeight: 'bold' as const,
+    marginBottom: 10,
+  },
+  heading2: {
+    color: colors.text,
+    fontSize: 18,
+    fontWeight: 'bold' as const,
+    marginBottom: 8,
+  },
+  paragraph: {
+    marginBottom: 10,
+  },
+  strong: {
+    fontWeight: 'bold' as const,
+  },
+  em: {
+    fontStyle: 'italic' as const,
+  },
+  list_item: {
+    marginBottom: 5,
+  },
+  bullet_list: {
+    marginBottom: 10,
+  },
+  ordered_list: {
+    marginBottom: 10,
+  },
+});
+
+// Accordion Section Component
+const AccordionSection = ({
+  title,
+  isOpen,
+  onPress,
+  icon,
+  iconColor,
+  children
+}: {
+  title: string;
+  isOpen: boolean;
+  onPress: () => void;
+  icon: string;
+  iconColor: string;
+  children: React.ReactNode;
+}) => {
+  const { colors } = useTheme();
+  const animatedHeight = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(animatedHeight, {
+      toValue: isOpen ? 1 : 0,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+  }, [isOpen]);
+
+  const animatedStyle = {
+    maxHeight: animatedHeight.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0, 1000],
+    }),
+    opacity: animatedHeight.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0, 1],
+    }),
+  };
+
+  return (
+    <View style={[styles.accordionSection, { backgroundColor: colors.surface }]}>
+      <TouchableOpacity
+        style={styles.accordionHeader}
+        onPress={onPress}
+        activeOpacity={0.7}
+      >
+        <View style={styles.accordionHeaderContent}>
+          <Ionicons name={icon as any} size={20} color={iconColor} />
+          <Text variant="h3" color={colors.text} style={styles.accordionTitle}>
+            {title}
+          </Text>
+        </View>
+        <Ionicons
+          name={isOpen ? "chevron-up" : "chevron-down"}
+          size={20}
+          color={colors.textSecondary}
+        />
+      </TouchableOpacity>
+
+      <Animated.View style={[styles.accordionContent, animatedStyle]}>
+        {children}
+      </Animated.View>
+    </View>
+  );
+};
 
 export default function SectionReaderScreen() {
   const router = useRouter();
@@ -25,6 +134,21 @@ export default function SectionReaderScreen() {
   const [progressStatus, setProgressStatus] = useState<'not started' | 'in progress' | 'completed'>('not started');
   const [updatingProgress, setUpdatingProgress] = useState(false);
 
+  // Translation states
+  const [languages, setLanguages] = useState<Language[]>([]);
+  const [selectedLanguageCode, setSelectedLanguageCode] = useState('en');
+  const [translatedText, setTranslatedText] = useState<string | null>(null);
+  const [translating, setTranslating] = useState(false);
+  const [showLanguagePicker, setShowLanguagePicker] = useState(false);
+
+  // Accordion states
+  const [accordionStates, setAccordionStates] = useState({
+    clarifications: true,
+    videos: true,
+    images: true,
+    articles: true,
+  });
+
   // Enable content protection - prevent screenshots and text selection
   useContentProtection(true);
 
@@ -37,13 +161,9 @@ export default function SectionReaderScreen() {
   const loadSectionData = async () => {
     try {
       setLoading(true);
-      // Step 1: Fetch section first — this triggers the backend to generate
-      // AI clarification, summary, and resources if they don't exist yet
       const sectionData = await booksService.getSectionById(id!);
       setSection(sectionData);
 
-      // Step 2: Now fetch subsections and resources in parallel
-      // Resources should be ready now since getSectionById triggers their generation
       const [subsectionsData, resourcesData] = await Promise.all([
         booksService.getSectionSubsections(id!).catch(() => []),
         booksService.getSectionResources(id!).catch(() => []),
@@ -51,9 +171,14 @@ export default function SectionReaderScreen() {
       setSubsections(subsectionsData);
       setResources(resourcesData);
 
-      // Load progress status if user is logged in
-      // Note: You may need to implement a getProgressBySection endpoint
-      // For now, we'll default to 'not started'
+      // Fetch Ethiopian languages
+      try {
+        const langs = await translationService.getEthiopianLanguages();
+        setLanguages(langs);
+      } catch (error) {
+        console.error('Failed to load languages', error);
+      }
+
     } catch (error: any) {
       Toast.show({
         type: 'error',
@@ -119,6 +244,55 @@ export default function SectionReaderScreen() {
     }
   };
 
+  // Helper function to extract YouTube video ID from URL
+  const extractYouTubeVideoId = (url: string): string | null => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+  };
+
+  // Toggle accordion function
+  const toggleAccordion = (section: keyof typeof accordionStates) => {
+    setAccordionStates(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  const handleTranslate = async (langCode: string) => {
+    if (langCode === 'en' || langCode === 'english') {
+      setSelectedLanguageCode('en');
+      setTranslatedText(null);
+      return;
+    }
+
+    if (!section?.aiClarification) return;
+
+    try {
+      setTranslating(true);
+      setSelectedLanguageCode(langCode);
+      const translated = await translationService.translateText(section.aiClarification, langCode);
+      setTranslatedText(translated);
+    } catch (error: any) {
+      Toast.show({
+        type: 'error',
+        text1: 'Translation Failed',
+        text2: error.message || 'Could not translate text',
+      });
+      setSelectedLanguageCode('en');
+      setTranslatedText(null);
+    } finally {
+      setTranslating(false);
+      setShowLanguagePicker(false);
+    }
+  };
+
+  const getLanguageName = (code: string) => {
+    if (code === 'en' || code === 'english') return 'English';
+    const lang = languages.find(l => l.code === code || l.lang === code);
+    return lang ? lang.language : code;
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
@@ -154,27 +328,148 @@ export default function SectionReaderScreen() {
           </Text>
         </View>
 
-        {/* AI Clarification */}
+        {/* Accordion Sections */}
         {section.aiClarification && (
-          <View style={[styles.clarificationCard, { backgroundColor: colors.warning + '15', borderLeftColor: colors.warning }]}>
-            <View style={styles.clarificationHeader}>
-              <Ionicons name="bulb" size={20} color={colors.warning} />
-              <Text variant="h3" color={colors.text} style={styles.clarificationTitle}>AI Clarification</Text>
+          <AccordionSection
+            title="Clarifications"
+            isOpen={accordionStates.clarifications}
+            onPress={() => toggleAccordion('clarifications')}
+            icon="bulb"
+            iconColor={colors.warning}
+          >
+            <View style={[styles.clarificationCard, { backgroundColor: colors.warning + '15', borderLeftColor: colors.warning }]}>
+              {/* Language Selector Dropdown */}
+              <View style={styles.translationHeader}>
+                <TouchableOpacity
+                  style={[styles.dropdownButton, { backgroundColor: colors.surface, borderColor: colors.warning + '40' }]}
+                  onPress={() => setShowLanguagePicker(true)}
+                  activeOpacity={0.7}
+                  disabled={translating}
+                >
+                  <Ionicons name="language" size={16} color={colors.warning} />
+                  <Text variant="bodySmall" color={colors.text} style={styles.dropdownButtonText}>
+                    {getLanguageName(selectedLanguageCode)}
+                  </Text>
+                  <Ionicons name="chevron-down" size={16} color={colors.textSecondary} />
+                </TouchableOpacity>
+
+                {translating && (
+                  <View style={styles.translatingIndicator}>
+                    <ActivityIndicator size="small" color={colors.warning} />
+                  </View>
+                )}
+              </View>
+
+              {/* Language Picker Modal */}
+              <Modal
+                visible={showLanguagePicker}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setShowLanguagePicker(false)}
+              >
+                <TouchableWithoutFeedback onPress={() => setShowLanguagePicker(false)}>
+                  <View style={styles.modalOverlay}>
+                    <TouchableWithoutFeedback>
+                      <View style={[styles.dropdownMenu, { backgroundColor: colors.surface }]}>
+                        <Text variant="h3" color={colors.text} style={styles.dropdownMenuTitle}>Select Language</Text>
+
+                        <TouchableOpacity
+                          style={[styles.dropdownItem, selectedLanguageCode === 'en' && { backgroundColor: colors.warning + '20' }]}
+                          onPress={() => handleTranslate('en')}
+                        >
+                          <Text variant="body" color={selectedLanguageCode === 'en' ? colors.warning : colors.text}>English</Text>
+                          {selectedLanguageCode === 'en' && <Ionicons name="checkmark" size={20} color={colors.warning} />}
+                        </TouchableOpacity>
+
+                        {languages.filter(l => l.code !== 'en' && l.lang !== 'english').map((lang) => (
+                          <TouchableOpacity
+                            key={lang.code}
+                            style={[styles.dropdownItem, selectedLanguageCode === lang.code && { backgroundColor: colors.warning + '20' }]}
+                            onPress={() => handleTranslate(lang.code)}
+                          >
+                            <Text variant="body" color={selectedLanguageCode === lang.code ? colors.warning : colors.text}>
+                              {lang.language}
+                            </Text>
+                            {selectedLanguageCode === lang.code && <Ionicons name="checkmark" size={20} color={colors.warning} />}
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    </TouchableWithoutFeedback>
+                  </View>
+                </TouchableWithoutFeedback>
+              </Modal>
+
+              {translating ? (
+                <View style={styles.translatingContainer}>
+                  <Text variant="bodySmall" color={colors.textSecondary}>Translating clarification...</Text>
+                </View>
+              ) : (
+                <View {...textProtectionProps}>
+                  <Markdown style={markdownStyles(colors)}>
+                    {translatedText || section.aiClarification || ''}
+                  </Markdown>
+                </View>
+              )}
             </View>
-            <Text variant="body" color={colors.textSecondary} style={styles.clarificationText} {...textProtectionProps}>
-              {section.aiClarification}
-            </Text>
-          </View>
+          </AccordionSection>
         )}
 
-        {/* Resources & References */}
-        {resources.length > 0 && (
-          <View style={styles.resourcesSection}>
-            <View style={styles.resourcesSectionHeader}>
-              <Ionicons name="library-outline" size={20} color={colors.primary} />
-              <Text variant="h2" color={colors.text} style={styles.resourcesTitle}>Resources & References</Text>
-            </View>
-            {resources.map((resource) => (
+        {/* Videos Section */}
+        {resources.filter(r => r.type === 'youtube').length > 0 && (
+          <AccordionSection
+            title="Videos"
+            isOpen={accordionStates.videos}
+            onPress={() => toggleAccordion('videos')}
+            icon="logo-youtube"
+            iconColor="#FF0000"
+          >
+            {resources.filter(r => r.type === 'youtube').map((resource) => {
+              const videoId = extractYouTubeVideoId(resource.link);
+              if (videoId) {
+                return (
+                  <View key={resource._id} style={styles.resourceCard}>
+                    <YouTubePlayer videoId={videoId} />
+                  </View>
+                );
+              }
+              return null;
+            })}
+          </AccordionSection>
+        )}
+
+        {/* Images Section */}
+        {resources.filter(r => r.type === 'image').length > 0 && (
+          <AccordionSection
+            title="Images"
+            isOpen={accordionStates.images}
+            onPress={() => toggleAccordion('images')}
+            icon="image-outline"
+            iconColor="#8B5CF6"
+          >
+            {resources.filter(r => r.type === 'image').map((resource) => (
+              <View key={resource._id} style={styles.resourceCard}>
+                <ImageViewer
+                  imageUrl={resource.link}
+                  title={resource.title}
+                  description={resource.description}
+                  onOpen={() => console.log('Image opened')}
+                  onClose={() => console.log('Image closed')}
+                />
+              </View>
+            ))}
+          </AccordionSection>
+        )}
+
+        {/* Articles Section */}
+        {resources.filter(r => r.type === 'article').length > 0 && (
+          <AccordionSection
+            title="Articles"
+            isOpen={accordionStates.articles}
+            onPress={() => toggleAccordion('articles')}
+            icon="document-text-outline"
+            iconColor={colors.primary}
+          >
+            {resources.filter(r => r.type === 'article').map((resource) => (
               <TouchableOpacity
                 key={resource._id}
                 style={[styles.resourceCard, { backgroundColor: colors.surface }]}
@@ -194,15 +489,22 @@ export default function SectionReaderScreen() {
                     </Text>
                   ) : (
                     <Text variant="bodySmall" color={colors.textSecondary}>
-                      {resource.type.charAt(0).toUpperCase() + resource.type.slice(1)}
+                      Article
                     </Text>
                   )}
                 </View>
                 <Ionicons name="open-outline" size={18} color={colors.textSecondary} />
               </TouchableOpacity>
             ))}
-          </View>
+          </AccordionSection>
         )}
+
+        {/* Ask AI Section */}
+        <AskAISection
+          contextTitle={section.title}
+          contextType="section"
+          contextId={id!}
+        />
 
         {/* Subsections */}
         {subsections.length > 0 && (
@@ -413,5 +715,89 @@ const styles = StyleSheet.create({
   },
   progressButton: {
     marginTop: SPACING.sm,
+  },
+  accordionSection: {
+    borderRadius: BORDER_RADIUS.md,
+    marginBottom: SPACING.md,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  accordionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: SPACING.md,
+    backgroundColor: 'transparent',
+  },
+  accordionHeaderContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  accordionTitle: {
+    marginLeft: SPACING.sm,
+    fontWeight: '600',
+  },
+  accordionContent: {
+    overflow: 'hidden',
+  },
+  translationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: SPACING.md,
+  },
+  dropdownButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.md,
+    paddingVertical: 8,
+    borderRadius: BORDER_RADIUS.md,
+    borderWidth: 1,
+    gap: SPACING.xs,
+  },
+  dropdownButtonText: {
+    fontWeight: '600',
+    minWidth: 80,
+  },
+  translatingIndicator: {
+    paddingRight: SPACING.xs,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: SPACING.xl,
+  },
+  dropdownMenu: {
+    width: '100%',
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  dropdownMenuTitle: {
+    marginBottom: SPACING.md,
+    textAlign: 'center',
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.lg,
+    borderRadius: BORDER_RADIUS.md,
+  },
+  translatingContainer: {
+    paddingVertical: SPACING.md,
+    alignItems: 'center',
   },
 });
