@@ -10,19 +10,18 @@ import {
     getUserQuizzes,
     getUserPayments
 } from '../controllers/authController.js';
-import protect from '../middleware/authMiddleware.js';
 import adminOnly from '../middleware/adminMiddleware.js';
 
 const router = express.Router();
 
-router.get('/', protect, adminOnly, getAllUsers);
-router.get('/:id', protect, getUserById);
-router.get('/:id/progress', protect, getUserProgress);
-router.get('/:id/chat-interactions', protect, getUserChatInteractions);
-router.get('/:id/quizzes', protect, getUserQuizzes);
-router.get('/:id/payments', protect, getUserPayments);
-router.post('/', protect, adminOnly, createUser);
-router.put('/:id', protect, updateUser);
-router.delete('/:id', protect, adminOnly, deleteUser);
+router.get('/', adminOnly, getAllUsers);
+router.get('/:id', getUserById);
+router.get('/:id/progress', getUserProgress);
+router.get('/:id/chat-interactions', getUserChatInteractions);
+router.get('/:id/quizzes', getUserQuizzes);
+router.get('/:id/payments', getUserPayments);
+router.post('/', adminOnly, createUser);
+router.put('/:id', updateUser);
+router.delete('/:id', adminOnly, deleteUser);
 
 export default router;
