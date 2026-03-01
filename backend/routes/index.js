@@ -19,7 +19,7 @@ import translatesRoutes from './translatesRoutes.js'
 
 const router = express.Router();
 
-router.use(paymentRoutes);
+router.use(protect, paymentRoutes);
 router.use('/auth', authRoutes);
 router.use('/users', protect, usersRoutes);
 router.use('/books', protect, booksRoutes);

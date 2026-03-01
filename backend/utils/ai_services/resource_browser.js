@@ -11,7 +11,7 @@ const addResources = async ({section, interaction}) => {
         throw new Error("No section or interaction");
     }
 
-    let llm = new ChatOllama({model: 'deepseek-r1:1.5b'})
+    let llm = new ChatOllama({model: 'qwen2.5:0.5b'})
     llm = llm.withStructuredOutput(z.object({
         queryForImage: z.string().describe('Query for searching images'),
         queryForArticle: z.string().describe('Query for searching articles'),

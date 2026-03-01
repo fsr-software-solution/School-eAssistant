@@ -48,8 +48,8 @@ export const updateStudentProgress = async (req, res, next) => {
 
     if (!['not started', 'in progress', 'completed'].includes(status)) 
         return next(new Error('Invalid status. Must be one of: not started, in progress, completed'))
-
-    if (req.user.role !== 'admin' && req.user._id !== id) return next(new Error('You can only update your own progress'))
+    
+    if (req.user.role !== 'admin' && req.user.id !== id) return next(new Error('You can only update your own progress'))
 
     const progress = await StudentProgress.findOne({_id: id, isDeleted: false})
     if (!progress) return next(new Error('Student progress record not found'))
