@@ -26,7 +26,7 @@ export const createStudentProgress = async (req, res, next) => {
     if (!section) return next(new Error('Invalid section ID or section not found'))
 
     const existingProgress = await StudentProgress.findOne({studentId, sectionId, isDeleted: false})
-    if (existingProgress) return next(new Error('Progress record already exists for this student and section'))
+    if (existingProgress) return res.status(201).json({data: existingProgress})
 
     const progress = StudentProgress.create({
       studentId,
@@ -39,7 +39,7 @@ export const createStudentProgress = async (req, res, next) => {
 
 export const updateStudentProgress = async (req, res, next) => {
     const { id } = req.params
-    const { status = '' } = req.body
+    const { status = 'in progress' } = req.body
 
     if (['not started', 'in progress', 'completed'].includes(status)) 
         next(new Error('Invalid status. Must be one of: not started, in progress, completed'))
