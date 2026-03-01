@@ -61,7 +61,7 @@ export default function ReferenceList({ references }: ReferenceListProps) {
 
 const styles = StyleSheet.create({
     container: {
-        marginTop: SPACING.md,
+        marginTop: 0,
     },
     header: {
         flexDirection: 'row',
@@ -79,10 +79,11 @@ const styles = StyleSheet.create({
     },
     refCard: {
         flexDirection: 'row',
-        padding: SPACING.sm,
+        padding: SPACING.xs,
         borderRadius: BORDER_RADIUS.md,
         borderWidth: 1,
         alignItems: 'flex-start',
+        alignSelf: 'stretch',
     },
     refIcon: {
         marginTop: 2,

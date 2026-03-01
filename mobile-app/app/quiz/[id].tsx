@@ -319,7 +319,7 @@ export default function QuizTakingScreen() {
                             )}
 
                             {current.references && current.references.length > 0 && (
-                                <View style={{ borderTopWidth: current.explanation ? 1 : 0, borderTopColor: colors.border, paddingTop: current.explanation ? SPACING.md : 0 }}>
+                                <View style={{ borderTopWidth: current.explanation ? 1 : 0, borderTopColor: colors.border, paddingTop: current.explanation ? SPACING.xs : 0 }}>
                                     <ReferenceList references={current.references} />
                                 </View>
                             )}
