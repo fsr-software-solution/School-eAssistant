@@ -11,9 +11,9 @@ const chatSessionsSchema = new mongoose.Schema({
     validate: {
       validator: async function(value) {
         const user = await mongoose.model('Users').findById(value);
-        return user && !user.isDeleted && user.role === 'student';
+        return user && !user.isDeleted;
       },
-      message: 'Referenced student does not exist, has been deleted, or is not a student'
+      message: 'Referenced student does not exist, has been deleted'
     }
   },
   type: {
@@ -60,25 +60,22 @@ chatSessionsSchema.pre('save', function() {
 
 // Static method to find active chat sessions
 chatSessionsSchema.statics.findActive = function() {
-  return this.find({ isDeleted: false });
+  return this.find({ isDeleted: false }).sort({ updatedAt: -1 });
 };
 
 // Static method to find chat sessions by student
 chatSessionsSchema.statics.findByStudent = function(studentId) {
-  return this.find({ studentId, isDeleted: false })
-    .sort({ createdAt: -1 });
+  return this.find({ studentId, isDeleted: false }).sort({ updatedAt: -1 });
 };
 
 // Static method to find chat sessions by type
 chatSessionsSchema.statics.findByType = function(type) {
-  return this.find({ type, isDeleted: false })
-    .sort({ createdAt: -1 });
+  return this.find({ type, isDeleted: false }).sort({ updatedAt: -1 });
 };
 
 // Static method to find chat sessions by student and type
 chatSessionsSchema.statics.findByStudentAndType = function(studentId, type) {
-  return this.find({ studentId, type, isDeleted: false })
-    .sort({ createdAt: -1 });
+  return this.find({ studentId, type, isDeleted: false }).sort({ updatedAt: -1 });
 };
 
 // Instance method to mark as deleted

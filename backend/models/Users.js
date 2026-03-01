@@ -50,7 +50,7 @@ usersSchema.methods.comparePassword = async function (enteredPassword) {
 usersSchema.index({ isDeleted: 1 });
 
 usersSchema.statics.findActive = function () {
-  return this.find({ isDeleted: false });
+  return this.find({ isDeleted: false }).sort({ updatedAt: -1 });
 };
 
 usersSchema.methods.softDelete = function () {

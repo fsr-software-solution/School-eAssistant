@@ -30,9 +30,9 @@ const interactionsSchema = new mongoose.Schema({
     validate: {
       validator: async function(value) {
         const user = await mongoose.model('Users').findById(value);
-        return user && !user.isDeleted && user.role === 'student';
+        return user && !user.isDeleted;
       },
-      message: 'Referenced student does not exist, has been deleted, or is not a student'
+      message: 'Referenced student does not exist, has been deleted'
     }
   },
   studentQuestion: {
@@ -87,25 +87,22 @@ interactionsSchema.pre('save', function() {
 
 // Static method to find active interactions
 interactionsSchema.statics.findActive = function() {
-  return this.find({ isDeleted: false });
+  return this.find({ isDeleted: false }).sort({ updatedAt: -1 });
 };
 
 // Static method to find interactions by session
 interactionsSchema.statics.findBySession = function(sessionId) {
-  return this.find({ sessionId, isDeleted: false })
-    .sort({ createdAt: 1 });
+  return this.find({ sessionId, isDeleted: false }).sort({ updatedAt: -1 });
 };
 
 // Static method to find interactions by chat session
 interactionsSchema.statics.findByChatSession = function(chatSessionId) {
-  return this.find({ chatSessionId, isDeleted: false })
-    .sort({ createdAt: 1 });
+  return this.find({ chatSessionId, isDeleted: false }).sort({ updatedAt: -1 });
 };
 
 // Static method to find interactions by student
 interactionsSchema.statics.findByStudent = function(studentId) {
-  return this.find({ studentId, isDeleted: false })
-    .sort({ createdAt: -1 });
+  return this.find({ studentId, isDeleted: false }).sort({ updatedAt: -1 });
 };
 
 // Instance method to mark as deleted
