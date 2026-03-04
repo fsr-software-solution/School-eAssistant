@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { API_BASE_URL } from '../constants';
+import api from '../constants';
 import { getRedirectPath } from '../utils/authUtils';
 import { useAuth } from '../hooks/useAuth';
 
@@ -32,7 +31,7 @@ function LoginPage() {
     setIsLoading(true);
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/v1/auth/login`, {
+      const response = await api.post('/api/v1/auth/login', {
         username,
         password,
       });

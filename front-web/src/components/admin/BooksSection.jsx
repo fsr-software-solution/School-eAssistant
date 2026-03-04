@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { API_BASE_URL } from '../../constants';
+import api from '../../constants';
 
 const BooksSection = () => {
   const [books, setBooks] = useState([]);
@@ -72,7 +71,7 @@ const BooksSection = () => {
       setUploading(true);
       setUploadProgress(0);
 
-      const response = await axios.post(`${API_BASE_URL}/api/v1/books`, formData, {
+      const response = await api.post('/api/v1/books', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -118,7 +117,7 @@ const BooksSection = () => {
   const fetchBooks = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/api/v1/books`);
+      const response = await api.get('/api/v1/books');
       setBooks(response.data.data || []);
     } catch (error) {
       console.error('Error fetching books:', error);
@@ -157,7 +156,7 @@ const BooksSection = () => {
   const handleDeleteBook = async (bookId) => {
     if (window.confirm('Are you sure you want to delete this book?')) {
       try {
-        await axios.delete(`${API_BASE_URL}/api/v1/books/${bookId}`);
+        await api.delete(`/api/v1/books/${bookId}`);
         
         setBooks(prevBooks => prevBooks.filter(book => book._id !== bookId));
         alert('Book deleted successfully!');
@@ -177,7 +176,7 @@ const BooksSection = () => {
     e.preventDefault();
     
     try {
-      const response = await axios.put(`${API_BASE_URL}/api/v1/books/${editingBook._id}`, {
+      const response = await api.put(`/api/v1/books/${editingBook._id}`, {
         gradeLevel: editingBook.gradeLevel,
         subject: editingBook.subject,
         yearOfPublish: editingBook.yearOfPublish
@@ -207,7 +206,7 @@ const BooksSection = () => {
   const fetchBookUnits = async (book) => {
     try {
       setUnitsLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/api/v1/books/${book._id}/units`);
+      const response = await api.get(`/api/v1/books/${book._id}/units`);
       setSelectedBookUnits(response.data.data);
     } catch (error) {
       console.error('Error fetching book units:', error);
@@ -225,7 +224,7 @@ const BooksSection = () => {
   const fetchUnitSections = async (unit) => {
     try {
       setSectionsLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/api/v1/units/${unit._id}/sections`);
+      const response = await api.get(`/api/v1/units/${unit._id}/sections`);
       pushToSectionsStack(response.data.data);
     } catch (error) {
       console.error('Error fetching unit sections:', error);
@@ -246,7 +245,7 @@ const BooksSection = () => {
   const fetchSectionSubsections = async (section) => {
     try {
       setSectionsLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/api/v1/sections/${section._id}/subsections`);
+      const response = await api.get(`/api/v1/sections/${section._id}/subsections`);
       pushToSectionsStack(response.data.data);
     } catch (error) {
       console.error('Error fetching section subsections:', error);
@@ -267,7 +266,7 @@ const BooksSection = () => {
   const fetchSectionResources = async (section) => {
     try {
       setResourcesLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/api/v1/sections/${section._id}/resources`);
+      const response = await api.get(`/api/v1/sections/${section._id}/resources`);
       setSelectedSectionResources(response.data.data);
     } catch (error) {
       console.error('Error fetching section resources:', error);
@@ -291,7 +290,7 @@ const BooksSection = () => {
     e.preventDefault();
     
     try {
-      const response = await axios.put(`${API_BASE_URL}/api/v1/sections/${editingSection._id}`, {
+      const response = await api.put(`/api/v1/sections/${editingSection._id}`, {
         aiClarification: editingSection.aiClarification
       });
 
@@ -321,7 +320,7 @@ const BooksSection = () => {
   const handleDeleteResource = async (resourceId) => {
     if (window.confirm('Are you sure you want to delete this resource?')) {
       try {
-        await axios.delete(`${API_BASE_URL}/api/v1/resources/${resourceId}`);
+        await api.delete(`/api/v1/resources/${resourceId}`);
         
         // Update the resources list
         setSelectedSectionResources(prevResources => 

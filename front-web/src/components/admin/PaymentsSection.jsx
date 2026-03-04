@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { API_BASE_URL } from '../../constants';
-import { useAuth } from '../../hooks/useAuth';
+import api from '../../constants';
 
 const PaymentsSection = () => {
-  const { getValidToken } = useAuth();
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -43,12 +40,7 @@ const PaymentsSection = () => {
   const fetchPayments = async () => {
     try {
       setLoading(true);
-      const token = await getValidToken();
-      const response = await axios.get(`${API_BASE_URL}/api/v1/admin/payments`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await api.get('/api/v1/admin/payments');
       if (response.data.success) {
         setPayments(response.data.data);
       } else {
@@ -65,12 +57,7 @@ const PaymentsSection = () => {
   const fetchAccount = async () => {
     try {
       setAccountLoading(true);
-      const token = await getValidToken();
-      const response = await axios.get(`${API_BASE_URL}/api/v1/admin/account`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await api.get('/api/v1/admin/account');
       if (response.data.data) {
         setAccount(response.data.data);
         setAccountForm({
@@ -90,12 +77,7 @@ const PaymentsSection = () => {
   const updateAccount = async () => {
     try {
       setAccountLoading(true);
-      const token = await getValidToken();
-      const response = await axios.put(`${API_BASE_URL}/api/v1/admin/account`, accountForm, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await api.put('/api/v1/admin/account', accountForm);
       if (response.data.data) {
         setAccount(response.data.data);
         alert('Account updated successfully');
@@ -112,12 +94,7 @@ const PaymentsSection = () => {
   const fetchPlans = async () => {
     try {
       setPlansLoading(true);
-      const token = await getValidToken();
-      const response = await axios.get(`${API_BASE_URL}/api/v1/admin/plans`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await api.get('/api/v1/admin/plans');
       if (response.data.success) {
         setPlans(response.data.data);
       }
@@ -132,18 +109,13 @@ const PaymentsSection = () => {
   const createPlan = async () => {
     try {
       setPlansLoading(true);
-      const token = await getValidToken();
       const features = planForm.features.split(',').map(f => f.trim());
-      const response = await axios.post(`${API_BASE_URL}/api/v1/admin/plans`, {
+      const response = await api.post('/api/v1/admin/plans', {
         planName: planForm.planName,
         description: planForm.description,
         amount: parseFloat(planForm.amount),
         durationDays: parseInt(planForm.durationDays),
         features
-      }, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
       });
       if (response.data.data) {
         setPlans(prev => [...prev, response.data.data]);
@@ -169,18 +141,13 @@ const PaymentsSection = () => {
   const updatePlan = async (planId) => {
     try {
       setPlansLoading(true);
-      const token = await getValidToken();
       const features = planForm.features.split(',').map(f => f.trim());
-      const response = await axios.put(`${API_BASE_URL}/api/v1/admin/plans/${planId}`, {
+      const response = await api.put(`/api/v1/admin/plans/${planId}`, {
         planName: planForm.planName,
         description: planForm.description,
         amount: parseFloat(planForm.amount),
         durationDays: parseInt(planForm.durationDays),
         features
-      }, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
       });
       if (response.data.data) {
         setPlans(prev => prev.map(plan => 
@@ -210,12 +177,7 @@ const PaymentsSection = () => {
     
     try {
       setPlansLoading(true);
-      const token = await getValidToken();
-      await axios.delete(`${API_BASE_URL}/api/v1/admin/plans/${planId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      await api.delete(`/api/v1/admin/plans/${planId}`);
 
       setPlans(prev => prev.filter(plan => plan._id !== planId));
       alert('Plan deleted successfully');
@@ -231,14 +193,9 @@ const PaymentsSection = () => {
   const updatePaymentStatus = async (transactionId, status, rejectionReason = '') => {
     try {
       setUpdatingStatus(prev => ({ ...prev, [transactionId]: true }));
-      const token = await getValidToken();
-      const response = await axios.put(`${API_BASE_URL}/api/v1/admin/payments/${transactionId}/status`, {
+      const response = await api.put(`/api/v1/admin/payments/${transactionId}/status`, {
         status,
         rejectionReason
-      }, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
       });
       if (response.data.data) {
         setPayments(prev => prev.map(payment => 

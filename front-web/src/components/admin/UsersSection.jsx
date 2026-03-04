@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { API_BASE_URL } from '../../constants';
+import api from '../../constants';
 
 const UsersSection = () => {
   const [users, setUsers] = useState([]);
@@ -37,7 +36,7 @@ const UsersSection = () => {
         // Get token from localStorage (assuming it's stored there after login)
         const token = localStorage.getItem('accessToken');
         
-        const response = await axios.get(`${API_BASE_URL}/api/v1/users`, {
+        const response = await api.get('/api/v1/users', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -87,28 +86,28 @@ const UsersSection = () => {
       const token = localStorage.getItem('accessToken');
       
       // Fetch chat interactions
-      const chatResponse = await axios.get(`${API_BASE_URL}/api/v1/users/${userId}/chat-interactions`, {
+      const chatResponse = await api.get(`/api/v1/users/${userId}/chat-interactions`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       
       // Fetch quizzes
-      const quizResponse = await axios.get(`${API_BASE_URL}/api/v1/users/${userId}/quizzes`, {
+      const quizResponse = await api.get(`/api/v1/users/${userId}/quizzes`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       
       // Fetch progress
-      const progressResponse = await axios.get(`${API_BASE_URL}/api/v1/users/${userId}/progress`, {
+      const progressResponse = await api.get(`/api/v1/users/${userId}/progress`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       
       // Fetch payments
-      const paymentsResponse = await axios.get(`${API_BASE_URL}/api/v1/users/${userId}/payments`, {
+      const paymentsResponse = await api.get(`/api/v1/users/${userId}/payments`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -179,7 +178,7 @@ const UsersSection = () => {
       try {
         const token = localStorage.getItem('accessToken');
         
-        await axios.delete(`${API_BASE_URL}/api/v1/users/${userId}`, {
+        await api.delete(`/api/v1/users/${userId}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -212,7 +211,7 @@ const UsersSection = () => {
       setCreateLoading(true);
       const token = localStorage.getItem('accessToken');
       
-      const response = await axios.put(`${API_BASE_URL}/api/v1/users/${editingUser.id}`, editUser, {
+      const response = await api.put(`/api/v1/users/${editingUser.id}`, editUser, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -261,7 +260,7 @@ const UsersSection = () => {
       setCreateLoading(true);
       const token = localStorage.getItem('accessToken');
       
-      const response = await axios.post(`${API_BASE_URL}/api/v1/users`, newUser, {
+      const response = await api.post('/api/v1/users', newUser, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

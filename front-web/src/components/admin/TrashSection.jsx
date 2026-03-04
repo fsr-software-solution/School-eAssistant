@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { API_BASE_URL } from '../../constants';
+import api from '../../constants';
 
 const TrashSection = () => {
   const [selectedModel, setSelectedModel] = useState('users');
@@ -30,7 +29,7 @@ const TrashSection = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/v1/admin/delete/${selectedModel}`);
+      const response = await api.get(`/api/v1/admin/delete/${selectedModel}`);
       setDeletedData(response.data.data || response.data || []);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to fetch deleted data');
@@ -45,7 +44,7 @@ const TrashSection = () => {
       return;
     }
     try {
-      await axios.put(`${API_BASE_URL}/api/v1/admin/delete/${selectedModel}/${id}`);
+      await api.put(`/api/v1/admin/delete/${selectedModel}/${id}`);
       fetchDeletedData(); // Refresh the list
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to restore item');
@@ -58,7 +57,7 @@ const TrashSection = () => {
       return;
     }
     try {
-      await axios.put(`${API_BASE_URL}/api/v1/admin/delete/${selectedModel}`);
+      await api.put(`/api/v1/admin/delete/${selectedModel}`);
       fetchDeletedData(); // Refresh the list
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to restore all items');
@@ -71,7 +70,7 @@ const TrashSection = () => {
       return;
     }
     try {
-      await axios.delete(`${API_BASE_URL}/api/v1/admin/delete/${selectedModel}/${id}`);
+      await api.delete(`/api/v1/admin/delete/${selectedModel}/${id}`);
       fetchDeletedData(); // Refresh the list
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to permanently delete item');
@@ -84,7 +83,7 @@ const TrashSection = () => {
       return;
     }
     try {
-      await axios.delete(`${API_BASE_URL}/api/v1/admin/delete/${selectedModel}`);
+      await api.delete(`/api/v1/admin/delete/${selectedModel}`);
       fetchDeletedData(); // Refresh the list
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to permanently delete all items');

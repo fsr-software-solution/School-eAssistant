@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { API_BASE_URL } from '../constants';
+import api from '../constants';
 
 export const useAuth = () => {
   const [user, setUser] = useState(null);
@@ -23,7 +22,7 @@ export const useAuth = () => {
         return;
       }
 
-      const response = await axios.post(`${API_BASE_URL}/api/v1/auth/refresh-token`, {
+      const response = await api.post('/api/v1/auth/refresh-token', {
         refreshToken
       });
 
