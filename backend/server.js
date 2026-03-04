@@ -37,11 +37,10 @@ app.get("/api", (req, res) => {
     res.send("FSR School eAssistant Server is Live ...")
 })
 
+app.use(express.static(path.join(__dirname, "public")))
 app.use(/.*/, async (req, res) => {
-    let htmlFile = await readFile(path.join(__dirname, "public", "index.html"), { encoding: 'utf-8' })
-    console.log(htmlFile)
-    res.type("text/html")
-    res.status(200).send(htmlFile)
+    const htmlContent = await readFile(path.join(__dirname, "public", "index.html"), { encoding: 'utf-8' })    
+    res.send(htmlContent)
 })
 
 app.use((err, req, res, next) => {
