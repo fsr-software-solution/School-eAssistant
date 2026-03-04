@@ -41,11 +41,14 @@ app.use((err, req, res, next) => {
     res.status(err.status || 500).json({error: err.message || 'Internal Server Error'})
 })
 
-const PORT = process.env.PORT || 5000
-app.listen(PORT, async () => {
-    console.log(`Server is running on port ${PORT} => http://localhost:${PORT}/api`)
+await initializeAdmin()
+await initializePaymentAccount()
+await initializePremiumPlans()
 
-    await initializeAdmin()
-    await initializePaymentAccount()
-    await initializePremiumPlans()
-})
+if (process.env.NODE_ENV === 'development') {
+    const PORT = process.env.PORT || 5000
+    app.listen(PORT, async () => {
+        console.log(`Server is running on port ${PORT} => http://localhost:${PORT}/api`)
+    })
+}
+export default app;
