@@ -1,0 +1,128 @@
+import api from './api';
+
+/**
+ * Book Types
+ */
+export interface Book {
+  _id: string;
+  gradeLevel: string;
+  subject: string;
+  totalPages: number;
+  toc?: any[];
+  summary?: string;
+  filePath: string;
+  yearOfPublish: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Unit {
+  _id: string;
+  bookId: string;
+  unitNumber: number;
+  title: string;
+  startingPage: number;
+  endingPage: number;
+  summary?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Section {
+  _id: string;
+  unitId: string;
+  sectionNumber: string;
+  parentSectionId?: string;
+  headingLevel: number;
+  title: string;
+  startingPage: number;
+  endingPage: number;
+  content: string;
+  aiClarification?: string;
+  summary?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Books Service
+ */
+export const booksService = {
+  /**
+   * Get all books
+   */
+  async getAllBooks(): Promise<Book[]> {
+    const response = await api.get<{ data: Book[] }>('/books');
+    return response.data.data;
+  },
+
+  /**
+   * Get book by ID
+   */
+  async getBookById(id: string): Promise<Book> {
+    const response = await api.get<{ data: Book }>(`/books/${id}`);
+    return response.data.data;
+  },
+
+  /**
+   * Get all units for a book
+   */
+  async getBookUnits(bookId: string): Promise<Unit[]> {
+    const response = await api.get<{ data: Unit[] }>(`/books/${bookId}/units`);
+    return response.data.data;
+  },
+
+  /**
+   * Get unit by ID
+   */
+  async getUnitById(id: string): Promise<Unit> {
+    const response = await api.get<{ data: Unit }>(`/units/${id}`);
+    return response.data.data;
+  },
+
+  /**
+   * Get all sections for a unit
+   */
+  async getUnitSections(unitId: string): Promise<Section[]> {
+    const response = await api.get<{ data: Section[] }>(`/units/${unitId}/sections`);
+    return response.data.data;
+  },
+
+  /**
+   * Get section by ID
+   */
+  async getSectionById(id: string): Promise<Section> {
+    const response = await api.get<{ data: Section }>(`/sections/${id}`);
+    return response.data.data;
+  },
+
+  /**
+   * Get subsections for a section
+   */
+  async getSectionSubsections(sectionId: string): Promise<Section[]> {
+    const response = await api.get<{ data: Section[] }>(`/sections/${sectionId}/subsections`);
+    return response.data.data;
+  },
+
+  /**
+   * Get resources for a section
+   */
+  async getSectionResources(sectionId: string): Promise<Resource[]> {
+    const response = await api.get<{ data: Resource[] }>(`/sections/${sectionId}/resources`);
+    return response.data.data;
+  },
+};
+
+export interface Resource {
+  _id: string;
+  sectionId?: string;
+  interactionId?: string;
+  title: string;
+  description?: string;
+  type: 'article' | 'youtube' | 'image' | 'other';
+  link: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+
