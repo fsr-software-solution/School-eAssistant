@@ -1,4 +1,5 @@
 import { ChatOllama } from '@langchain/ollama'
+import {ChatGroq} from '@langchain/groq'
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai'
 import { search as articleSearch } from 'ddg-search'
 import { imageSearch } from '@mudbill/duckduckgo-images-api'
@@ -12,7 +13,7 @@ const addResources = async ({section, interaction}) => {
         throw new Error("No section or interaction");
     }
 
-    let llm = new ChatGoogleGenerativeAI({ model: 'gemini-2.0-flash' })
+    let llm = new ChatGroq({ model: 'llama-3.3-70b-versatile' })
     llm = llm.withStructuredOutput(z.object({
         queryForImage: z.string().describe('Query for searching images'),
         queryForArticle: z.string().describe('Query for searching articles'),

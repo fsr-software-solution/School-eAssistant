@@ -9,7 +9,7 @@ import Sections from '../../models/Sections.js'
 
 
 const bookContentExtractor = async (file, {gradeLevel, subject, yearOfPublish, filePath, tocStartingPage, tocEndingPage}) => {
-    let llm = new ChatGoogleGenerativeAI({ model: 'gemini-2.0-flash' })
+    let llm = new ChatGroq({ model: 'llama-3.3-70b-versatile' })
     llm = llm.withStructuredOutput(TOCSchema)
 
     let splittedBook = await splitAndExtract(file)

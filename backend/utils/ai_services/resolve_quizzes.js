@@ -1,4 +1,5 @@
 import { ChatOllama } from '@langchain/ollama'
+import {ChatGroq} from '@langchain/groq'
 import { selectRandomDocuments, similaritySearch } from './embeddings.js'
 import References from '../../models/References.js'
 import Quizzes from '../../models/Quizzes.js'
@@ -25,7 +26,7 @@ const questionSchema = z.object({
 
 
 const resolveQuizzes = async ({ chatSessionId, baseIdea, numberOfQuestions }) => {
-    let llm = new ChatGoogleGenerativeAI({ model: 'gemini-2.0-flash' })
+    let llm = new ChatGroq({ model: 'llama-3.3-70b-versatile' })
     let structuredLLM = llm.withStructuredOutput(questionSchema)
 
     let similaritySearchResults = []
