@@ -57,7 +57,7 @@ const selectRandomDocuments = async (limit = 5) =>
     ])
     .toArray()
 
-const deleteEmbeddedBook = async (bookId) => await collection.deleteMany({"bookId": bookId})
+const deleteEmbeddedBook = async (bookId) => await collection.deleteMany({"bookId": bookId.toString()})
 
     
 export default embedDocument
