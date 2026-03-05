@@ -1,6 +1,4 @@
-import { ChatOllama } from '@langchain/ollama'
-import {ChatGroq} from '@langchain/groq'
-import { ChatGoogleGenerativeAI } from '@langchain/google-genai'
+import { ChatMistralAI } from '@langchain/mistralai'
 import { search as articleSearch } from 'ddg-search'
 import { imageSearch } from '@mudbill/duckduckgo-images-api'
 import { YouTube as youtubeSearch } from 'youtube-sr'
@@ -13,7 +11,7 @@ const addResources = async ({section, interaction}) => {
         throw new Error("No section or interaction");
     }
 
-    let llm = new ChatGroq({ model: 'llama-3.3-70b-versatile' })
+    let llm = new ChatMistralAI({ model: 'mistral-small-latest' })
     llm = llm.withStructuredOutput(z.object({
         queryForImage: z.string().describe('Query for searching images'),
         queryForArticle: z.string().describe('Query for searching articles'),

@@ -1,5 +1,4 @@
-import { ChatOllama } from '@langchain/ollama'
-import {ChatGroq} from '@langchain/groq'
+import { ChatMistralAI } from '@langchain/mistralai'
 import { selectRandomDocuments, similaritySearch } from './embeddings.js'
 import References from '../../models/References.js'
 import Quizzes from '../../models/Quizzes.js'
@@ -26,7 +25,7 @@ const questionSchema = z.object({
 
 
 const resolveQuizzes = async ({ chatSessionId, baseIdea, numberOfQuestions }) => {
-    let llm = new ChatGroq({ model: 'llama-3.3-70b-versatile' })
+    let llm = new ChatMistralAI({ model: 'mistral-small-latest' })
     let structuredLLM = llm.withStructuredOutput(questionSchema)
 
     let similaritySearchResults = []
