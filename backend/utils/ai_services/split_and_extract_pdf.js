@@ -1,6 +1,6 @@
 import { readFile } from 'fs/promises';
 import { PDFDocument } from 'pdf-lib';
-import { PDFParse } from 'pdf-parse-v2';
+import PDFParse from 'pdf-parse';
 
 async function splitAndExtract(pdfBytes) {
     if (!pdfBytes) {
@@ -27,17 +27,14 @@ async function splitAndExtract(pdfBytes) {
         subDoc.addPage(copiedPage);
         const subDocBytes = await subDoc.save();
         
-        const pdfParser = new PDFParse({ data: subDocBytes });
-        const textResult = await pdfParser.getText();
-        const pageText = textResult.text.trim();
+        const pdfParser = await PDFParse({ data: subDocBytes });
+        const textResult = pdfParser.text;
+        const pageText = textResult.text?.trim() || "";
         
         results.push({
             physicalPage: i + 1,
             content: pageText.length > 0 ? pageText : ""
         });
-        
-        // Clean up the parser instance
-        await pdfParser.destroy();
     }
 
     return results;
