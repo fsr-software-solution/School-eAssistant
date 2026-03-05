@@ -26,10 +26,10 @@ async function splitAndExtract(pdfBytes) {
         const [copiedPage] = await subDoc.copyPages(srcDoc, [i]);
         subDoc.addPage(copiedPage);
         const subDocBytes = await subDoc.save();
-        
-        const pdfParser = await PDFParse({ data: subDocBytes });
-        const textResult = pdfParser.text;
-        const pageText = textResult.text?.trim() || "";
+
+        const pdfParser = await PDFParse({ data: subDocBytes });        
+        const textResult = pdfParser.text || "";
+        const pageText = textResult.trim();
         
         results.push({
             physicalPage: i + 1,
