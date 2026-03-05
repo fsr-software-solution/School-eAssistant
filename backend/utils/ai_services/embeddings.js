@@ -34,8 +34,17 @@ const embedDocument = async (pdfBytes, bookId) => {
     splittedDocs = splittedDocs.map(doc => {
         return {...doc, metadata: {...doc.metadata, bookId}}
     })
-    await vectorStore.addDocuments(splittedDocs)
-    return splittedDocs.length
+    
+    const batchSize = 100
+    let totalProcessed = 0
+    
+    for (let i = 0; i < splittedDocs.length; i += batchSize) {
+        const batch = splittedDocs.slice(i, i + batchSize)
+        await vectorStore.addDocuments(batch)
+        totalProcessed += batch.length
+    }
+    
+    return totalProcessed
 }
 
 const similaritySearch = async (query, limit=5) => await vectorStore.similaritySearch(query, limit)
