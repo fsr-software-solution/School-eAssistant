@@ -24,7 +24,6 @@
     "@langchain/ollama": "^1.2.2",
     "@langchain/textsplitters": "^1.0.1",
     "@mudbill/duckduckgo-images-api": "^2.0.1",
-    "@napi-rs/canvas": "^0.1.95",
     "bcryptjs": "^3.0.3",
     "cloudinary": "^2.9.0",
     "cors": "^2.8.6",
@@ -47,7 +46,6 @@
     "pdf-lib": "^1.17.1",
     "pdf-parse": "^1.1.4",
     "pdf-parse-v2": "npm:pdf-parse@^2.4.5",
-    "pdfjs-dist": "^5.4.624",
     "tesseract.js": "^7.0.0",
     "youtube-sr": "^4.3.12",
     "zod": "^4.3.6"

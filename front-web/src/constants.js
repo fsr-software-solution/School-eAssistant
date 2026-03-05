@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // API Configuration
-export const API_BASE_URL = 'http://localhost:5000';
+export const API_BASE_URL = 'https://school-e-assistant.vercel.app';
 
 // Local Storage Keys
 export const STORAGE_KEYS = {
