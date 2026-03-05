@@ -1,12 +1,13 @@
 import {PDFLoader} from '@langchain/community/document_loaders/fs/pdf'
 import {RecursiveCharacterTextSplitter} from '@langchain/textsplitters'
 import {OllamaEmbeddings} from '@langchain/ollama'
+import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai'
 import { MongoDBAtlasVectorSearch } from "@langchain/mongodb"
 import { MongoClient } from "mongodb"
 import dotenv from 'dotenv'
 
 dotenv.config()
-let embeddings = new OllamaEmbeddings({model: 'all-minilm:22m'})
+let embeddings = new GoogleGenerativeAIEmbeddings({model: 'text-embedding-004'})
 
 const client = new MongoClient(process.env.MONGODB_ATLAS_URI || "")
 const collection = client

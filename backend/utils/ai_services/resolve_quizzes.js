@@ -25,7 +25,7 @@ const questionSchema = z.object({
 
 
 const resolveQuizzes = async ({ chatSessionId, baseIdea, numberOfQuestions }) => {
-    let llm = new ChatOllama({ model: 'smollm2:135m' })
+    let llm = new ChatGoogleGenerativeAI({ model: 'gemini-2.0-flash' })
     let structuredLLM = llm.withStructuredOutput(questionSchema)
 
     let similaritySearchResults = []

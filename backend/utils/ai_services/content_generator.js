@@ -5,7 +5,7 @@ export const summarizer = async ({book, unit, section, interaction, quiz}) => {
         throw new Error("No book, unit, section, interaction or quiz");        
     }
 
-    let llm = new ChatOllama({model: 'smollm2:135m'})
+    let llm = new ChatGoogleGenerativeAI({ model: 'gemini-2.0-flash' })
     let response = await llm.invoke(`
         Summarize the following information in single paragraph:
         ${book? 'SUBJECT: ' + book.subject : ''}
@@ -24,7 +24,7 @@ export const clarifier = async ({section}) => {
         throw new Error("No section");
     }
 
-    let llm = new ChatOllama({model: 'smollm2:135m'})
+    let llm = new ChatGoogleGenerativeAI({ model: 'gemini-2.0-flash' })
     let response = await llm.invoke(`
         Clarify the following content on topic ${section.title}:
         CONTENT: ${section.content}
