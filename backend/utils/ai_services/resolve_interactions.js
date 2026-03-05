@@ -1,11 +1,11 @@
-import { ChatOllama } from '@langchain/ollama'
+import { ChatMistralAI } from '@langchain/mistralai'
 import Interactions from '../../models/Interactions.js'
 import addReferences from './add_references.js'
 import { similaritySearch } from './embeddings.js'
 import * as z from 'zod'
 
 const resolveInteraction = async ({sectionId, chatSessionId, studentId, studentQuestion, histories, section}) => {
-    let llm = new ChatGoogleGenerativeAI({ model: 'gemini-2.0-flash' })
+    let llm = new ChatMistralAI({ model: 'mistral-small-latest' })
     let standaloneQuestion = await llm.invoke(`
             Extract standalone question from the following question:
             QUESTION: ${studentQuestion}

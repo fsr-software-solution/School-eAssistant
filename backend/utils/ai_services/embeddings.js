@@ -1,13 +1,12 @@
 import {PDFLoader} from '@langchain/community/document_loaders/fs/pdf'
 import {RecursiveCharacterTextSplitter} from '@langchain/textsplitters'
-import {OllamaEmbeddings} from '@langchain/ollama'
-import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai'
+import { MistralAIEmbeddings } from '@langchain/mistralai'
 import { MongoDBAtlasVectorSearch } from "@langchain/mongodb"
 import { MongoClient } from "mongodb"
 import dotenv from 'dotenv'
 
 dotenv.config()
-let embeddings = new GoogleGenerativeAIEmbeddings({model: 'text-embedding-004'})
+let embeddings = new MistralAIEmbeddings({model: 'mistral-embed'})
 
 const client = new MongoClient(process.env.MONGODB_ATLAS_URI || "")
 const collection = client
@@ -35,8 +34,17 @@ const embedDocument = async (pdfBytes, bookId) => {
     splittedDocs = splittedDocs.map(doc => {
         return {...doc, metadata: {...doc.metadata, bookId}}
     })
-    await vectorStore.addDocuments(splittedDocs)
-    return splittedDocs.length
+    
+    const batchSize = 100
+    let totalProcessed = 0
+    
+    for (let i = 0; i < splittedDocs.length; i += batchSize) {
+        const batch = splittedDocs.slice(i, i + batchSize)
+        await vectorStore.addDocuments(batch)
+        totalProcessed += batch.length
+    }
+    
+    return totalProcessed
 }
 
 const similaritySearch = async (query, limit=5) => await vectorStore.similaritySearch(query, limit)
@@ -49,7 +57,7 @@ const selectRandomDocuments = async (limit = 5) =>
     ])
     .toArray()
 
-const deleteEmbeddedBook = async (bookId) => await collection.deleteMany({"bookId": bookId})
+const deleteEmbeddedBook = async (bookId) => await collection.deleteMany({"bookId": bookId.toString()})
 
     
 export default embedDocument

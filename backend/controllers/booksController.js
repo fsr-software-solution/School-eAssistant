@@ -50,8 +50,8 @@ export const createBook = async (req, res, next) => {
     tocEndingPage,
     filePath: bookFile.originalname
   })
-
-  await embedDocument(bookFile.buffer, book._id)
+  
+  await embedDocument(bookFile.buffer, book._id.toString())  
   res.status(201).json({data: book})
 }
 
