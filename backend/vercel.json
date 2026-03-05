@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "installCommand": "npm install --legacy-peer-deps",
   "builds": [
     {
       "src": "api/index.js",
@@ -20,10 +21,5 @@
         "Access-Control-Allow-Headers": "Content-Type, Authorization"
       }
     }
-  ],
-  "build": {
-    "commands": {
-      "install": "npm install --legacy-peer-deps"
-    }
-  }
+  ]
 }
