@@ -5,7 +5,7 @@ import { similaritySearch } from './embeddings.js'
 import * as z from 'zod'
 
 const resolveInteraction = async ({sectionId, chatSessionId, studentId, studentQuestion, histories, section}) => {
-    let llm = new ChatOllama({model: 'llama3.2:3b'})
+    let llm = new ChatGoogleGenerativeAI({ model: 'gemini-2.0-flash' })
     let standaloneQuestion = await llm.invoke(`
             Extract standalone question from the following question:
             QUESTION: ${studentQuestion}

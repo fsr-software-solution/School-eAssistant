@@ -13,4 +13,4 @@ router.post('/', createStudentProgress);
 router.put('/:id', updateStudentProgress);
 router.delete('/:id', deleteStudentProgress);
 
-export default router;2
+export default router;

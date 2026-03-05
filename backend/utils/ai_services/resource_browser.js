@@ -1,4 +1,5 @@
 import { ChatOllama } from '@langchain/ollama'
+import { ChatGoogleGenerativeAI } from '@langchain/google-genai'
 import { search as articleSearch } from 'ddg-search'
 import { imageSearch } from '@mudbill/duckduckgo-images-api'
 import { YouTube as youtubeSearch } from 'youtube-sr'
@@ -11,7 +12,7 @@ const addResources = async ({section, interaction}) => {
         throw new Error("No section or interaction");
     }
 
-    let llm = new ChatOllama({model: 'qwen2.5:0.5b'})
+    let llm = new ChatGoogleGenerativeAI({ model: 'gemini-2.0-flash' })
     llm = llm.withStructuredOutput(z.object({
         queryForImage: z.string().describe('Query for searching images'),
         queryForArticle: z.string().describe('Query for searching articles'),

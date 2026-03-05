@@ -1,7 +1,7 @@
 import { TOCSchema } from './states.js'
 import { ChatOllama } from '@langchain/ollama'
+import { ChatGoogleGenerativeAI } from '@langchain/google-genai'
 import {ChatGroq} from '@langchain/groq'
-import {readFile, writeFile} from 'fs/promises'
 import splitAndExtract from './split_and_extract_pdf.js'
 import Books from '../../models/Books.js'
 import Units from '../../models/Units.js'
@@ -9,11 +9,7 @@ import Sections from '../../models/Sections.js'
 
 
 const bookContentExtractor = async (file, {gradeLevel, subject, yearOfPublish, filePath, tocStartingPage, tocEndingPage}) => {
-    // let llm = new ChatOllama({model: 'smollm2:135m'})
-    let llm = new ChatGroq({
-        model: 'llama-3.3-70b-versatile',
-        apiKey: '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'
-    })
+    let llm = new ChatGoogleGenerativeAI({ model: 'gemini-2.0-flash' })
     llm = llm.withStructuredOutput(TOCSchema)
 
     let splittedBook = await splitAndExtract(file)
